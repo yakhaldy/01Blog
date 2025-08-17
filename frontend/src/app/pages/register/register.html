@@ -1,0 +1,58 @@
+<form (ngSubmit)="onRegister()" #registerForm="ngForm">
+  <app-logo></app-logo>
+
+  <div class="inputGroup">
+    <label for="firstName">First Name</label>
+    <input type="text" id="firstName" [(ngModel)]="firstName" name="firstName" placeholder="First Name" required />
+  </div>
+
+  <div class="inputGroup">
+    <label for="lastName">Last Name</label>
+    <input type="text" id="lastName" [(ngModel)]="lastName" name="lastName" placeholder="Last Name" required />
+  </div>
+
+  <div class="inputGroup">
+    <label for="username">Username</label>
+    <input type="text" id="username" [(ngModel)]="username" name="username" placeholder="Username" required />
+  </div>
+
+  <div class="inputGroup">
+    <label for="email">Email</label>
+    <input type="email" id="email" [(ngModel)]="email" name="email" placeholder="email@domain.com" required />
+  </div>
+
+  <div class="inputGroup">
+    <label for="password">Password</label>
+    <input type="password" id="password" [(ngModel)]="password" name="password" placeholder="••••••••" required />
+  </div>
+
+  <div class="inputGroup">
+    <label for="about">About</label>
+    <textarea id="about" [(ngModel)]="about" name="about" placeholder="Tell us about yourself"></textarea>
+  </div>
+
+  <div class="inputGroup">
+    <label for="gender">Gender</label>
+    <select id="gender" [(ngModel)]="gender" name="gender">
+      <option value="">Select Gender</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
+  <div class="inputGroup">
+    <label for="age">Age</label>
+    <input type="number" id="age" [(ngModel)]="age" name="age" placeholder="Age" />
+  </div>
+
+  <div class="inputGroup">
+    <label for="photo">Photo</label>
+    <input type="file" id="photo" (change)="onFileChange($event)" accept="image/*" />
+  </div>
+
+  <div class="inputGroupg">
+    <button type="submit">Register</button>
+    <p>Go to -> <a routerLink="/login">Login</a></p>
+  </div>
+</form>

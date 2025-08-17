@@ -1,0 +1,145 @@
+/* Container form */
+form {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+  width: 100%;
+  max-width: 450px;
+  background-color: #fff;
+  margin: 0;
+  padding: 2.5em;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 0.5em;
+  font-family: 'Source Sans Pro', sans-serif;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+/* Input groups */
+form .inputGroup {
+  margin-bottom: 1.8em;
+  position: relative;
+}
+
+/* Labels */
+form label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #217093;
+  font-weight: 700;
+}
+
+/* Text inputs and password */
+form input[type='text'],
+form input[type='email'],
+form input[type='password'],
+form input[type='number'],
+form textarea,
+form select {
+  display: block;
+  width: 100%;
+  padding: 14px 1em;
+  font-size: 1.25em;
+  color: #353538;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: #f3fafd;
+  border: 2px solid #217093;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.25s ease-out, box-shadow 0.2s linear;
+}
+
+/* Focus effect */
+form input:focus,
+form textarea:focus,
+form select:focus {
+  outline: none;
+  border-color: #4eb8dd;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Textarea style */
+form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* File input style */
+form input[type="file"] {
+  padding: 6px 1em;
+  font-size: 1em;
+  border: 2px solid #217093;
+  border-radius: 4px;
+  background-color: #f3fafd;
+  cursor: pointer;
+}
+
+/* Button */
+form button {
+  display: block;
+  width: 100%;
+  height: 60px;
+  padding: 0.65em 1em;
+  font-size: 1.5em;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background-color: #4eb8dd;
+  border: none;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-out, transform 0.1s ease-in-out;
+  cursor: pointer;
+}
+
+form button:hover,
+form button:active {
+  background-color: #217093;
+  transform: scale(0.98);
+}
+
+/* Bottom link */
+form .inputGroupg p {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: #333;
+  text-align: center;
+}
+
+form .inputGroupg p a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 4px;
+  transition: color 0.3s;
+}
+
+form .inputGroupg p a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Responsive tweaks */
+@media (max-width: 500px) {
+  form {
+    width: 90%;
+    padding: 2em;
+  }
+
+  form input[type='text'],
+  form input[type='email'],
+  form input[type='password'],
+  form input[type='number'],
+  form textarea,
+  form select {
+    font-size: 1.1em;
+    padding: 12px 1em;
+  }
+
+  form button {
+    font-size: 1.3em;
+  }
+}

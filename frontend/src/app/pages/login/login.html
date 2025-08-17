@@ -1,0 +1,37 @@
+<!-- <h2>Login</h2>
+<form (ngSubmit)="onLogin()" #loginForm="ngForm">
+  <div>
+    <label>Username:</label>
+    <input type="text" name="username" [(ngModel)]="username" required>
+  </div>
+
+  <div>
+    <label>Password:</label>
+    <input type="password" name="password" [(ngModel)]="password" required>
+  </div>
+
+  <button type="submit">Login</button>
+</form>
+ -->
+
+
+
+<form (ngSubmit)="onLogin()" #loginForm="ngForm">
+  <app-logo></app-logo>
+
+  <div class="inputGroup">
+    <label for="email">Email</label>
+    <input type="text" id="email" [(ngModel)]="email" name="email" maxlength="256" placeholder="email@domain.com" />
+  </div>
+
+  <div class="inputGroup">
+    <label for="password">Password</label>
+    <input type="password" id="password" [(ngModel)]="password" name="password" placeholder="••••••••" />
+  </div>
+
+  <div class="inputGroupg">
+    <button type="submit">Log in</button>
+      <!-- <button type="button" (click)="switchToRegister.emit()">Go to Register</button> -->
+       <p>Go to -> <a routerLink="/register">Register</a></p>
+  </div>
+</form>
