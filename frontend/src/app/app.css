@@ -1,8 +1,0 @@
-main {
-  background: linear-gradient(135deg, #bbe8f8 0%, #217093 100%);
-  min-height: 100vh;
-  margin: 0;
-  padding: 1rem 0 4rem 0;
-  font-family: 'Inter', 'Source Sans Pro', sans-serif;
-  overflow-x: hidden;
-}
