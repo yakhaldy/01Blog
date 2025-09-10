@@ -12,7 +12,7 @@ import { Auth } from '../auth';
   styleUrls: ['./login.css']
 })
 export class Login {
-  user = { username: '', password: '' };
+  user = { email: '', password: '' };
 
 
   constructor(private auth: Auth, private router: Router) {}

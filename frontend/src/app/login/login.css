@@ -1,0 +1,113 @@
+  .login-container{
+    
+  }
+  .container {
+      display: flex;
+      width: 900px;
+      height: 500px;
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    /* Left image section */
+    .left {
+      flex: 1;
+      background: url("/frontend/src/assets/img/loginImg.png") no-repeat center center;
+      background-size: cover;
+    }
+
+    /* Right form section */
+    .right {
+      flex: 1;
+      background: #0d0d0d;
+      color: #fff;
+      padding: 60px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .right h2 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .right p {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #ccc;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: none;
+      border-radius: 4px;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+  
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #0056cc;
+    }
+
+    .signUP {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .signUp a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .signUp a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+        width: 95%;
+      }
+      .left {
+        height: 200px;
+      }
+      .right {
+        padding: 30px 20px;
+      }
+    }
