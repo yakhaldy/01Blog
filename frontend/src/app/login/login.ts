@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../auth';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   standalone: true,
@@ -11,21 +12,33 @@ import { Auth } from '../auth';
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
+
 export class Login {
   user = { email: '', password: '' };
-
-
-  constructor(private auth: Auth, private router: Router) {}
+  errorMessage: string | null = null;
+  constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) {}
 
   login() {
+  
     this.auth.login(this.user).subscribe({
       next: (res) => {
-        console.log('Login successful', res);
-        this.router.navigate(['/']); 
+        console.log('Login successful===========>', res);
+        this.errorMessage = null;
+        this.router.navigate(['/']);
       },
       error: (err) => {
-        console.error('Login failed', err);
+        if (err.status === 401) {          
+          this.errorMessage = err.error.error;
+           this.cdr.detectChanges();
+        } else {
+          this.errorMessage = null;
+          console.log('Login failed', err);
+          alert( err.error.error);
+        }
       }
     });
+  }
+  goToPath(url : string) {
+    this.router.navigate([url]);
   }
 }

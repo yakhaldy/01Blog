@@ -1,38 +1,121 @@
 <div class="register-container">
-  <h2>Register</h2>
-  <form (ngSubmit)="register()">
-    <div class="form-group">
-      <label for="username">Username:</label>
-      <input 
-        type="text" 
-        id="username" 
-        [(ngModel)]="user.username" 
-        name="username" 
-        required>
+  <!-- Creative floating elements -->
+  <div class="creative-bg">
+    <div class="floating-circle circle-1"></div>
+    <div class="floating-circle circle-2"></div>
+    <div class="floating-circle circle-3"></div>
+    <div class="floating-triangle"></div>
+    <div class="floating-square"></div>
+  </div>
+
+  <div class="container">
+    <div class="left">
+      <!-- Creative overlay -->
+      <div class="creative-overlay">
+        <div class="artistic-content">
+          <h1 class="welcome-text">Welcome to</h1>
+          <h2 class="brand-name">01 Blog</h2>
+          <div class="decorative-line"></div>
+          <p class="tagline">Join the creative community</p>
+        </div>
+        <div class="art-shapes">
+          <div class="shape-dot dot-1"></div>
+          <div class="shape-dot dot-2"></div>
+          <div class="shape-dot dot-3"></div>
+        </div>
+      </div>
     </div>
+    
+    <div class="right">
+      <h2 class="creative-title">Create Account</h2>
+      <p class="creative-subtitle">Welcome to 01 Blog - Join our community</p>
+      
+      <form (ngSubmit)="register()">
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="firstName">First Name</label>
+            <input 
+              type="text" 
+              id="firstName" 
+              [(ngModel)]="user.firstName" 
+              name="firstName" 
+              placeholder="Enter your first name" 
+              required>
+            <div class="input-glow"></div>
+          </div>
+          <div class="form-group half">
+            <label for="lastName">Last Name</label>
+            <input 
+              type="text" 
+              id="lastName" 
+              [(ngModel)]="user.lastName" 
+              name="lastName" 
+              placeholder="Enter your last name" 
+              required>
+            <div class="input-glow"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input 
+            type="email" 
+            id="email" 
+            [(ngModel)]="user.email" 
+            name="email" 
+            placeholder="Enter your email" 
+            required>
+          <div class="input-glow"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            [(ngModel)]="user.password" 
+            name="password" 
+            placeholder="Enter your password" 
+            required>
+          <div class="input-glow"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            [(ngModel)]="user.confirmPassword" 
+            name="confirmPassword" 
+            placeholder="Confirm your password" 
+            required>
+          <div class="input-glow"></div>
+        </div>
+        
+        <button class="btn creative-btn" type="submit">
+          <span class="btn-content">Create Account</span>
+          <div class="btn-ripple"></div>
+        </button>
+      </form>
 
-    <div class="form-group">
-      <label for="email">Email:</label>
-      <input 
-        type="email" 
-        id="email" 
-        [(ngModel)]="user.email" 
-        name="email" 
-        required>
+      <p *ngIf="errorMessage" class="error-message creative-message">
+        <span class="message-icon">⚠</span>
+        {{ errorMessage }}
+      </p>
+      
+      <p *ngIf="successMessage" class="success-message creative-message">
+        <span class="message-icon">✓</span>
+        {{ successMessage }}
+      </p>
+      
+      <div class="signIn creative-link-section">
+        <p>Already have an account? 
+          <a (click)="goToPath('login')" class="enhanced-link">
+            Sign in here
+            <span class="link-hover-effect"></span>
+          </a>
+        </p>
+      </div>
     </div>
-
-    <div class="form-group">
-      <label for="password">Password:</label>
-      <input 
-        type="password" 
-        id="password" 
-        [(ngModel)]="user.password" 
-        name="password" 
-        required>
-    </div>
-
-    <button type="submit">Register</button>
-  </form>
-
-  <p>Already have an account? <a routerLink="/login">Login here</a></p>
+  </div>
 </div>

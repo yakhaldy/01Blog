@@ -24,7 +24,7 @@ public class BlogApplication {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initData() {
-        if (userRepository.findByUsername("admin").isEmpty()) {
+        if (userRepository.findByEmail("admin@admin.ad").isEmpty()) {
             User admin = new User();
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin123"));
