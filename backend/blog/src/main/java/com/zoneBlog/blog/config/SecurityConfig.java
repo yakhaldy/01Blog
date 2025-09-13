@@ -1,6 +1,5 @@
 package com.zoneBlog.blog.config;
 
-
 import com.zoneBlog.blog.repository.UserRepository;
 import com.zoneBlog.blog.security.JwtFilter;
 
@@ -13,55 +12,43 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
 
     private final UserRepository userRepository;
-    private JwtFilter jwtFilter;
-    
-    public SecurityConfig(UserRepository userRepository) {
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(UserRepository userRepository, JwtFilter jwtFilter) {
         this.userRepository = userRepository;
+        this.jwtFilter = jwtFilter;
     }
 
-     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-          http.csrf().disable()
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/login", "/api/register").permitAll()
-            .anyRequest().authenticated()
-        );
-
-    http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
-    }
-
-    // @Bean
-    // public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    //     http
-    //         .csrf().disable()
-    //         .authorizeHttpRequests(auth -> auth
-    //             .requestMatchers("/admin/**").hasRole("ADMIN")
-    //             .anyRequest().authenticated()
-    //         )
-    //         .formLogin().permitAll()
-    //         .and()
-    //         .logout().permitAll();
-    //     return http.build();
-    // }
     @Bean
-    public UserDetailsService userDetailsService() {
-        return email -> userRepository.findByEmail(email)
-                .map(user -> User.builder()
-                        .username(user.getUsername())
-                        .password(user.getPassword())
-                        .roles(user.getRole().replace("ROLE_", ""))
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+        System.out.println("🔧 Configuring Security Filter Chain...");
+        
+        http
+            .cors(cors -> {
+                cors.configurationSource(corsConfigurationSource);
+                System.out.println("✅ CORS configured");
+            })
+            .csrf(csrf -> {
+                csrf.disable();
+                System.out.println("✅ CSRF disabled");
+            })
+            .authorizeHttpRequests(auth -> {
+                auth
+                    .requestMatchers("/api/login", "/api/register").permitAll()
+                    .anyRequest().authenticated();
+            });
+
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        System.out.println("✅ JWT Filter added before UsernamePasswordAuthenticationFilter");
+
+        return http.build();
     }
 
     @Bean
@@ -69,9 +56,9 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
     @Bean
-    public AuthenticationManager authManager(HttpSecurity http, PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) throws Exception {
+    public AuthenticationManager authManager(HttpSecurity http, PasswordEncoder passwordEncoder,
+            UserDetailsService userDetailsService) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder)

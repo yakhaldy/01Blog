@@ -4,7 +4,7 @@
   background-image: linear-gradient(to top, #a8dfed 0%, #e8e9eb 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
-  
+
   font-family: 'Vibur', cursive;
   font-family: 'Abel', sans-serif;
   opacity: .95;
@@ -105,7 +105,7 @@
 .container {
   display: flex;
   width: 900px;
-  height: 600px;
+  height: 700px;
   background: #111;
   border-radius: 10px;
   overflow: hidden;
@@ -276,7 +276,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .creative-title {
@@ -376,7 +376,7 @@ input[type="password"]:focus {
 
 /* Enhanced button */
 .creative-btn {
-  width: 100%;
+  width: 107%;
   padding: 14px;
   border: none;
   border-radius: 4px;
@@ -730,7 +730,7 @@ input[type="password"]:focus {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  overflow-y: auto;
+  overflow-y: hidden;
   position: relative;
 }
 

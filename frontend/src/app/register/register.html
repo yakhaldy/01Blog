@@ -33,24 +33,13 @@
       <form (ngSubmit)="register()">
         <div class="form-row">
           <div class="form-group half">
-            <label for="firstName">First Name</label>
+            <label for="username">First Name</label>
             <input 
               type="text" 
-              id="firstName" 
-              [(ngModel)]="user.firstName" 
-              name="firstName" 
+              id="username" 
+              [(ngModel)]="user.username" 
+              name="username" 
               placeholder="Enter your first name" 
-              required>
-            <div class="input-glow"></div>
-          </div>
-          <div class="form-group half">
-            <label for="lastName">Last Name</label>
-            <input 
-              type="text" 
-              id="lastName" 
-              [(ngModel)]="user.lastName" 
-              name="lastName" 
-              placeholder="Enter your last name" 
               required>
             <div class="input-glow"></div>
           </div>

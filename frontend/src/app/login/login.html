@@ -45,9 +45,17 @@
           <div class="btn-ripple"></div>
         </button>
       </form>
-      <p style=" color: red;" class="error-message">{{ errorMessage }}</p>
-      <div class="signUp">
-        <p>Don't have an account? <a  (click)="goToPath('register')">Register here </a></p>
+       <p *ngIf="errorMessage" class="error-message creative-message">
+        <span class="message-icon">⚠</span>
+        {{ errorMessage }}
+      </p>
+       <div class="signUp creative-link-section">
+        <p>Don't have an account?  
+          <a  (click)="goToPath('register')" class="enhanced-link">
+            Register here
+            <span class="link-hover-effect"></span>
+          </a>
+        </p>
       </div>
     </div>
   </div>

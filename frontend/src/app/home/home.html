@@ -1,1 +1,68 @@
-<p>home works!</p>
+<div class="home-container">
+  <div class="creative-bg">
+    <div class="floating-circle circle-1"></div>
+    <div class="floating-circle circle-2"></div>
+    <div class="floating-circle circle-3"></div>
+    <div class="floating-triangle"></div>
+    <div class="floating-square"></div>
+  </div>
+  <app-navbar></app-navbar>
+  <div class="home-layout">
+
+    <aside class="sidebar-left">
+      <div class="profile-card">
+        <div *ngIf="isLoading" class="loading">
+          <p>Loading user data...</p>
+        </div>
+
+        <!-- Error State -->
+        <!-- <div *ngIf="errorMessage && !isLoading" class="error">
+          <p>{{ errorMessage }}</p>
+          <button (click)="loadCurrentUser()">Retry</button>
+        </div> -->
+        <div *ngIf="currentUser && !isLoading">
+          <img src="{{ currentUser?.avatar }}" alt="Profile" class="avatar">
+          <h3>{{ currentUser.username }}</h3>
+          <p>{{ currentUser.email }}</p>
+          <p>{{ currentUser?.bio }}</p>
+          <div class="stats">
+            <span>following: {{ currentUser.followingCount || 0 }}</span>
+            <span>Followers: {{ currentUser.followersCount || 0 }}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+
+    <main class="main-feed">
+
+      <div class="create-post">
+        <textarea [(ngModel)]="newPost.description" placeholder="What's on your mind?"></textarea>
+        <input type="text" [(ngModel)]="newPost.mediaUrl" placeholder="Image/Video URL (optional)">
+        <button (click)="createPost()">Post</button>
+      </div>
+
+
+      <div class="posts">
+        <div *ngFor="let post of posts" class="post-card">
+          <h4>{{ post.user.username }}</h4>
+          <p>{{ post.description }}</p>
+          <img *ngIf="post.mediaUrl" [src]="post.mediaUrl" alt="Post media">
+          <small>{{ post.createdAt | date:'short' }}</small>
+        </div>
+      </div>
+    </main>
+
+
+    <aside class="sidebar-right">
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Search users...">
+      <ul>
+        <li *ngFor="let u of users | filter:searchTerm">
+          <span (click)="goToProfile(u.username)">{{ u.username }}</span>
+          <button (click)="follow(u)">Follow</button>
+        </li>
+      </ul>
+    </aside>
+  </div>
+
+</div>

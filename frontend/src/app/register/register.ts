@@ -15,8 +15,7 @@ import { ChangeDetectorRef } from '@angular/core';
 
 export class Register {
   user = { 
-    firstName: '', 
-    lastName: '', 
+    username: '', 
     email: '', 
     password: '', 
     confirmPassword: '' 
@@ -27,10 +26,18 @@ export class Register {
   constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) {}
 
   register() {
-    // Reset messages
     this.errorMessage = null;
     this.successMessage = null;
-
+    if (this.user.username == "" ){
+       this.errorMessage = '"Username is Empty';
+      this.cdr.detectChanges();
+      return;
+    }
+    if (this.user.email == "" ){
+       this.errorMessage = '"Email is Empty';
+      this.cdr.detectChanges();
+      return;
+    }
     // Basic validation
     if (this.user.password !== this.user.confirmPassword) {
       this.errorMessage = 'Passwords do not match';
@@ -58,7 +65,7 @@ export class Register {
         }, 2000);
       },
       error: (err) => {
-        if (err.status === 400 || err.status === 409) {          
+        if (err.status === 400 ) {          
           this.errorMessage = err.error.error || 'Registration failed';
           this.cdr.detectChanges();
         } else {

@@ -23,7 +23,9 @@ export class Login {
     this.auth.login(this.user).subscribe({
       next: (res) => {
         console.log('Login successful===========>', res);
+        
         this.errorMessage = null;
+        localStorage.setItem('token', res.token);
         this.router.navigate(['/']);
       },
       error: (err) => {
@@ -31,9 +33,9 @@ export class Login {
           this.errorMessage = err.error.error;
            this.cdr.detectChanges();
         } else {
-          this.errorMessage = null;
           console.log('Login failed', err);
-          alert( err.error.error);
+          this.errorMessage = 'An unexpected error occurred';
+          this.cdr.detectChanges();
         }
       }
     });
