@@ -6,15 +6,15 @@ import {
 } from "./chunk-UGZYKGZZ.js";
 import "./chunk-4W7GV72Y.js";
 import {
+  coerceBooleanProperty,
+  coerceCssPixelValue
+} from "./chunk-46HAYV32.js";
+import {
   _isTestEnvironment
 } from "./chunk-6OSEN5Z7.js";
 import {
   supportsScrollBehavior
 } from "./chunk-7UJZXIJQ.js";
-import {
-  coerceBooleanProperty,
-  coerceCssPixelValue
-} from "./chunk-46HAYV32.js";
 import {
   _animationsDisabled
 } from "./chunk-FQULWVS3.js";

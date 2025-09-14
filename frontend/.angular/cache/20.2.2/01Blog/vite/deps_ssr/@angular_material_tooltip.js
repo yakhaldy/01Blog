@@ -4,21 +4,21 @@ import {
   ScrollDispatcher,
   ScrollingModule,
   ViewportRuler
-} from "./chunk-WCNZGRB3.js";
+} from "./chunk-S3DVOQJ3.js";
 import "./chunk-PYO5HRQ2.js";
-import {
-  _isTestEnvironment
-} from "./chunk-ZBNQ4PMZ.js";
-import {
-  supportsScrollBehavior
-} from "./chunk-FQL6O3MQ.js";
 import {
   coerceBooleanProperty,
   coerceCssPixelValue
 } from "./chunk-QJVLQKZV.js";
 import {
   _animationsDisabled
-} from "./chunk-3X24OORA.js";
+} from "./chunk-VYWI5KKA.js";
+import {
+  _isTestEnvironment
+} from "./chunk-ZBNQ4PMZ.js";
+import {
+  supportsScrollBehavior
+} from "./chunk-FQL6O3MQ.js";
 import {
   A11yModule,
   AriaDescriber,
@@ -30,18 +30,18 @@ import {
   coerceArray,
   hasModifierKey,
   normalizePassiveListenerOptions
-} from "./chunk-TFTKRXG7.js";
+} from "./chunk-IWCIPH3L.js";
 import {
   _CdkPrivateStyleLoader
 } from "./chunk-XGGHD6XU.js";
 import {
-  BidiModule,
-  Directionality
-} from "./chunk-T4PXRGKK.js";
-import {
   Platform,
   coerceNumberProperty
 } from "./chunk-VRLUFGSC.js";
+import {
+  BidiModule,
+  Directionality
+} from "./chunk-T4PXRGKK.js";
 import {
   Location,
   NgClass

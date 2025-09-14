@@ -22,16 +22,16 @@ public class BlogApplication {
         SpringApplication.run(BlogApplication.class, args);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void initData() {
-        if (userRepository.findByEmail("admin@admin.ad").isEmpty()) {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setRole("ROLE_ADMIN");
-            admin.setEmail("admin@admin.ad");
-            userRepository.save(admin);
-            System.out.println("Admin user created!");
-        }
-    }
+    // @EventListener(ApplicationReadyEvent.class)
+    // public void initData() {
+    //     if (userRepository.findByEmail("admin@admin.ad").isEmpty()) {
+    //         User admin = new User();
+    //         admin.setUsername("admin");
+    //         admin.setPassword(passwordEncoder.encode("admin123"));
+    //         admin.setRole("ROLE_ADMIN");
+    //         admin.setEmail("admin@admin.ad");
+    //         userRepository.save(admin);
+    //         System.out.println("Admin user created!");
+    //     }
+    // }
 }

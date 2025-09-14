@@ -40,7 +40,7 @@ export class Login {
       }
     });
   }
-  goToPath(url : string) {
-    this.router.navigate([url]);
+  goToRegister() {
+    this.router.navigate(["register"]);
   }
 }

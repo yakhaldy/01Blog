@@ -12,16 +12,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column( unique = true)
     private String username;
 
-    @Column(nullable = false)
+    // @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
+    // @Column(nullable = false)
     private String role; //  "ROLE_USER" or "ROLE_ADMIN"
     
-    @Column(nullable = false)
+    // @Column(nullable = false)
     private String email; 
 
     private String bio;

@@ -1,3 +1,10 @@
+import {
+  MatDivider,
+  MatDividerModule
+} from "./chunk-PPYNY6VP.js";
+import {
+  NG_VALUE_ACCESSOR
+} from "./chunk-3KVG4MU5.js";
 import "./chunk-4W7GV72Y.js";
 import {
   MAT_RIPPLE_GLOBAL_OPTIONS,
@@ -6,17 +13,10 @@ import {
   _StructuralStylesLoader
 } from "./chunk-PEO2QJ66.js";
 import {
-  NG_VALUE_ACCESSOR
-} from "./chunk-3KVG4MU5.js";
-import "./chunk-6OSEN5Z7.js";
-import "./chunk-7UJZXIJQ.js";
-import {
-  MatDivider,
-  MatDividerModule
-} from "./chunk-PPYNY6VP.js";
-import {
   coerceBooleanProperty
 } from "./chunk-46HAYV32.js";
+import "./chunk-6OSEN5Z7.js";
+import "./chunk-7UJZXIJQ.js";
 import {
   _animationsDisabled
 } from "./chunk-FQULWVS3.js";

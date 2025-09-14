@@ -28,14 +28,5 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
         
-    // @Bean
-    // public UserDetailsService userDetailsService() {
-    //     return email -> userRepository.findByEmail(email)
-    //             .map(user -> User.builder()
-    //                     .username(user.getEmail())
-    //                     .password(user.getPassword())
-    //                     .roles(user.getRole().replace("ROLE_", ""))
-    //                     .build())
-    //             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    // }
+
 }
