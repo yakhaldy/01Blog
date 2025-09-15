@@ -1,4 +1,4 @@
-package com.zoneBlog.blog.config;
+package com.zoneBlog.blog.service;
 
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
