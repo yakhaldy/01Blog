@@ -286,6 +286,40 @@
 
 .file-input-hidden {
     display: none;
+
+}
+
+.iconImageInput {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.iconImageInput:hover {
+  transform: scale(1.1);
+  opacity: 0.8;
+}
+
+/* Optional: align image + button horizontally on wider screens */
+@media (min-width: 500px) {
+  .post-input-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .post-textarea {
+    flex: 1;
+  }
+
+  .iconImageInput {
+    margin-left: 12px;
+  }
+
+  button[type="submit"] {
+    margin-left: 12px;
+    white-space: nowrap;
+  }
 }
 
 .file-upload-btn {
@@ -615,4 +649,414 @@
         font-size: 13px;
         padding: 0 12px;
     }
+}
+
+
+
+/* ===============================
+   Posts Section - Twitter/X Style
+   =============================== */
+
+/* Posts Container */
+.posts-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.posts-list {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Empty Feed State */
+.empty-feed {
+    padding: 40px 20px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(47, 51, 54, 0.8);
+}
+
+.empty-message {
+    color: #8b98a5;
+    font-size: 15px;
+    line-height: 20px;
+    margin: 0;
+}
+
+/* Post Card */
+.post-card {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(47, 51, 54, 0.8);
+    padding: 16px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.post-card:hover {
+    background: rgba(0, 0, 0, 0.6);
+    border-bottom-color: rgba(47, 51, 54, 1);
+}
+
+.post-card:last-of-type {
+    border-bottom: none;
+}
+
+/* Post Header */
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.post-author-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    flex: 1;
+}
+
+.post-author-info:hover {
+    opacity: 0.8;
+}
+
+.author-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.author-avatar .avatar-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #8b98a5;
+    border-radius: 50%;
+    transition: color 0.2s ease;
+}
+
+.post-author-info:hover .avatar-icon {
+    color: #1d9bf0;
+}
+
+.author-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.author-name {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 20px;
+    margin: 0;
+    word-break: break-word;
+}
+
+.post-time {
+    color: #8b98a5;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.post-time:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Post Actions Menu */
+.post-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.post-card:hover .post-actions {
+    opacity: 1;
+}
+
+.delete-btn {
+    color: #f91880 !important;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+}
+
+.delete-btn:hover {
+    background-color: rgba(249, 24, 128, 0.1) !important;
+    color: #f91880 !important;
+}
+
+.delete-btn .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Post Content */
+.post-content {
+    margin-bottom: 12px;
+}
+
+.post-description {
+    color: #ffffff;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 400;
+    margin: 0 0 12px 0;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+/* Media Content */
+.post-media {
+    margin-top: 12px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(47, 51, 54, 0.5);
+    transition: border-color 0.2s ease;
+}
+
+.post-media:hover {
+    border-color: rgba(47, 51, 54, 0.8);
+}
+
+.post-image,
+.post-video {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.post-image:hover,
+.post-video:hover {
+    transform: scale(1.01);
+}
+
+.post-image {
+    max-height: 500px;
+    object-fit: cover;
+    cursor: zoom-in;
+}
+
+.post-video {
+    max-height: 500px;
+    outline: none;
+}
+
+.post-video::-webkit-media-controls-panel {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Post Footer */
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+}
+
+.post-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #8b98a5;
+    font-size: 13px;
+    transition: color 0.2s ease;
+}
+
+.stat-item .mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.stat-count {
+    font-weight: 400;
+}
+
+.post-interactions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.interaction-btn {
+    color: #8b98a5 !important;
+    transition: all 0.2s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.interaction-btn:hover {
+    background-color: rgba(29, 155, 240, 0.1) !important;
+    color: #1d9bf0 !important;
+    transform: scale(1.1);
+}
+
+.interaction-btn .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Like button specific styling */
+.interaction-btn:first-child:hover {
+    background-color: rgba(249, 24, 128, 0.1) !important;
+    color: #f91880 !important;
+}
+
+/* Liked state (you can add this class dynamically) */
+.interaction-btn.liked {
+    color: #f91880 !important;
+}
+
+.interaction-btn.liked .mat-icon {
+    content: 'favorite';
+}
+
+/* Loading Animation for Images */
+.post-image {
+    background: linear-gradient(90deg, rgba(47, 51, 54, 0.2) 0%, rgba(47, 51, 54, 0.4) 50%, rgba(47, 51, 54, 0.2) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.post-image[src] {
+    animation: none;
+    background: none;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .post-card {
+        padding: 12px;
+    }
+    
+    .post-header {
+        margin-bottom: 8px;
+    }
+    
+    .author-avatar .avatar-icon {
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .post-actions {
+        opacity: 1; /* Always visible on mobile */
+    }
+    
+    .post-stats {
+        gap: 12px;
+    }
+    
+    .post-interactions {
+        gap: 2px;
+    }
+    
+    .interaction-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .post-image,
+    .post-video {
+        max-height: 400px;
+    }
+}
+
+@media (max-width: 480px) {
+    .post-card {
+        padding: 8px 12px;
+    }
+    
+    .post-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .post-interactions {
+        justify-content: center;
+        margin-left: 0;
+    }
+    
+    .author-name {
+        font-size: 14px;
+    }
+    
+    .post-time {
+        font-size: 14px;
+    }
+    
+    .post-description {
+        font-size: 14px;
+        line-height: 18px;
+    }
+}
+
+/* Animation for new posts */
+@keyframes slideInPost {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.post-card {
+    animation: slideInPost 0.3s ease-out;
+}
+
+/* Focus states for accessibility */
+.post-card:focus,
+.post-author-info:focus,
+.interaction-btn:focus,
+.delete-btn:focus {
+    outline: 2px solid #1d9bf0;
+    outline-offset: 2px;
+}
+
+/* Material Design Button Overrides */
+.mat-mdc-icon-button.interaction-btn,
+.mat-mdc-icon-button.delete-btn {
+    --mdc-icon-button-state-layer-size: 36px;
+    --mdc-icon-button-icon-size: 18px;
 }

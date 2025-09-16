@@ -22,11 +22,8 @@
         <div *ngIf="currentUser && !isLoading" class="profile-content">
           <header class="profile-header">
             <div class="profile-avatar">
-              <img 
-                [src]="currentUser?.avatar || 'assets/img/default-avatar.png'" 
-                [alt]="currentUser.username + ' profile picture'"
-                class="avatar-img"
-                loading="lazy">
+              <img [src]="currentUser?.avatar || 'assets/img/default-avatar.png'"
+                [alt]="currentUser.username + ' profile picture'" class="avatar-img" loading="lazy">
             </div>
 
             <div class="profile-info">
@@ -58,23 +55,30 @@
         <form class="post-form" (ngSubmit)="createPost()" #postForm="ngForm">
           <div class="post-input-container">
             <mat-form-field class="post-textarea" appearance="outline">
-              <textarea 
-                matInput 
-                [(ngModel)]="newPost.description" 
-                name="postDescription"
-                rows="3" 
-                placeholder="What's happening?"
-                maxlength="280"
-                aria-label="Post content"
-                #postTextarea></textarea>
+              <textarea matInput [(ngModel)]="newPost.description" name="postDescription" rows="3" id="input"
+                placeholder="What's happening?" maxlength="280" aria-label="Post content" #postTextarea
+                style="color: aliceblue;"></textarea>
+              <mat-hint>{{ postCharacterCount }}/280</mat-hint>
             </mat-form-field>
-            
-            <input type="file"  [(ngModel)]="newPost.media"  name="postMedia"  />
 
-            <button 
-              mat-raised-button 
-              color="primary" 
-              type="submit"
+            <!-- Media Upload Section -->
+            <!-- File Input -->
+            <label for="file-input" class="file-upload-label">
+              <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
+            </label>
+            <input type="file" id="file-input" (change)="onFileSelected($event)" accept="image/*,video/*"
+              style="display: none;">
+
+            <!-- File Preview -->
+            <div *ngIf="selectedFileName" class="file-preview">
+              <span class="file-name">{{ selectedFileName }}</span>
+              <button type="button" class="remove-file-btn" (click)="removeMediaFile()" aria-label="Remove file">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+
+            <button mat-raised-button color="primary" type="submit" [disabled]="!isPostFormValid"
               aria-label="Publish post">
               Post
             </button>
@@ -87,6 +91,74 @@
         <!-- Posts will be dynamically added here -->
         <div *ngIf="posts.length === 0" class="empty-feed">
           <p class="empty-message">No posts yet. Be the first to share something!</p>
+        </div>
+        <div class="posts-list" *ngIf="!isLoading && posts.length > 0">
+          <article *ngFor="let post of posts; " class="post-card" role="article"
+            [attr.aria-label]="'Post by ' + post.user?.username">
+
+            <!-- Post Header -->
+            <header class="post-header">
+              <div class="post-author-info" (click)="goToProfile(post.user?.username || '')">
+                <div class="author-avatar">
+                  <mat-icon class="avatar-icon">account_circle</mat-icon>
+                </div>
+                <div class="author-details">
+                  <h4 class="author-name">{{ post.user?.username }}</h4>
+                  <time class="post-time" [attr.datetime]="post.createdAt">
+                    {{ post.createdAt | date:'medium' }}
+                  </time>
+                </div>
+              </div>
+
+              <!-- Post Actions Menu -->
+              <div class="post-actions" *ngIf="isMyPost(post)">
+                <button mat-icon-button (click)="deletePost(post)" matTooltip="Delete post" class="delete-btn">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </header>
+
+            <!-- Post Content -->
+            <div class="post-content">
+              <p class="post-description">{{ post.description }}</p>
+
+              <!-- Media Content -->
+              <div class="post-media" *ngIf="post.mediaUrl">
+                <!-- IMAGE -->
+                <img *ngIf="isImage(post.mediaUrl)" [src]="post.mediaUrl"
+                  [alt]="'Media from post by ' + post.user?.username" class="post-image" loading="lazy">
+
+                <!-- VIDEO -->
+                <video *ngIf="isVideo(post.mediaUrl)" [src]="post.mediaUrl" controls class="post-video"
+                  preload="metadata">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+
+            <!-- Post Footer -->
+            <footer class="post-footer">
+              <div class="post-stats">
+                <span class="stat-item">
+                  <mat-icon>favorite_border</mat-icon>
+                  <span class="stat-count">{{ post.likesCount || 0 }}</span>
+                </span>
+                <span class="stat-item">
+                  <mat-icon>comment</mat-icon>
+                  <span class="stat-count">{{ post.commentsCount || 0 }}</span>
+                </span>
+              </div>
+
+              <div class="post-interactions">
+                <button mat-icon-button matTooltip="Like" class="interaction-btn">
+                  <mat-icon>favorite_border</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Comment" class="interaction-btn">
+                  <mat-icon>comment</mat-icon>
+                </button>
+              </div>
+            </footer>
+          </article>
         </div>
       </section>
     </main>
@@ -101,35 +173,23 @@
         <div class="search-container">
           <mat-form-field class="search-field" appearance="outline">
             <mat-icon matPrefix>search</mat-icon>
-            <input 
-              matInput 
-              [(ngModel)]="searchTerm" 
-              placeholder="Search users..."
-              aria-label="Search users">
+            <input matInput [(ngModel)]="searchTerm" placeholder="Search users..." aria-label="Search users">
           </mat-form-field>
         </div>
 
         <div class="users-list">
-          <div 
-            *ngFor="let user of users | filter:searchTerm; trackBy: trackByUsername"
-            class="user-item"
-            role="article"
-            [attr.aria-label]="'User: ' + user.username" >
-            
-            <div class="user-info" >
+          <div *ngFor="let user of users | filter:searchTerm; trackBy: trackByUsername" class="user-item" role="article"
+            [attr.aria-label]="'User: ' + user.username">
+            <div class="user-info" (click)="goToProfile(user)">
               <div class="user-avatar">
                 <mat-icon class="avatar-icon">account_circle</mat-icon>
               </div>
-              <div class="user-details" >
+              <div class="user-details">
                 <h4 class="username">{{ user.username }}</h4>
               </div>
             </div>
-            
-            <button 
-              mat-raised-button 
-              color="primary" 
-              class="follow-btn"
-              (click)="follow(user)"
+
+            <button mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
               [attr.aria-label]="'Follow ' + user.username">
               Follow
             </button>

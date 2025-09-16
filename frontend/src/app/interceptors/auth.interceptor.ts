@@ -19,6 +19,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
+        // Skip token for login/register endpoints
         if (req.url.endsWith('/api/login') || req.url.endsWith('/api/register')) {
             return next.handle(req);
         }
@@ -29,16 +30,14 @@ export class AuthInterceptor implements HttpInterceptor {
         if (token) {
             authReq = req.clone({
                 setHeaders: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${token}`
                 }
             });
-        } 
 
+        }
 
         return next.handle(authReq).pipe(
             catchError((err: HttpErrorResponse) => {
-                
                 if (err.status === 401) {
                     localStorage.removeItem('token');
                     this.router.navigate(['/login']);

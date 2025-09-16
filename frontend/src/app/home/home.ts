@@ -23,7 +23,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 // Custom Imports
 import { Navbar } from '../components/navbar/navbar';
 import { FilterPipe } from '../pipes/filter-pipe';
-import { Auth } from '../auth';
+import { Auth, CreatePostRequest, Post } from '../auth';
 
 // Interfaces
 interface User {
@@ -36,19 +36,18 @@ interface User {
   followersCount?: number;
 }
 
-interface Post {
-  id?: string;
-  description: string;
-  media?: string;
-  author?: User;
-  createdAt?: Date;
-  likesCount?: number;
-  commentsCount?: number;
-}
+// interface Post {
+//   id?: string;
+//   description: string;
+//   media?: string;
+//   author?: User;
+//   createdAt?: Date;
+//   likesCount?: number;
+//   commentsCount?: number;
+// }
 
 interface NewPost {
   description: string;
-  media: string;
   mediaFile?: File;
 }
 
@@ -89,9 +88,9 @@ export class Home implements OnInit, OnDestroy {
   // New Post Form
   newPost: NewPost = { 
     description: '', 
-    media: '',
     mediaFile: undefined
   };
+
 
   // RxJS Subject for cleanup
   private destroy$ = new Subject<void>();
@@ -171,153 +170,154 @@ export class Home implements OnInit, OnDestroy {
    * Load posts from the server
    */
   loadPosts(): void {
-    // TODO: Implement API call
-    // this.http.get<Post[]>('http://localhost:8080/api/posts')
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe({
-    //     next: (posts) => {
-    //       this.posts = posts;
-    //       this.cdr.detectChanges();
-    //     },
-    //     error: (error) => {
-    //       console.error('Failed to load posts:', error);
-    //     }
-    //   });
+        this.auth.getAllPosts()
+      .subscribe({
+        next: (posts) => {
+          this.posts = posts;
+          console.log('Posts loaded:', posts);
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Failed to load posts:', error);
+          // this.showErrorMessage('Failed to load posts');
+        }
+      });
+  }
+ isMyPost(post: Post): boolean {
+    return post.user?.username === this.currentUser?.username;
   }
 
-  /**
-   * Load users list for suggestions
-   */
+   deletePost(post: Post): void {
+    console.log("deletePost :", post);
+    
+    if (!post.id || !confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    // this.auth.deletePost(post.id)
+      // .subscribe({
+      //   next: () => {
+      //     this.showSuccessMessage('Post deleted successfully!');
+      //   },
+      //   error: (error) => {
+      //     console.error('Failed to delete post:', error);
+      //     this.showErrorMessage(error.message || 'Failed to delete post');
+      //   }
+      // });
+  }
+isImage(url: string | null | undefined): boolean {
+  return !!url && /\.(jpg|jpeg|png|gif)$/i.test(url);
+}
+
+isVideo(url: string | null | undefined): boolean {
+  return !!url && /\.(mp4|webm|avi)$/i.test(url);
+}
+
+
   loadUsers(): void {
-    // Generate mock users for now
     this.users = Array.from({ length: 10 }, (_, index) => ({
       id: `user-${index}`,
       username: `user${index}`,
       email: `user${index}@example.com`
     }));
-
-    // TODO: Implement API call
-    // this.http.get<User[]>('http://localhost:8080/api/users')
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe({
-    //     next: (users) => {
-    //       this.users = users;
-    //       this.cdr.detectChanges();
-    //     },
-    //     error: (error) => {
-    //       console.error('Failed to load users:', error);
-    //     }
-    //   });
   }
 
-  /**
-   * Toggle media upload section visibility
-   */
-  toggleMediaUpload(): void {
-    this.showMediaUpload = !this.showMediaUpload;
-    
-    // Clear media data when hiding upload section
-    if (!this.showMediaUpload) {
-      this.newPost.media = '';
-      this.newPost.mediaFile = undefined;
-      this.selectedFileName = '';
-    }
-  }
-
-
-  /**
-   * Handle file selection for media upload
-   */
-  onFileSelected(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    
+ 
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
     if (file) {
-      // Validate file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-      if (file.size > maxSize) {
-        console.error('File size exceeds 10MB limit');
-        // TODO: Show user-friendly error message
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'video/mp4', 'video/webm', 'video/avi'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).');
         return;
       }
 
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'video/mp4', 'video/webm'];
-      if (!allowedTypes.includes(file.type)) {
-        console.error('Invalid file type');
-        // TODO: Show user-friendly error message
+      // Validate file size (10MB limit)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > maxSize) {
+        alert('File size exceeds 10MB limit.');
         return;
       }
 
       this.newPost.mediaFile = file;
       this.selectedFileName = file.name;
-      this.newPost.media = ''; // Clear URL input when file is selected
-      
-      console.log('File selected:', file.name, file.size, file.type);
+      console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
     }
   }
 
-  /**
-   * Create a new post
-   */
+  removeMediaFile(): void {
+    this.newPost.mediaFile = undefined;
+    this.selectedFileName = '';
+    // Clear the file input
+    const fileInput = document.getElementById('file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+
   createPost(): void {
-    if (!this.newPost.description.trim()) {
+    if (!this.isPostFormValid) {
+      console.log('Post form is invalid');
       return;
     }
 
-    console.log('Creating post:', {
-      description: this.newPost.description.trim(),
-      mediaUrl: this.newPost.media.trim(),
-      mediaFile: this.newPost.mediaFile ? {
-        name: this.newPost.mediaFile.name,
-        size: this.newPost.mediaFile.size,
-        type: this.newPost.mediaFile.type
-      } : null
+    // Prepare form data
+    const postData: CreatePostRequest = {
+      description: this.newPost.description.trim()
+    };
+
+    if (this.newPost.mediaFile) {
+      postData.mediaFile = this.newPost.mediaFile;
+    }
+
+    console.log("Creating post with data:", {
+      description: postData.description,
+      hasFile: !!postData.mediaFile,
+      fileName: this.newPost.mediaFile?.name
     });
-
-    // Reset form after creating post
-    this.resetPostForm();
-
-    // TODO: Implement API call with FormData for file upload
-    // const formData = new FormData();
-    // formData.append('description', this.newPost.description.trim());
-    // 
-    // if (this.newPost.mediaFile) {
-    //   formData.append('mediaFile', this.newPost.mediaFile);
-    // } else if (this.newPost.media.trim()) {
-    //   formData.append('mediaUrl', this.newPost.media.trim());
-    // }
-    // 
-    // this.http.post<Post>('http://localhost:8080/api/posts', formData)
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe({
-    //     next: (newPost) => {
-    //       this.posts.unshift(newPost);
-    //       this.resetPostForm();
-    //       this.cdr.detectChanges();
-    //     },
-    //     error: (error) => {
-    //       console.error('Failed to create post:', error);
-    //     }
-    //   });
+    
+    this.auth.createPost(postData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newPost) => {
+          console.log('Post created successfully:', newPost);
+          this.posts = [newPost,...this.posts];
+          this.resetPostForm();
+          this.cdr.detectChanges();
+        
+        },
+        error: (error) => {
+          console.error('Failed to create post:', error);
+          if (error.status === 401 || error.status === 403) {
+            this.handleAuthError(error);
+          }
+        }
+      });
   }
 
-  /**
-   * Reset the post creation form
-   */
+ 
   private resetPostForm(): void {
-    this.newPost = { 
-      description: '', 
-      media: '',
+    this.newPost = {
+      description: '',
       mediaFile: undefined
     };
     this.selectedFileName = '';
-    this.showMediaUpload = false;
+    
+    // Clear the file input
+    const fileInput = document.getElementById('file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+     const Input = document.getElementById('input') as HTMLInputElement;
+    if (Input) {
+      Input.value = '';
+    }
   }
 
-  /**
-   * Follow a user
-   */
+  
+
   follow(user: User): void {
     if (!user.id) {
       console.error('Cannot follow user without ID');
@@ -325,27 +325,10 @@ export class Home implements OnInit, OnDestroy {
     }
 
     console.log('Following user:', user.username);
-
-    // TODO: Implement API call
-    // this.http.post(`http://localhost:8080/api/users/${user.id}/follow`, {})
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe({
-    //     next: () => {
-    //       console.log(`Successfully followed ${user.username}`);
-    //       // Update UI state or reload data as needed
-    //     },
-    //     error: (error) => {
-    //       console.error('Failed to follow user:', error);
-    //     }
-    //   });
   }
 
-  /**
-   * Navigate to user profile
-   */
   goToProfile(username: string): void {
     console.log('Navigating to profile:', username);
-    // this.router.navigate(['/profile', username]);
   }
 
   /**

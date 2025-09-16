@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
+export interface CreatePostRequest {
+  description: string;
+  mediaFile?: File;
+  mediaUrl?: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +14,8 @@ import { Observable } from 'rxjs';
 export class Auth {
   private apiUrl = 'http://localhost:8080/api';
 
-  constructor(private http: HttpClient) {}
+
+  constructor(private http: HttpClient) { }
 
   register(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, user);
@@ -24,35 +31,46 @@ export class Auth {
   getCurrentUser(): Observable<any> {
     // Debug: Check if token exists
     const token = localStorage.getItem('token');
-    console.log('🔍 Auth Service - Token exists:', !!token);
-    
     if (!token) {
       console.log('❌ No token found in getCurrentUser()');
     }
-
-    // The interceptor should add the Authorization header automatically
-    console.log('🚀 Making request to /getMydata');
-    return this.http.get(`${this.apiUrl}/getMydata`);
-  }
-
-  // Alternative method with manual header (for testing)
-  getCurrentUserManual(): Observable<any> {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      throw new Error('No token found');
-    }
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    });
-
-    console.log('🚀 Making manual request with headers:', headers.keys());
-    
-    return this.http.get(`${this.apiUrl}/getMydata`, { headers });
+    return this.http.get(`${this.apiUrl}/profile`);
   }
   getToken(): string | null {
     return localStorage.getItem('token');
   }
+
+
+
+createPost(postData: CreatePostRequest): Observable<Post> {
+    const formData = new FormData();
+    formData.append('description', postData.description);
+    
+    if (postData.mediaFile) {
+      formData.append('mediaFile', postData.mediaFile);
+    }
+
+    return this.http.post<Post>(`${this.apiUrl}/posts`, formData);
+  }
+
+    
+ getAllPosts(): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.apiUrl}/posts`)
+  }
+
+}
+export interface Post {
+  id?: number;
+  description: string;
+  mediaUrl?: string;
+  user?: {
+    id: number;
+    username: string;
+    email?: string;
+    avatar?: string;
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
+  likesCount?: number;
+  commentsCount?: number;
 }

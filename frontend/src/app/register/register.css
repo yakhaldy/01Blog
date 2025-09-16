@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Abel|Abril+Fatface|Alegreya|Arima+Madurai|Dancing+Script|Dosis|Merriweather|Oleo+Script|Overlock|PT+Serif|Pacifico|Playball|Playfair+Display|Share|Unica+One|Vibur');
 
 .register-container {
-  background-image: linear-gradient(to top, #a8dfed 0%, #e8e9eb 100%);
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 25%, #1a202c 50%, #2d3748 75%, #1a1a1a 100%);
   background-attachment: fixed;
   background-repeat: no-repeat;
 

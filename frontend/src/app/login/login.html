@@ -1,5 +1,5 @@
 <div class="login-container">
-    <div class="creative-bg">
+  <div class="creative-bg">
     <div class="floating-circle circle-1"></div>
     <div class="floating-circle circle-2"></div>
     <div class="floating-circle circle-3"></div>
@@ -7,9 +7,10 @@
     <div class="floating-square"></div>
   </div>
 
+
   <div class="container">
 
-     <div class="left">
+    <div class="left">
       <div class="creative-overlay">
         <div class="artistic-content">
           <h1 class="welcome-text">Welcome to</h1>
@@ -26,7 +27,7 @@
     </div>
 
     <div class="right">
-      <h2 class="creative-title" >Sign in</h2>
+      <h2 class="creative-title">Sign in</h2>
       <p class="creative-subtitle">Welcome to 01 Blog</p>
 
       <form (ngSubmit)="login()">
@@ -37,21 +38,22 @@
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" [(ngModel)]="user.password" name="password" placeholder="Enter your password" required>
+          <input type="password" id="password" [(ngModel)]="user.password" name="password"
+            placeholder="Enter your password" required>
         </div>
 
-         <button class="btn creative-btn" type="submit">
+        <button class="btn creative-btn" type="submit">
           <span class="btn-content">Login</span>
           <div class="btn-ripple"></div>
         </button>
       </form>
-       <p *ngIf="errorMessage" class="error-message creative-message">
+      <p *ngIf="errorMessage" class="error-message creative-message">
         <span class="message-icon">⚠</span>
         {{ errorMessage }}
       </p>
-       <div class="signUp creative-link-section">
-        <p>Don't have an account?  
-          <a  (click)="goToRegister()" class="enhanced-link">
+      <div class="signUp creative-link-section">
+        <p>Don't have an account?
+          <a (click)="goToRegister()" class="enhanced-link">
             Register here
             <span class="link-hover-effect"></span>
           </a>

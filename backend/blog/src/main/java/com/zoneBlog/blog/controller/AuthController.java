@@ -1,33 +1,29 @@
 package com.zoneBlog.blog.controller;
 
 import com.zoneBlog.blog.dataTransferObj.LoginRequest;
+import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.dataTransferObj.RegisterRequest;
-import com.zoneBlog.blog.model.User;
-import com.zoneBlog.blog.repository.UserRepository;
-
-import java.util.HashMap;
+import com.zoneBlog.blog.model.Post;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import com.zoneBlog.blog.security.JwtUtil;
+
 import com.zoneBlog.blog.service.Login;
 import com.zoneBlog.blog.service.Register;
-import java.util.HashMap;
+import com.zoneBlog.blog.service.Profile;
+import com.zoneBlog.blog.service.Posts;
+import java.util.List;
+
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private Register r;
@@ -45,21 +41,39 @@ public class AuthController {
         return l.login(request);
     }
 
-    @GetMapping("/getMydata")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        String email = authentication.getName();
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    @Autowired
+    private Profile profile;
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("username", user.getUsername());
-        response.put("email", user.getEmail());
-        response.put("role", user.getRole());
-        response.put("bio", user.getBio());
-        response.put("avatar", user.getAvatar());
-        // return ResponseEntity.status(500).body(Map.of("error", "test error"));
-        return ResponseEntity.ok(response);
+    @GetMapping("/profile")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        return profile.getCurrentUser(authentication);
+
     }
 
+    @Autowired
+    private Posts Posts;
+
+  @PostMapping(value = "/posts", consumes = "multipart/form-data")
+    public ResponseEntity<?> createPost(
+            Authentication authentication,
+            @RequestPart("description") String description,
+            @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
+        try {
+            PostRequest request = new PostRequest();
+            request.setDescription(description);
+            Post post = Posts.createPost(authentication, request, mediaFile);
+            return ResponseEntity.ok(post);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to create post: " + e.getMessage()));
+        }
+    }
+    @GetMapping("/posts")
+    public ResponseEntity<?> getAllPosts() {
+        try {
+            List<Post> posts = Posts.getAllPosts();
+            return ResponseEntity.ok(posts);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
