@@ -24,8 +24,6 @@ import java.util.UUID;
 import java.io.IOException;
 import java.util.List;
 
-
-
 @Service
 public class Posts {
     @Autowired
@@ -34,15 +32,14 @@ public class Posts {
     @Autowired
     private PostRepository postRepository;
 
-
     @Value("${file.upload.dir:uploads}")
     private String uploadDir;
 
     @Value("${file.upload.max-size:10485760}") // 10MB
     private long maxFileSize;
 
-    private final String[] allowedImageTypes = {"image/jpeg", "image/jpg", "image/png", "image/gif"};
-    private final String[] allowedVideoTypes = {"video/mp4", "video/webm", "video/avi"};
+    private final String[] allowedImageTypes = { "image/jpeg", "image/jpg", "image/png", "image/gif" };
+    private final String[] allowedVideoTypes = { "video/mp4", "video/webm", "video/avi" };
 
     private User getCurrentUser(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
@@ -109,26 +106,59 @@ public class Posts {
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(file.getInputStream(), filePath);
 
-            return "/uploads/" + fileName;
+            return "http://localhost:8080/uploads/" + fileName;
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file: " + e.getMessage());
         }
     }
 
-       private boolean isAllowedFileType(String contentType) {
-        if (contentType == null) return false;
-        
+    private boolean isAllowedFileType(String contentType) {
+        if (contentType == null)
+            return false;
+
         for (String type : allowedImageTypes) {
-            if (contentType.equals(type)) return true;
+            if (contentType.equals(type))
+                return true;
         }
         for (String type : allowedVideoTypes) {
-            if (contentType.equals(type)) return true;
+            if (contentType.equals(type))
+                return true;
         }
         return false;
     }
 
-
-      public  List<Post> getAllPosts() {
+    public List<Post> getAllPosts() {
         return postRepository.findAllByOrderByCreatedAtDesc();
     }
+
+    public void deletePost(Long id, Authentication authentication) {
+        User user = getCurrentUser(authentication);
+        Post post = getPostById(id);
+
+        if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals("ADMIN")) {
+            throw new RuntimeException("You can only delete your own posts");
+        }
+
+        deleteOldMediaFile(post.getMediaUrl());
+
+        postRepository.delete(post);
+    }
+
+    public Post getPostById(Long id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+    }
+
+    private void deleteOldMediaFile(String mediaUrl) {
+        if (mediaUrl != null && mediaUrl.startsWith("/uploads/")) {
+            try {
+                String fileName = mediaUrl.substring("/uploads/".length());
+                Path filePath = Paths.get(uploadDir, fileName);
+                Files.deleteIfExists(filePath);
+            } catch (IOException e) {
+                System.err.println("Failed to delete old media file: " + e.getMessage());
+            }
+        }
+    }
+
 }

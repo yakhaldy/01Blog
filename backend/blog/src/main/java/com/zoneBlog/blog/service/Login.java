@@ -31,13 +31,12 @@ public class Login {
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password));
-            SecurityContextHolder.getContext().setAuthentication(auth); ///???????????? wa9la dyrha fi blasa akhara 
+            // SecurityContextHolder.getContext().setAuthentication(auth); 
             String token = jwtUtil.generateToken(email);
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Login successful!");
             response.put("token", token);
-            response.put("user", auth.getName());
 
             return ResponseEntity.ok(response);
 
@@ -48,3 +47,4 @@ public class Login {
         }
     }
 }
+              

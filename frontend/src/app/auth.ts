@@ -29,11 +29,6 @@ export class Auth {
   }
 
   getCurrentUser(): Observable<any> {
-    // Debug: Check if token exists
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('❌ No token found in getCurrentUser()');
-    }
     return this.http.get(`${this.apiUrl}/profile`);
   }
   getToken(): string | null {
@@ -57,10 +52,13 @@ createPost(postData: CreatePostRequest): Observable<Post> {
  getAllPosts(): Observable<Post[]> {
     return this.http.get<Post[]>(`${this.apiUrl}/posts`)
   }
+  deletePost(id : number): Observable<any>  {
+    return this.http.delete(`${this.apiUrl}/posts/${id}`)
+  }
 
 }
 export interface Post {
-  id?: number;
+  id: number;
   description: string;
   mediaUrl?: string;
   user?: {

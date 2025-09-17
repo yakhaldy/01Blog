@@ -1,0 +1,435 @@
+/* ===============================
+   Update Post Dialog Styles - Twitter/X Theme
+   =============================== */
+
+/* Dialog Container */
+.mat-mdc-dialog-container {
+    background: rgba(0, 0, 0, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(47, 51, 54, 0.8);
+    border-radius: 16px !important;
+    color: #ffffff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    max-width: 600px !important;
+    width: 90vw !important;
+}
+
+/* Dialog Title */
+.mat-mdc-dialog-title {
+    color: #ffffff !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    padding: 20px 24px 16px 24px !important;
+    border-bottom: 1px solid rgba(47, 51, 54, 0.8);
+}
+
+/* Dialog Content */
+.mat-mdc-dialog-content.dialog-content {
+    padding: 20px 24px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Post Textarea Field */
+.dialog-content .post-textarea {
+    width: 100%;
+}
+
+.dialog-content .post-textarea .mat-mdc-text-field-wrapper {
+    background: rgba(47, 51, 54, 0.3) !important;
+    border-radius: 8px;
+}
+
+.dialog-content .post-textarea textarea {
+    color: #ffffff !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
+    padding: 12px !important;
+    border: none;
+    resize: none;
+    background: transparent;
+}
+
+.dialog-content .post-textarea textarea::placeholder {
+    color: #8b98a5 !important;
+}
+
+/* Error State for Textarea */
+.dialog-content .post-textarea textarea.error {
+    border-color: #f91880 !important;
+    background: rgba(249, 24, 128, 0.05) !important;
+}
+
+/* Hints */
+.dialog-content .mat-mdc-form-field-hint {
+    color: #8b98a5 !important;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.dialog-content .mat-mdc-form-field-hint.error-hint {
+    color: #f91880 !important;
+    font-weight: 500;
+}
+
+/* Current Media Section */
+.current-media {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(47, 51, 54, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(47, 51, 54, 0.4);
+}
+
+.media-label {
+    color: #8b98a5;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.current-image-container {
+    position: relative;
+    display: inline-block;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.current-image {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+}
+
+.current-image:hover {
+    transform: scale(1.02);
+}
+
+.remove-current-btn {
+    position: absolute !important;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: #f91880 !important;
+    width: 32px !important;
+    height: 32px !important;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+}
+
+.remove-current-btn:hover {
+    background: rgba(249, 24, 128, 0.2) !important;
+    transform: scale(1.1);
+}
+
+.remove-current-btn .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* File Upload Section */
+.file-upload-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(47, 51, 54, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(47, 51, 54, 0.3);
+    transition: all 0.2s ease;
+}
+
+.file-upload-section:hover {
+    background: rgba(47, 51, 54, 0.2);
+    border-color: rgba(29, 155, 240, 0.5);
+}
+
+.file-upload-label {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-upload-label:hover {
+    transform: scale(1.1);
+}
+
+.iconImageInput {
+    width: 32px;
+    height: 32px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.file-upload-label:hover .iconImageInput {
+    opacity: 1;
+}
+
+/* File Preview */
+.file-preview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(29, 155, 240, 0.1);
+    border: 1px solid rgba(29, 155, 240, 0.3);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.file-preview:hover {
+    background: rgba(29, 155, 240, 0.15);
+    border-color: rgba(29, 155, 240, 0.5);
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1d9bf0;
+    flex: 1;
+}
+
+.file-info .mat-icon {
+    color: #1d9bf0;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.file-name {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+.remove-file-btn {
+    color: #8b98a5 !important;
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.remove-file-btn:hover {
+    color: #f91880 !important;
+    background: rgba(249, 24, 128, 0.1) !important;
+    transform: scale(1.1);
+}
+
+.remove-file-btn .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Validation Messages */
+.validation-message {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+}
+
+.validation-message.error {
+    color: #f91880;
+    background: rgba(249, 24, 128, 0.1);
+    border: 1px solid rgba(249, 24, 128, 0.3);
+}
+
+.validation-message.error::before {
+    content: "⚠️";
+    font-size: 16px;
+}
+
+/* Dialog Actions */
+.mat-mdc-dialog-actions {
+    padding: 16px 24px 20px 24px !important;
+    border-top: 1px solid rgba(47, 51, 54, 0.8);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Action Buttons */
+.mat-mdc-dialog-actions .mat-mdc-button {
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    padding: 0 20px !important;
+    height: 36px !important;
+    min-width: 80px !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Cancel Button */
+.mat-mdc-dialog-actions .mat-mdc-button:not(.mat-mdc-raised-button) {
+    color: #8b98a5 !important;
+    border: 1px solid rgba(139, 152, 165, 0.3) !important;
+    background: transparent !important;
+}
+
+.mat-mdc-dialog-actions .mat-mdc-button:not(.mat-mdc-raised-button):hover {
+    color: #ffffff !important;
+    border-color: rgba(139, 152, 165, 0.6) !important;
+    background: rgba(139, 152, 165, 0.1) !important;
+}
+
+/* Update Button */
+.mat-mdc-dialog-actions .mat-mdc-raised-button.mat-primary {
+    background: #1d9bf0 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.mat-mdc-dialog-actions .mat-mdc-raised-button.mat-primary:hover:not([disabled]) {
+    background: #1a8cd8 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3) !important;
+}
+
+.mat-mdc-dialog-actions .mat-mdc-raised-button.mat-primary:disabled {
+    background: rgba(29, 155, 240, 0.3) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    cursor: not-allowed;
+}
+
+/* Dialog Backdrop */
+.cdk-overlay-backdrop.cdk-overlay-dark-backdrop {
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(4px);
+}
+
+/* Scrollbar for Dialog Content */
+.dialog-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dialog-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dialog-content::-webkit-scrollbar-thumb {
+    background: rgba(139, 152, 165, 0.3);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.dialog-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 152, 165, 0.5);
+}
+
+/* Material Form Field Overrides for Dialog */
+.dialog-content .mat-mdc-form-field {
+    --mdc-outlined-text-field-outline-color: rgba(47, 51, 54, 0.6);
+    --mdc-outlined-text-field-focus-outline-color: #1d9bf0;
+    --mdc-outlined-text-field-label-text-color: #8b98a5;
+    --mdc-outlined-text-field-input-text-color: #ffffff;
+    --mdc-outlined-text-field-container-color: transparent;
+    --mdc-outlined-text-field-hover-outline-color: rgba(47, 51, 54, 0.8);
+}
+
+.dialog-content .mat-mdc-form-field.mat-focused {
+    --mdc-outlined-text-field-outline-color: #1d9bf0;
+}
+
+/* Focus States */
+.file-upload-label:focus-visible,
+.remove-current-btn:focus-visible,
+.remove-file-btn:focus-visible {
+    outline: 2px solid #1d9bf0;
+    outline-offset: 2px;
+}
+
+/* Animation for Dialog Appearance */
+.mat-mdc-dialog-container {
+    animation: slideInDialog 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes slideInDialog {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .mat-mdc-dialog-container {
+        width: 95vw !important;
+        max-width: none !important;
+        margin: 16px !important;
+    }
+    
+    .mat-mdc-dialog-title {
+        padding: 16px 20px 12px 20px !important;
+        font-size: 18px !important;
+    }
+    
+    .mat-mdc-dialog-content.dialog-content {
+        padding: 16px 20px !important;
+        gap: 12px;
+    }
+    
+    .mat-mdc-dialog-actions {
+        padding: 12px 20px 16px 20px !important;
+        flex-direction: column;
+    }
+    
+    .mat-mdc-dialog-actions .mat-mdc-button {
+        width: 100%;
+        margin: 0 !important;
+    }
+    
+    .current-image {
+        max-width: 100%;
+        max-height: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mat-mdc-dialog-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .dialog-content {
+        max-height: calc(100vh - 120px);
+    }
+    
+    .file-preview {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .remove-file-btn {
+        align-self: flex-end;
+    }
+}

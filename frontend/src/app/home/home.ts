@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+
 
 // Angular Material Imports
 import { MatCardModule } from '@angular/material/card';
@@ -19,11 +18,17 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 // Custom Imports
 import { Navbar } from '../components/navbar/navbar';
 import { FilterPipe } from '../pipes/filter-pipe';
 import { Auth, CreatePostRequest, Post } from '../auth';
+
+import { MatDialog } from '@angular/material/dialog';
+import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
+
 
 // Interfaces
 interface User {
@@ -36,15 +41,11 @@ interface User {
   followersCount?: number;
 }
 
-// interface Post {
-//   id?: string;
-//   description: string;
-//   media?: string;
-//   author?: User;
-//   createdAt?: Date;
-//   likesCount?: number;
-//   commentsCount?: number;
-// }
+interface UpdatePostResult {
+  description: string;
+  mediaFile?: File;
+  removeCurrentImage?: boolean;
+}
 
 interface NewPost {
   description: string;
@@ -55,7 +56,7 @@ interface NewPost {
   selector: 'app-home',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -67,15 +68,16 @@ interface NewPost {
     MatProgressSpinnerModule,
     MatChipsModule,
     MatBadgeModule,
+    MatMenuModule,
     MatTooltipModule,
     MatToolbarModule,
-    Navbar, 
-    FilterPipe
+    Navbar,
+    FilterPipe,
   ],
   templateUrl: './home.html',
   styleUrls: ['./home.css']
 })
-export class Home implements OnInit, OnDestroy {
+export class Home implements OnInit {
   // Component State
   currentUser: User | null = null;
   posts: Post[] = [];
@@ -84,39 +86,36 @@ export class Home implements OnInit, OnDestroy {
   isLoading: boolean = true;
   showMediaUpload: boolean = false;
   selectedFileName: string = '';
-  
+
   // New Post Form
-  newPost: NewPost = { 
-    description: '', 
+  newPost: NewPost = {
+    description: '',
     mediaFile: undefined
   };
 
 
-  // RxJS Subject for cleanup
-  private destroy$ = new Subject<void>();
-
   constructor(
-    private router: Router, 
-    private http: HttpClient, 
+    private router: Router,
+    private http: HttpClient,
     private auth: Auth,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog ,////////////....
+
+  ) { }
 
   ngOnInit(): void {
     this.initializeComponent();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+
 
   /**
    * Initialize component by checking authentication and loading data
    */
   private initializeComponent(): void {
     const token = this.auth.getToken();
-    
+
     if (!token) {
       this.router.navigate(['/login']);
       return;
@@ -138,22 +137,20 @@ export class Home implements OnInit, OnDestroy {
    * Load current authenticated user data
    */
   loadCurrentUser(): void {
-    this.auth.getCurrentUser()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (user: User) => {
-          console.log('Current user loaded:', user);
-          this.currentUser = user;
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Failed to load current user:', error);
-          this.isLoading = false;
-          this.handleAuthError(error);
-          this.cdr.detectChanges();
-        }
-      });
+    this.auth.getCurrentUser().subscribe({
+      next: (user: User) => {
+        console.log('Current user loaded:', user);
+        this.currentUser = user;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Failed to load current user:', error);
+        this.isLoading = false;
+        this.handleAuthError(error);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   /**
@@ -170,7 +167,7 @@ export class Home implements OnInit, OnDestroy {
    * Load posts from the server
    */
   loadPosts(): void {
-        this.auth.getAllPosts()
+    this.auth.getAllPosts()
       .subscribe({
         next: (posts) => {
           this.posts = posts;
@@ -183,35 +180,110 @@ export class Home implements OnInit, OnDestroy {
         }
       });
   }
- isMyPost(post: Post): boolean {
+  isMyPost(post: Post): boolean {
     return post.user?.username === this.currentUser?.username;
   }
+ 
 
-   deletePost(post: Post): void {
+  deletePost(post: Post): void {
     console.log("deletePost :", post);
+    this.auth.deletePost(post.id).subscribe({
+      next: (res)=>{
+        console.log('delete Post:', res);
+       this.posts = this.posts.filter((p)=> post.id != p.id )
+        
+      },
+      error: (error)=>{
+          console.error('Failed to delete Post:', error);
+      }
+    })
+  }
+updatePost(post: Post): void {
+  console.log("Updating post:", post);
+  
+  const dialogRef = this.dialog.open(UpdatePostDialog, {
+    width: '700px',
+    maxWidth: '90vw',
     
-    if (!post.id || !confirm('Are you sure you want to delete this post?')) {
-      return;
-    }
+    data: { 
+      content: post.description, 
+      imgUrl: post.mediaUrl,
+      postId: post.id 
+    },
+    disableClose: false,
+    autoFocus: true
+  });
 
-    // this.auth.deletePost(post.id)
-      // .subscribe({
-      //   next: () => {
-      //     this.showSuccessMessage('Post deleted successfully!');
+  dialogRef.afterClosed().subscribe((result: UpdatePostResult) => {
+    if (result) {
+      console.log('Dialog closed with result:', result);
+      
+      
+      const updateData = new FormData();
+      updateData.append('description', result.description);
+      
+      if (result.mediaFile) {
+        updateData.append('mediaFile', result.mediaFile);
+      }
+      
+      if (result.removeCurrentImage) {
+        updateData.append('removeImage', 'true');
+      }
+
+      
+      // this.auth.updatePost(post.id!, updateData).subscribe({
+      //   next: (updatedPost) => {
+      //     console.log('Post updated successfully:', updatedPost);
+          
+      //     const index = this.posts.findIndex(p => p.id === post.id);
+      //     if (index !== -1) {
+      //       this.posts[index] = { ...this.posts[index], ...updatedPost };
+      //     }
+          
+      //     this.showSuccessMessage('Post updated successfully!');
+      //     this.cdr.detectChanges();
       //   },
       //   error: (error) => {
-      //     console.error('Failed to delete post:', error);
-      //     this.showErrorMessage(error.message || 'Failed to delete post');
+      //     console.error('Failed to update post:', error);
+      //     this.handleUpdatePostError(error);
       //   }
       // });
-  }
-isImage(url: string | null | undefined): boolean {
-  return !!url && /\.(jpg|jpeg|png|gif)$/i.test(url);
+    } else {
+      console.log('Dialog was cancelled');
+    }
+  });
 }
 
-isVideo(url: string | null | undefined): boolean {
-  return !!url && /\.(mp4|webm|avi)$/i.test(url);
+
+private handleUpdatePostError(error: any): void {
+  let errorMessage = 'Failed to update post';
+  
+  if (error.status === 401 || error.status === 403) {
+    errorMessage = 'You are not authorized to update this post';
+    this.handleAuthError(error);
+  } else if (error.status === 404) {
+    errorMessage = 'Post not found';
+  } else if (error.status === 400) {
+    errorMessage = error.error?.message || 'Invalid post data';
+  } else if (error.status === 413) {
+    errorMessage = 'File size too large';
+  } else if (error.status === 415) {
+    errorMessage = 'Unsupported file type';
+  }
+  console.log();
+  
+  
+  this.showErrorMessage(errorMessage);
 }
+
+
+  isImage(url: string | null | undefined): boolean {
+    return !!url && /\.(jpg|jpeg|png|gif)$/i.test(url);
+  }
+
+  isVideo(url: string | null | undefined): boolean {
+    return !!url && /\.(mp4|webm|avi)$/i.test(url);
+  }
 
 
   loadUsers(): void {
@@ -222,7 +294,7 @@ isVideo(url: string | null | undefined): boolean {
     }));
   }
 
- 
+
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
@@ -277,16 +349,14 @@ isVideo(url: string | null | undefined): boolean {
       hasFile: !!postData.mediaFile,
       fileName: this.newPost.mediaFile?.name
     });
-    
-    this.auth.createPost(postData)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
+
+    this.auth.createPost(postData).subscribe({
         next: (newPost) => {
           console.log('Post created successfully:', newPost);
-          this.posts = [newPost,...this.posts];
+          this.posts = [newPost, ...this.posts];
           this.resetPostForm();
           this.cdr.detectChanges();
-        
+
         },
         error: (error) => {
           console.error('Failed to create post:', error);
@@ -297,26 +367,26 @@ isVideo(url: string | null | undefined): boolean {
       });
   }
 
- 
+
   private resetPostForm(): void {
     this.newPost = {
       description: '',
       mediaFile: undefined
     };
     this.selectedFileName = '';
-    
+
     // Clear the file input
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
-     const Input = document.getElementById('input') as HTMLInputElement;
+    const Input = document.getElementById('input') as HTMLInputElement;
     if (Input) {
       Input.value = '';
     }
   }
 
-  
+
 
   follow(user: User): void {
     if (!user.id) {
@@ -329,6 +399,15 @@ isVideo(url: string | null | undefined): boolean {
 
   goToProfile(username: string): void {
     console.log('Navigating to profile:', username);
+  }
+
+  likePoste(id: number): void {
+    console.log('like post ', id);
+
+  }
+  commentPoste(id: number): void {
+    console.log('comment for post ', id);
+
   }
 
   /**
@@ -357,5 +436,21 @@ isVideo(url: string | null | undefined): boolean {
    */
   get isCharacterLimitExceeded(): boolean {
     return this.postCharacterCount > 280;
+  }
+   private showSuccessMessage(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: ['success-snackbar']
+    });
+  }
+
+  /**
+   * Show error message
+   */
+  private showErrorMessage(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
   }
 }

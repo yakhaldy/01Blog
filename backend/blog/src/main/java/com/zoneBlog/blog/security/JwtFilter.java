@@ -79,7 +79,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         System.out.println("❌ Token validation failed for user: " + username);
                     }
                 } else {
-                    System.out.println("⚠️ Username is null or authentication already exists");
+                    System.out.println("⚠️ Username is null or authentication already exists");     
                 }
             } catch (Exception e) {
                 System.err.println("❌ Error processing JWT token: " + e.getMessage());

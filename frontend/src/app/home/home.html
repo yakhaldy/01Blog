@@ -78,6 +78,8 @@
             </div>
 
 
+
+
             <button mat-raised-button color="primary" type="submit" [disabled]="!isPostFormValid"
               aria-label="Publish post">
               Post
@@ -112,9 +114,24 @@
 
               <!-- Post Actions Menu -->
               <div class="post-actions" *ngIf="isMyPost(post)">
-                <button mat-icon-button (click)="deletePost(post)" matTooltip="Delete post" class="delete-btn">
-                  <mat-icon>delete</mat-icon>
+                <!-- <button mat-icon-button (click)="showOption(post)" matTooltip="option" class="delete-btn">
+                  <mat-icon>more_vert</mat-icon>
+                </button> -->
+                <button mat-icon-button [matMenuTriggerFor]="optionsMenu" matTooltip="Options">
+                  <mat-icon>more_vert</mat-icon>
                 </button>
+
+                <!-- Menu that shows when the button is clicked -->
+                <mat-menu #optionsMenu="matMenu" class="optionsMenu">
+                  <button mat-menu-item (click)="updatePost(post)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Update</span>
+                  </button>
+                  <button mat-menu-item (click)="deletePost(post)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
               </div>
             </header>
 
@@ -150,10 +167,10 @@
               </div>
 
               <div class="post-interactions">
-                <button mat-icon-button matTooltip="Like" class="interaction-btn">
+                <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
                   <mat-icon>favorite_border</mat-icon>
                 </button>
-                <button mat-icon-button matTooltip="Comment" class="interaction-btn">
+                <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="commentPoste(post.id!)">
                   <mat-icon>comment</mat-icon>
                 </button>
               </div>

@@ -1,0 +1,86 @@
+<h2 mat-dialog-title>Update Post</h2>
+
+<mat-dialog-content class="dialog-content">
+    <mat-form-field class="post-textarea" appearance="outline">
+        <textarea 
+            matInput 
+            [(ngModel)]="postUpdate.description" 
+            name="postDescription" 
+            rows="4" 
+            placeholder="What's happening?" 
+            maxlength="280" 
+            aria-label="Post content"
+            [class.error]="isCharacterLimitExceeded">
+        </textarea>
+        <mat-hint [class.error-hint]="isCharacterLimitExceeded">
+            {{ postCharacterCount }}/280
+        </mat-hint>
+    </mat-form-field>
+
+    <!-- Current Image Display -->
+    <div *ngIf="hasCurrentImage() && !hasNewFile()" class="current-media">
+        <p class="media-label">Current image:</p>
+        <div class="current-image-container">
+            <img [src]="currentImageUrl" alt="Current post image" class="current-image">
+            <button type="button" 
+                    class="remove-current-btn" 
+                    (click)="removeCurrentImage()" 
+                    mat-icon-button
+                    matTooltip="Remove current image">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- File Upload Section -->
+    <div class="file-upload-section">
+        <label for="fileinput" class="file-upload-label" matTooltip="Upload new media">
+            <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
+        </label>
+        <input 
+            type="file" 
+            id="fileinput" 
+            (change)="onFileSelected($event)" 
+            accept="image/*,video/*"
+            style="display: none;">
+    </div>
+
+
+    <!-- New File Preview -->
+    <div *ngIf="hasNewFile()" class="file-preview">
+        <div class="file-info">
+            <mat-icon>attach_file</mat-icon>
+            <span class="file-name">{{ selectedFileName }}</span>
+        </div>
+        <button 
+            type="button" 
+            class="remove-file-btn" 
+            (click)="removeMediaFile()" 
+            mat-icon-button
+            matTooltip="Remove file">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <!-- Validation Messages -->
+    <div *ngIf="postUpdate.description.trim().length === 0" class="validation-message error">
+        Post content cannot be empty
+    </div>
+    <div *ngIf="isCharacterLimitExceeded" class="validation-message error">
+        Post exceeds maximum character limit
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" type="button">
+        Cancel
+    </button>
+    <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="save()"
+        [disabled]="!isPostValid"
+        type="button">
+        Update Post
+    </button>
+</mat-dialog-actions>

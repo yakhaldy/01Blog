@@ -76,4 +76,13 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
     }
+    @DeleteMapping("/posts/{id}")
+       public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
+        try {
+             Posts.deletePost(id,authentication);
+            return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
