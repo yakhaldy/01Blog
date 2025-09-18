@@ -1,62 +1,56 @@
 <h2 mat-dialog-title>Update Post</h2>
 
 <mat-dialog-content class="dialog-content">
-    <mat-form-field class="post-textarea" appearance="outline">
-        <textarea 
-            matInput 
-            [(ngModel)]="postUpdate.description" 
-            name="postDescription" 
-            rows="4" 
-            placeholder="What's happening?" 
-            maxlength="280" 
-            aria-label="Post content"
-            [class.error]="isCharacterLimitExceeded">
+    <div class="imput-continer">
+        <mat-form-field class="post-textarea" appearance="outline">
+            <textarea matInput [(ngModel)]="postUpdate.description" name="postDescription" rows="4"
+                placeholder="What's happening?" maxlength="280" aria-label="Post content"
+                [class.error]="isCharacterLimitExceeded">
         </textarea>
-        <mat-hint [class.error-hint]="isCharacterLimitExceeded">
-            {{ postCharacterCount }}/280
-        </mat-hint>
-    </mat-form-field>
+            <mat-hint [class.error-hint]="isCharacterLimitExceeded">
+                {{ postCharacterCount }}/280
+            </mat-hint>
+        </mat-form-field>
 
+        <!-- File Upload Section -->
+        <div class="file-upload-section">
+            <label for="fileinput" class="file-upload-label" matTooltip="Upload new media">
+                <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
+            </label>
+            <input type="file" id="fileinput" (change)="onFileSelected($event)" accept="image/*,video/*"
+                style="display: none;">
+        </div>
+    </div>
     <!-- Current Image Display -->
     <div *ngIf="hasCurrentImage() && !hasNewFile()" class="current-media">
         <p class="media-label">Current image:</p>
         <div class="current-image-container">
-            <img [src]="currentImageUrl" alt="Current post image" class="current-image">
-            <button type="button" 
-                    class="remove-current-btn" 
-                    (click)="removeCurrentImage()" 
-                    mat-icon-button
-                    matTooltip="Remove current image">
+            <!-- <img [src]="currentImageUrl" alt="Current post image" class="current-image"> -->
+              <!-- IMAGE -->
+                <img *ngIf="isImage(currentImageUrl)" [src]="currentImageUrl" class="current-image"
+                   class="post-image" loading="lazy">
+
+                <!-- VIDEO -->
+                <video *ngIf="isVideo(currentImageUrl)" [src]="currentImageUrl" controls class="post-video" class="current-image"
+                  preload="metadata">
+                  Your browser does not support the video tag.
+                </video>
+            <button type="button" class="remove-current-btn" (click)="removeCurrentImage()" mat-icon-button
+                matTooltip="Remove current image">
                 <mat-icon>delete</mat-icon>
             </button>
         </div>
     </div>
 
-    <!-- File Upload Section -->
-    <div class="file-upload-section">
-        <label for="fileinput" class="file-upload-label" matTooltip="Upload new media">
-            <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
-        </label>
-        <input 
-            type="file" 
-            id="fileinput" 
-            (change)="onFileSelected($event)" 
-            accept="image/*,video/*"
-            style="display: none;">
-    </div>
 
 
     <!-- New File Preview -->
-    <div *ngIf="hasNewFile()" class="file-preview">
+    <div *ngIf="hasNewFile() " class="file-preview">
         <div class="file-info">
             <mat-icon>attach_file</mat-icon>
             <span class="file-name">{{ selectedFileName }}</span>
         </div>
-        <button 
-            type="button" 
-            class="remove-file-btn" 
-            (click)="removeMediaFile()" 
-            mat-icon-button
+        <button type="button" class="remove-file-btn" (click)="removeMediaFile()" mat-icon-button
             matTooltip="Remove file">
             <mat-icon>close</mat-icon>
         </button>
@@ -71,16 +65,11 @@
     </div>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+<mat-dialog-actions align="end" class="footer">
     <button mat-button (click)="cancel()" type="button">
         Cancel
     </button>
-    <button 
-        mat-raised-button 
-        color="primary" 
-        (click)="save()"
-        [disabled]="!isPostValid"
-        type="button">
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="!isPostValid" type="button">
         Update Post
     </button>
 </mat-dialog-actions>

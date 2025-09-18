@@ -1,0 +1,43 @@
+<!-- error-500.component.html -->
+<div class="error-container">
+  <div class="error-content">
+  
+    
+    <div class="error-text">
+      <h1>500</h1>
+      <h2>Internal Server Error</h2>
+      <p>
+        We're experiencing some technical difficulties. 
+        Our team has been notified and is working to fix this issue.
+      </p>
+    </div>
+    
+    <div class="error-actions">
+      <button class="btn btn-primary" (click)="refreshPage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+          <path d="M21 3v5h-5"></path>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+          <path d="M3 21v-5h5"></path>
+        </svg>
+        Try Again
+      </button>
+      
+      <button class="btn btn-secondary" (click)="goHome()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9,22 9,12 15,12 15,22"></polyline>
+        </svg>
+        Go Home
+      </button>
+      
+      <button class="btn btn-outline" (click)="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 19-7-7 7-7"></path>
+          <path d="m19 12H5"></path>
+        </svg>
+        Go Back
+      </button>
+    </div>
+  </div>
+</div>

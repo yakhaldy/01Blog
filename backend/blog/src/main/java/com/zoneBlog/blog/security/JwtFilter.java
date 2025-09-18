@@ -10,17 +10,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
-    
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     // Define public endpoints that should skip JWT validation
     private final List<String> publicEndpoints = Arrays.asList(
         "/api/login",
@@ -34,8 +37,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         String requestPath = request.getRequestURI();
@@ -59,34 +62,44 @@ public class JwtFilter extends OncePerRequestFilter {
                 String username = jwtUtil.extractUsername(token);
                 System.out.println("👤 Extracted username: " + username);
 
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (username == null) {
+                    System.out.println("❌ Username could not be extracted from token");
+                    sendUnauthorizedResponse(response, "Invalid token: unable to extract username");
+                    return;
+                }
+
+                if (SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    
                     System.out.println("✅ Loaded user details for: " + userDetails.getUsername());
 
                     if (jwtUtil.validateToken(token, userDetails.getUsername())) {
                         System.out.println("✅ Token is valid for user: " + username);
-                        
-                        UsernamePasswordAuthenticationToken authToken = 
-                            new UsernamePasswordAuthenticationToken(
+
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
-                        authToken.setDetails(new org.springframework.security.web.authentication.WebAuthenticationDetailsSource()
-                                .buildDetails(request));
+                        authToken.setDetails(
+                                new org.springframework.security.web.authentication.WebAuthenticationDetailsSource()
+                                        .buildDetails(request));
 
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                         System.out.println("✅ Authentication set for user: " + username);
                     } else {
                         System.out.println("❌ Token validation failed for user: " + username);
+                        sendUnauthorizedResponse(response, "Token is invalid or expired");
+                        return;
                     }
-                } else {
-                    System.out.println("⚠️ Username is null or authentication already exists");     
                 }
             } catch (Exception e) {
                 System.err.println("❌ Error processing JWT token: " + e.getMessage());
                 e.printStackTrace();
+                sendUnauthorizedResponse(response, "Token processing error: " + e.getMessage());
+                return;
             }
         } else {
-            System.out.println("⚠️ No valid Authorization header found for protected endpoint");
+            System.out.println("❌ Missing or invalid Authorization header");
+            // sendUnauthorizedResponse(response, "Missing or invalid Authorization
+            // header");
+            // return;
         }
 
         filterChain.doFilter(request, response);
@@ -94,5 +107,22 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private boolean isPublicEndpoint(String requestPath) {
         return publicEndpoints.stream().anyMatch(requestPath::equals);
+    }
+
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        Map<String, Object> errorResponse = Map.of(
+                "error", "Unauthorized",
+                "message", message,
+                "status", 401);
+
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
+
+        System.out.println("❌ Sent 401 Unauthorized response: " + message);
     }
 }

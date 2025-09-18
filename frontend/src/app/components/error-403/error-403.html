@@ -1,0 +1,50 @@
+<!-- error-403.component.html -->
+<div class="error-container">
+  <div class="error-content">
+
+    
+    <div class="error-text">
+      <h1>403</h1>
+      <h2>Access Forbidden</h2>
+      <p>
+        You don't have permission to access this resource. 
+        This could be due to insufficient privileges or authentication issues.
+      </p>
+      <div class="error-details">
+        <ul>
+          <li>You may not have the required permissions</li>
+          <li>Your session might have expired</li>
+          <li>The resource may be restricted</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="error-actions">
+      <button class="btn btn-primary" (click)="goToLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+          <polyline points="10,17 15,12 10,7"></polyline>
+          <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+        Sign In
+      </button>
+      
+      <button class="btn btn-secondary" (click)="goHome()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9,22 9,12 15,12 15,22"></polyline>
+        </svg>
+        Go Home
+      </button>
+      
+      <button class="btn btn-outline" (click)="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 19-7-7 7-7"></path>
+          <path d="m19 12H5"></path>
+        </svg>
+        Go Back
+      </button>
+      
+    </div>
+  </div>
+</div>

@@ -1,32 +1,28 @@
-/* ===============================
-   Update Post Dialog Styles - Twitter/X Theme
-   =============================== */
 
-/* Dialog Container */
-.mat-mdc-dialog-container {
-    background: rgba(0, 0, 0, 0.95) !important;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(47, 51, 54, 0.8);
-    border-radius: 16px !important;
-    color: #ffffff;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-    max-width: 600px !important;
-    width: 90vw !important;
+
+
+.footer , .mat-mdc-dialog-title, .mat-mdc-dialog-content.dialog-content {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 25%, #1a202c 50%, #2d3748 75%, #1a1a1a 100%);
+    background-attachment: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
+.imput-continer{
+    display: flex;
 
+}
 /* Dialog Title */
 .mat-mdc-dialog-title {
-    color: #ffffff !important;
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    margin: 0 !important;
-    padding: 20px 24px 16px 24px !important;
+    color: #ffffff ;
+    font-size: 20px ;
+    font-weight: 700 ;
+    margin: 0 ;
+    padding: 20px 24px 16px 24px ;
     border-bottom: 1px solid rgba(47, 51, 54, 0.8);
 }
 
 /* Dialog Content */
 .mat-mdc-dialog-content.dialog-content {
-    padding: 20px 24px !important;
+    padding: 20px 24px ;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -39,40 +35,37 @@
     width: 100%;
 }
 
-.dialog-content .post-textarea .mat-mdc-text-field-wrapper {
-    background: rgba(47, 51, 54, 0.3) !important;
-    border-radius: 8px;
-}
+
 
 .dialog-content .post-textarea textarea {
-    color: #ffffff !important;
-    font-size: 16px !important;
-    line-height: 24px !important;
-    padding: 12px !important;
+    color: #ffffff ;
+    font-size: 16px ;
+    line-height: 24px ;
+    padding: 12px ;
     border: none;
     resize: none;
     background: transparent;
 }
 
 .dialog-content .post-textarea textarea::placeholder {
-    color: #8b98a5 !important;
+    color: #8b98a5 ;
 }
 
 /* Error State for Textarea */
 .dialog-content .post-textarea textarea.error {
-    border-color: #f91880 !important;
-    background: rgba(249, 24, 128, 0.05) !important;
+    border-color: #f91880 ;
+    background: rgba(249, 24, 128, 0.05) ;
 }
 
 /* Hints */
 .dialog-content .mat-mdc-form-field-hint {
-    color: #8b98a5 !important;
+    color: #8b98a5 ;
     font-size: 13px;
     margin-top: 4px;
 }
 
 .dialog-content .mat-mdc-form-field-hint.error-hint {
-    color: #f91880 !important;
+    color: #f91880 ;
     font-weight: 500;
 }
 
@@ -118,19 +111,19 @@
 }
 
 .remove-current-btn {
-    position: absolute !important;
+    position: absolute ;
     top: 8px;
     right: 8px;
-    background: rgba(0, 0, 0, 0.8) !important;
-    color: #f91880 !important;
-    width: 32px !important;
-    height: 32px !important;
+    background: rgba(0, 0, 0, 0.8) ;
+    color: #f91880 ;
+    width: 32px ;
+    height: 32px ;
     backdrop-filter: blur(4px);
     transition: all 0.2s ease;
 }
 
 .remove-current-btn:hover {
-    background: rgba(249, 24, 128, 0.2) !important;
+    background: rgba(249, 24, 128, 0.2) ;
     transform: scale(1.1);
 }
 
@@ -147,15 +140,11 @@
     gap: 12px;
     padding: 12px;
     background: rgba(47, 51, 54, 0.1);
-    border-radius: 8px;
-    border: 1px solid rgba(47, 51, 54, 0.3);
+    /* border-radius: 8px;
+    border: 1px solid rgba(47, 51, 54, 0.3); */
     transition: all 0.2s ease;
 }
 
-.file-upload-section:hover {
-    background: rgba(47, 51, 54, 0.2);
-    border-color: rgba(29, 155, 240, 0.5);
-}
 
 .file-upload-label {
     cursor: pointer;
@@ -220,16 +209,16 @@
 }
 
 .remove-file-btn {
-    color: #8b98a5 !important;
-    width: 32px !important;
-    height: 32px !important;
+    color: #8b98a5 ;
+    width: 32px ;
+    height: 32px ;
     flex-shrink: 0;
     transition: all 0.2s ease;
 }
 
 .remove-file-btn:hover {
-    color: #f91880 !important;
-    background: rgba(249, 24, 128, 0.1) !important;
+    color: #f91880 ;
+    background: rgba(249, 24, 128, 0.1) ;
     transform: scale(1.1);
 }
 
@@ -264,7 +253,7 @@
 
 /* Dialog Actions */
 .mat-mdc-dialog-actions {
-    padding: 16px 24px 20px 24px !important;
+    padding: 16px 24px 20px 24px ;
     border-top: 1px solid rgba(47, 51, 54, 0.8);
     display: flex;
     justify-content: flex-end;
@@ -273,50 +262,50 @@
 
 /* Action Buttons */
 .mat-mdc-dialog-actions .mat-mdc-button {
-    border-radius: 20px !important;
-    font-weight: 700 !important;
-    font-size: 15px !important;
-    padding: 0 20px !important;
-    height: 36px !important;
-    min-width: 80px !important;
-    transition: all 0.2s ease !important;
+    border-radius: 20px ;
+    font-weight: 700 ;
+    font-size: 15px ;
+    padding: 0 20px ;
+    height: 36px ;
+    min-width: 80px ;
+    transition: all 0.2s ease ;
 }
 
 /* Cancel Button */
 .mat-mdc-dialog-actions .mat-mdc-button:not(.mat-mdc-raised-button) {
-    color: #8b98a5 !important;
-    border: 1px solid rgba(139, 152, 165, 0.3) !important;
-    background: transparent !important;
+    color: #8b98a5 ;
+    border: 1px solid rgba(139, 152, 165, 0.3) ;
+    background: transparent ;
 }
 
 .mat-mdc-dialog-actions .mat-mdc-button:not(.mat-mdc-raised-button):hover {
-    color: #ffffff !important;
-    border-color: rgba(139, 152, 165, 0.6) !important;
-    background: rgba(139, 152, 165, 0.1) !important;
+    color: #ffffff ;
+    border-color: rgba(139, 152, 165, 0.6) ;
+    background: rgba(139, 152, 165, 0.1) ;
 }
 
 /* Update Button */
 .mat-mdc-dialog-actions .mat-mdc-raised-button.mat-primary {
-    background: #1d9bf0 !important;
-    color: #ffffff !important;
-    box-shadow: none !important;
+    background: #1d9bf0 ;
+    color: #ffffff ;
+    box-shadow: none ;
 }
 
 .mat-mdc-dialog-actions .mat-mdc-raised-button.mat-primary:hover:not([disabled]) {
-    background: #1a8cd8 !important;
+    background: #1a8cd8 ;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3) ;
 }
 
 .mat-mdc-dialog-actions .mat-mdc-raised-button.mat-primary:disabled {
-    background: rgba(29, 155, 240, 0.3) !important;
-    color: rgba(255, 255, 255, 0.5) !important;
+    background: rgba(29, 155, 240, 0.3) ;
+    color: rgba(255, 255, 255, 0.5) ;
     cursor: not-allowed;
 }
 
 /* Dialog Backdrop */
 .cdk-overlay-backdrop.cdk-overlay-dark-backdrop {
-    background: rgba(0, 0, 0, 0.8) !important;
+    background: rgba(0, 0, 0, 0.8) ;
     backdrop-filter: blur(4px);
 }
 
@@ -380,29 +369,29 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .mat-mdc-dialog-container {
-        width: 95vw !important;
-        max-width: none !important;
-        margin: 16px !important;
+        width: 95vw ;
+        max-width: none ;
+        margin: 16px ;
     }
     
     .mat-mdc-dialog-title {
-        padding: 16px 20px 12px 20px !important;
-        font-size: 18px !important;
+        padding: 16px 20px 12px 20px ;
+        font-size: 18px ;
     }
     
     .mat-mdc-dialog-content.dialog-content {
-        padding: 16px 20px !important;
+        padding: 16px 20px ;
         gap: 12px;
     }
     
     .mat-mdc-dialog-actions {
-        padding: 12px 20px 16px 20px !important;
+        padding: 12px 20px 16px 20px ;
         flex-direction: column;
     }
     
     .mat-mdc-dialog-actions .mat-mdc-button {
         width: 100%;
-        margin: 0 !important;
+        margin: 0 ;
     }
     
     .current-image {
@@ -413,10 +402,10 @@
 
 @media (max-width: 480px) {
     .mat-mdc-dialog-container {
-        width: 100vw !important;
-        height: 100vh !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
+        width: 100vw ;
+        height: 100vh ;
+        border-radius: 0 ;
+        margin: 0 ;
     }
     
     .dialog-content {

@@ -4,12 +4,13 @@ import { Register } from './register/register';
 import { Home } from './home/home';
 import {Profile} from './profile/profile';
 import { Notifications} from './notifications/notifications'
-
+import { Error404 } from './components/error-404/error-404'
 export const routes: Routes = [
   { path: '', component: Home},
   { path: 'login', component: Login },
   { path: 'register', component: Register },
   {path: 'profile', component: Profile},
-  {path: 'notifications', component: Notifications}
+  {path: 'notifications', component: Notifications},
 
+  { path: '**', component: Error404 }
 ];

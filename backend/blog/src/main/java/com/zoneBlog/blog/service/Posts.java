@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 
@@ -107,6 +108,11 @@ public class Posts {
             Files.copy(file.getInputStream(), filePath);
 
             return "http://localhost:8080/uploads/" + fileName;
+            // String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+            // .path("/uploads/")
+            // .path(fileName)
+            // .toUriString();
+            // return fileDownloadUri;
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file: " + e.getMessage());
         }
@@ -150,15 +156,51 @@ public class Posts {
     }
 
     private void deleteOldMediaFile(String mediaUrl) {
-        if (mediaUrl != null && mediaUrl.startsWith("/uploads/")) {
+        // System.err.println("=========="+mediaUrl);
+        if (mediaUrl != null && mediaUrl.startsWith("http://localhost:8080/uploads/")) {
             try {
-                String fileName = mediaUrl.substring("/uploads/".length());
+                String fileName = mediaUrl.substring("http://localhost:8080/uploads/".length());
                 Path filePath = Paths.get(uploadDir, fileName);
                 Files.deleteIfExists(filePath);
             } catch (IOException e) {
                 System.err.println("Failed to delete old media file: " + e.getMessage());
             }
         }
+    }
+
+    public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request, MultipartFile mediaFile,String removeImage){
+         User user = getCurrentUser(authentication);
+          if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        Post post = getPostById(id);
+
+        if (!post.getUser().getId().equals(user.getId()) ) {
+            throw new RuntimeException("You can only update your own posts");
+        }
+        String description = request.getDescription();
+          if (description == null || description.trim().isEmpty()) {
+            throw new RuntimeException("Post description cannot be empty");
+        }
+
+        if (description.length() > 280) {
+            throw new RuntimeException("Post description cannot exceed 280 characters");
+        }
+
+        post.setDescription(description);
+
+        if (mediaFile != null && !mediaFile.isEmpty()) {
+            deleteOldMediaFile(post.getMediaUrl());
+            String mediaPath = handleFileUpload(mediaFile);
+            post.setMediaUrl(mediaPath);
+        }
+        if ( removeImage != null && removeImage.equals("true")){
+            deleteOldMediaFile(post.getMediaUrl());
+            post.setMediaUrl(null);
+
+        }
+        postRepository.save(post);
+        return post;
     }
 
 }

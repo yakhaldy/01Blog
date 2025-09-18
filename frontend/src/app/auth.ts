@@ -55,6 +55,9 @@ createPost(postData: CreatePostRequest): Observable<Post> {
   deletePost(id : number): Observable<any>  {
     return this.http.delete(`${this.apiUrl}/posts/${id}`)
   }
+  updatePost(id: number, data: FormData):Observable<Post>{
+    return this.http.patch<Post>(`${this.apiUrl}/posts/${id}`,data)
+  }
 
 }
 export interface Post {

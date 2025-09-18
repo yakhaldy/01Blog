@@ -53,7 +53,7 @@ public class AuthController {
     @Autowired
     private Posts Posts;
 
-  @PostMapping(value = "/posts", consumes = "multipart/form-data")
+    @PostMapping(value = "/posts", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             Authentication authentication,
             @RequestPart("description") String description,
@@ -67,6 +67,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to create post: " + e.getMessage()));
         }
     }
+
     @GetMapping("/posts")
     public ResponseEntity<?> getAllPosts() {
         try {
@@ -76,11 +77,27 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
     }
+
     @DeleteMapping("/posts/{id}")
-       public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
         try {
-             Posts.deletePost(id,authentication);
+            Posts.deletePost(id, authentication);
             return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PatchMapping("/posts/{id}")
+    public ResponseEntity<?> updatePost(@PathVariable Long id, Authentication authentication,
+            @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile,
+            @RequestPart("description") String description,
+            @RequestPart(value = "removeImage", required = false) String removeImage) {
+        try {
+            PostRequest request = new PostRequest();
+            request.setDescription(description);
+            Post post =  Posts.updatePost(id, authentication,request, mediaFile, removeImage);
+            return ResponseEntity.ok(post);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

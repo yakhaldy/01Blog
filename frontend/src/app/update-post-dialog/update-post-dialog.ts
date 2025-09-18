@@ -49,6 +49,8 @@ export class UpdatePostDialog {
 
     this.postUpdate.description = this.data.content || '';
     this.currentImageUrl = this.data.imgUrl || '';
+    console.log("-----",this.currentImageUrl);
+    
   }
 
   save() {
@@ -83,7 +85,7 @@ export class UpdatePostDialog {
   }
 
   private shouldRemoveCurrentImage(): boolean {
-    return !!this.currentImageUrl && !this.selectedFileName;
+    return this.currentImageUrl == '' && this.selectedFileName == '';
   }
 
   onFileSelected(event: any): void {
@@ -96,7 +98,7 @@ export class UpdatePostDialog {
         return;
       }
 
-      // Validate file size (10MB limit)
+ 
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (file.size > maxSize) {
         alert('File size exceeds 10MB limit.');
@@ -132,4 +134,11 @@ export class UpdatePostDialog {
   hasNewFile(): boolean {
     return !!this.selectedFileName && this.selectedFileName.length > 0;
   }
+   isImage(url: string | null | undefined): boolean {
+  return !!url && /\.(jpg|jpeg|png|gif)$/i.test(url);
+}
+
+ isVideo(url: string | null | undefined): boolean {
+  return !!url && /\.(mp4|webm|avi)$/i.test(url);
+}
 }
