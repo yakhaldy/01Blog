@@ -18,11 +18,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
-    private final UserRepository userRepository;
     private final JwtFilter jwtFilter;
 
     public SecurityConfig(UserRepository userRepository, JwtFilter jwtFilter) {
-        this.userRepository = userRepository;
         this.jwtFilter = jwtFilter;
     }
 

@@ -41,8 +41,10 @@
 .navbar {
   background: #0d0d0d;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
   z-index: 1000;
   padding: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -85,7 +87,7 @@
   text-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
   animation: slideInUp 1s ease forwards 0.8s;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 1s ease;
 }
 
 .brand-name:hover {

@@ -34,6 +34,7 @@ import { isImage, isVideo } from './home.helpers';
 import { User, UpdatePostResult, NewPost } from './home.model';
 import { HomeService } from './home.service';
 import { Post } from '../auth';
+import { error, log } from 'node:console';
 
 @Component({
   selector: 'app-home',
@@ -79,7 +80,7 @@ export class Home implements OnInit {
     private homeService: HomeService,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.initializeComponent();
@@ -112,8 +113,15 @@ export class Home implements OnInit {
     });
   }
   private loadUsers(): void {
-  this.users = []; // or from service
-}
+   this.homeService.getAllUsers().subscribe({
+    next:(users) =>{
+      this.users = users;
+    },
+    error:(error)=>{
+        this.handleAuthError(error);
+    }
+   })
+  }
 
 
   private handleAuthError(error: any): void {
@@ -121,13 +129,15 @@ export class Home implements OnInit {
     //   localStorage.removeItem('token');
     //   this.router.navigate(['/login']);
     // }
+    console.log(error);
+    
   }
 
   private loadPosts(): void {
     this.homeService.getAllPosts().subscribe({
       next: (posts) => {
         this.posts = posts;
-        this.cdr.detectChanges();
+        this.cdr.detectChanges();        
       },
       error: (error) => {
         console.error('Failed to load posts:', error);
@@ -178,8 +188,8 @@ export class Home implements OnInit {
 
         this.homeService.updatePost(post.id!, updateData).subscribe({
           next: (updatedPost) => {
-            console.log("updatePost :",updatedPost);
-            
+            console.log("updatePost :", updatedPost);
+
             const index = this.posts.findIndex(p => p.id === post.id);
             if (index !== -1) {
               this.posts[index] = updatedPost;
@@ -255,9 +265,8 @@ export class Home implements OnInit {
       },
       error: (error) => {
         console.error('Failed to create post:', error);
-        if (error.status === 401 || error.status === 403) {
           this.handleAuthError(error);
-        }
+        
       }
     });
   }
@@ -272,8 +281,22 @@ export class Home implements OnInit {
   }
 
   likePoste(id: number): void {
-    console.log('Like post', id);
+    const post = this.posts.find(p => p.id === id);
+    if (post) {
+      post.isLiked = !post.isLiked;
+      this.homeService.likePost(id).subscribe({
+        next:(updatedPost) =>{
+            const index = this.posts.findIndex(p => p.id === post.id);
+           this.posts[index].likesCount = updatedPost.likesCount;
+        },
+        error: (error)=>{
+          this.handleAuthError(error);
+        }
+      })
+    }
   }
+
+
 
   commentPoste(id: number): void {
     console.log('Comment on post', id);
@@ -288,8 +311,8 @@ export class Home implements OnInit {
     console.log('Go to profile:', username);
   }
 
-  trackByUsername: TrackByFunction<User> = (index: number, user: User): string =>
-    user.username || index.toString();
+  // trackByUsername: TrackByFunction<User> = (index: number, user: User): string =>
+  //   user.username || index.toString();
 
   get isPostFormValid(): boolean {
     return this.newPost.description.trim().length > 0 && !this.isCharacterLimitExceeded;
@@ -300,7 +323,7 @@ export class Home implements OnInit {
   }
 
   get isCharacterLimitExceeded(): boolean {
-    return this.postCharacterCount > 280;
+    return this.postCharacterCount > 1000;
   }
 
   // Optionally use these from home.helpers.ts

@@ -7,31 +7,40 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.User;
+import com.zoneBlog.blog.model.Like;
 import com.zoneBlog.blog.repository.PostRepository;
 import com.zoneBlog.blog.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
+
+import com.zoneBlog.blog.repository.LikeRepository;
 
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.io.IOException;
 import java.util.List;
 
 @Service
+@Transactional
 public class Posts {
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private LikeRepository likeRepository;
 
     @Value("${file.upload.dir:uploads}")
     private String uploadDir;
@@ -62,9 +71,9 @@ public class Posts {
         if (description == null || description.trim().isEmpty()) {
             throw new RuntimeException("Post description cannot be empty");
         }
-
-        if (description.length() > 280) {
-            throw new RuntimeException("Post description cannot exceed 280 characters");
+        description = description.replaceAll("\r\n", "\n");
+        if (description.length() > 1000) {
+            throw new RuntimeException("Post description cannot exceed 1000 characters");
         }
 
         Post post = new Post();
@@ -133,8 +142,21 @@ public class Posts {
         return false;
     }
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAllByOrderByCreatedAtDesc();
+    public List<Post> getAllPosts(Authentication authentication) {
+        User user = getCurrentUser(authentication);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        posts = posts.stream().map(p -> {
+            if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId())) {
+                p.setIsLiked(true);
+            } else {
+                p.setIsLiked(false);
+            }
+            return p; 
+        }).collect(Collectors.toList());
+        return posts;
     }
 
     public void deletePost(Long id, Authentication authentication) {
@@ -168,23 +190,25 @@ public class Posts {
         }
     }
 
-    public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request, MultipartFile mediaFile,String removeImage){
-         User user = getCurrentUser(authentication);
-          if (user == null) {
+    public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request,
+            MultipartFile mediaFile, String removeImage) {
+        User user = getCurrentUser(authentication);
+        if (user == null) {
             throw new RuntimeException("User not found");
         }
         Post post = getPostById(id);
 
-        if (!post.getUser().getId().equals(user.getId()) ) {
+        if (!post.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("You can only update your own posts");
         }
         String description = request.getDescription();
-          if (description == null || description.trim().isEmpty()) {
+        if (description == null || description.trim().isEmpty()) {
             throw new RuntimeException("Post description cannot be empty");
         }
 
-        if (description.length() > 280) {
-            throw new RuntimeException("Post description cannot exceed 280 characters");
+        description = description.replaceAll("\r\n", "\n");
+        if (description.length() > 1000) {
+            throw new RuntimeException("Post description cannot exceed 1000 characters");
         }
 
         post.setDescription(description);
@@ -194,11 +218,36 @@ public class Posts {
             String mediaPath = handleFileUpload(mediaFile);
             post.setMediaUrl(mediaPath);
         }
-        if ( removeImage != null && removeImage.equals("true")){
+        if (removeImage != null && removeImage.equals("true")) {
             deleteOldMediaFile(post.getMediaUrl());
             post.setMediaUrl(null);
 
         }
+        postRepository.save(post);
+        return post;
+    }
+
+    public Post likePost(Long id, Authentication authentication) {
+        User user = getCurrentUser(authentication);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        Post post = getPostById(id);
+        if (post == null) {
+            throw new RuntimeException("Post not found");
+        }
+        if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId())) {
+            // System.out.println("--------------------------------\n"+ "remove like"
+            // +"\n---------------------------------");
+            likeRepository.deleteByUser_IdAndPost_Id(user.getId(), post.getId());
+        } else {
+            Like like = new Like();
+            like.setPost(post);
+            like.setUser(user);
+            likeRepository.save(like);
+        }
+        post.setLikesCount(likeRepository.countByPost_Id(post.getId()));
+
         postRepository.save(post);
         return post;
     }

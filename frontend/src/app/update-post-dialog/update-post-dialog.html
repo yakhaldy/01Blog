@@ -4,11 +4,11 @@
     <div class="imput-continer">
         <mat-form-field class="post-textarea" appearance="outline">
             <textarea matInput [(ngModel)]="postUpdate.description" name="postDescription" rows="4"
-                placeholder="What's happening?" maxlength="280" aria-label="Post content"
+                placeholder="What's happening?" maxlength="1000" aria-label="Post content"
                 [class.error]="isCharacterLimitExceeded">
         </textarea>
             <mat-hint [class.error-hint]="isCharacterLimitExceeded">
-                {{ postCharacterCount }}/280
+                {{ postCharacterCount }}/1000
             </mat-hint>
         </mat-form-field>
 

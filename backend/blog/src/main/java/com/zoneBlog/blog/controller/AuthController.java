@@ -4,6 +4,7 @@ import com.zoneBlog.blog.dataTransferObj.LoginRequest;
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.dataTransferObj.RegisterRequest;
 import com.zoneBlog.blog.model.Post;
+import com.zoneBlog.blog.model.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,8 @@ import com.zoneBlog.blog.service.Login;
 import com.zoneBlog.blog.service.Register;
 import com.zoneBlog.blog.service.Profile;
 import com.zoneBlog.blog.service.Posts;
+import com.zoneBlog.blog.service.Users;
+
 import java.util.List;
 
 import java.util.Map;
@@ -69,12 +72,12 @@ public class AuthController {
     }
 
     @GetMapping("/posts")
-    public ResponseEntity<?> getAllPosts() {
+    public ResponseEntity<?> getAllPosts(Authentication authentication) {
         try {
-            List<Post> posts = Posts.getAllPosts();
+            List<Post> posts = Posts.getAllPosts(authentication);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
         }
     }
 
@@ -84,7 +87,7 @@ public class AuthController {
             Posts.deletePost(id, authentication);
             return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to delete post: " + e.getMessage()));
         }
     }
 
@@ -96,10 +99,35 @@ public class AuthController {
         try {
             PostRequest request = new PostRequest();
             request.setDescription(description);
-            Post post =  Posts.updatePost(id, authentication,request, mediaFile, removeImage);
+            Post post = Posts.updatePost(id, authentication, request, mediaFile, removeImage);
             return ResponseEntity.ok(post);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to update post: " + e.getMessage()));
+
         }
     }
+
+    @PostMapping("/posts/like")
+    public ResponseEntity<?> likePost(@RequestBody PostRequest request, Authentication authentication) {
+        try {
+            Post post = Posts.likePost(request.getPostId(), authentication);
+            return ResponseEntity.ok(post);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to like post: " + e.getMessage()));
+        }
+    }
+
+    @Autowired
+    private Users user;
+
+    @GetMapping("users")
+    public ResponseEntity<?> getAllUsers(Authentication authentication) {
+        try {
+            List<User> users = user.getAllUsers(authentication);
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to like post: " + e.getMessage()));
+        }
+    }
+
 }

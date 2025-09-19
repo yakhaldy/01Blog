@@ -77,11 +77,11 @@ export class UpdatePostDialog {
 
   get isPostValid(): boolean {
     return this.postUpdate.description.trim().length > 0 && 
-           this.postUpdate.description.length <= 280;
+           this.postUpdate.description.length <= 1000;
   }
 
   get isCharacterLimitExceeded(): boolean {
-    return this.postUpdate.description.length > 280;
+    return this.postUpdate.description.length > 1000;
   }
 
   private shouldRemoveCurrentImage(): boolean {

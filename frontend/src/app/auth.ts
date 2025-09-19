@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { User } from '../app/home/home.model';
 
 export interface CreatePostRequest {
   description: string;
@@ -58,20 +59,27 @@ createPost(postData: CreatePostRequest): Observable<Post> {
   updatePost(id: number, data: FormData):Observable<Post>{
     return this.http.patch<Post>(`${this.apiUrl}/posts/${id}`,data)
   }
-
+  likePost(id: number):Observable<Post>{
+    return this.http.post<Post>(`${this.apiUrl}/posts/like`, {postId: id})
+  }
+  getAllUsers():Observable<User[]>{
+        return this.http.get<User[]>(`${this.apiUrl}/users`)
+ 
+  }
 }
 export interface Post {
   id: number;
   description: string;
   mediaUrl?: string;
-  user?: {
+  user: {
     id: number;
     username: string;
-    email?: string;
+    email: string;
     avatar?: string;
   };
-  createdAt?: Date;
-  updatedAt?: Date;
-  likesCount?: number;
-  commentsCount?: number;
+  isLiked: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  likesCount: number;
+  commentsCount: number;
 }

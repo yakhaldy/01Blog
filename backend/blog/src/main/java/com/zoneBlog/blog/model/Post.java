@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonFormat;
-
+import java.util.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,11 +18,11 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 280)
+    @Column(nullable = false, length = 1000)
     private String description;
 
     @Column(name = "media_url")
@@ -42,8 +42,12 @@ public class Post {
     @Column(name = "comments_count", columnDefinition = "bigint default 0")
     private Long commentsCount = 0L;
 
-    @Column(name = "is_deleted", columnDefinition = "boolean default false")
-    private Boolean isDeleted = false;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes;
+
+    private Boolean isLiked = false;
+
+
 
     @PrePersist
     protected void onCreate() {

@@ -32,4 +32,10 @@ export class HomeService {
   updatePost(postId: number, data: FormData): Observable<Post> {
     return this.auth.updatePost(postId, data);
   }
+  likePost(postId: number) : Observable<Post> {
+    return this.auth.likePost(postId);
+  }
+  getAllUsers(): Observable<User[]>{
+    return  this.auth.getAllUsers();
+  }
 }

@@ -56,9 +56,9 @@
           <div class="post-input-container">
             <mat-form-field class="post-textarea" appearance="outline">
               <textarea matInput [(ngModel)]="newPost.description" name="postDescription" rows="3" id="input"
-                placeholder="What's happening?" maxlength="280" aria-label="Post content" #postTextarea
+                placeholder="What's happening?" maxlength="1000" aria-label="Post content" #postTextarea
                 style="color: aliceblue;"></textarea>
-              <mat-hint>{{ postCharacterCount }}/280</mat-hint>
+              <mat-hint>{{ postCharacterCount }}/1000</mat-hint>
             </mat-form-field>
 
             <!-- Media Upload Section -->
@@ -117,7 +117,7 @@
                 <!-- <button mat-icon-button (click)="showOption(post)" matTooltip="option" class="delete-btn">
                   <mat-icon>more_vert</mat-icon>
                 </button> -->
-                <button mat-icon-button [matMenuTriggerFor]="optionsMenu" matTooltip="Options">
+                <button mat-icon-button [matMenuTriggerFor]="optionsMenu" class="Options" matTooltip="Options">
                   <mat-icon>more_vert</mat-icon>
                 </button>
 
@@ -168,8 +168,11 @@
 
               <div class="post-interactions">
                 <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
-                  <mat-icon>favorite_border</mat-icon>
+                  <mat-icon [ngClass]="{ 'liked': post.isLiked }">
+                    {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+                  </mat-icon>
                 </button>
+
                 <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="commentPoste(post.id!)">
                   <mat-icon>comment</mat-icon>
                 </button>
@@ -190,12 +193,12 @@
         <div class="search-container">
           <mat-form-field class="search-field" appearance="outline">
             <mat-icon matPrefix>search</mat-icon>
-            <input matInput [(ngModel)]="searchTerm" placeholder="Search users..." aria-label="Search users">
+            <input matInput [(ngModel)]="searchTerm" placeholder="Search users..." aria-label="Search users" style="color: aliceblue;">
           </mat-form-field>
         </div>
 
         <div class="users-list">
-          <div *ngFor="let user of users | filter:searchTerm; trackBy: trackByUsername" class="user-item" role="article"
+          <div *ngFor="let user of users | filter:searchTerm; " class="user-item" role="article"
             [attr.aria-label]="'User: ' + user.username">
             <div class="user-info" (click)="goToProfile(user)">
               <div class="user-avatar">
@@ -212,10 +215,10 @@
             </button>
           </div>
 
-          <button class="show-more-btn" type="button">
-            <span class="show-more-text">Show more</span>
-          </button>
         </div>
+        <button class="show-more-btn" type="button">
+          <span class="show-more-text">Show more</span>
+        </button>
       </section>
     </aside>
   </div>
