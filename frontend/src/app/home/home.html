@@ -90,11 +90,15 @@
 
       <!-- Posts Feed -->
       <section class="posts-container" role="region" aria-label="Posts feed">
+        <div *ngIf="isLoadingPost" class="loading-container">
+          <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
+          <p class="loading-text">Loading...</p>
+        </div>
         <!-- Posts will be dynamically added here -->
-        <div *ngIf="posts.length === 0" class="empty-feed">
+        <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
           <p class="empty-message">No posts yet. Be the first to share something!</p>
         </div>
-        <div class="posts-list" *ngIf="!isLoading && posts.length > 0">
+        <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
           <article *ngFor="let post of posts; " class="post-card" role="article"
             [attr.aria-label]="'Post by ' + post.user?.username">
 
@@ -196,7 +200,10 @@
             <input matInput [(ngModel)]="searchTerm" placeholder="Search users..." aria-label="Search users" style="color: aliceblue;">
           </mat-form-field>
         </div>
-
+         <div *ngIf="isLoadingUsers" class="loading-container">
+          <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
+          <p class="loading-text">Loading...</p>
+        </div>
         <div class="users-list">
           <div *ngFor="let user of users | filter:searchTerm; " class="user-item" role="article"
             [attr.aria-label]="'User: ' + user.username">
@@ -209,9 +216,13 @@
               </div>
             </div>
 
-            <button mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
+            <button *ngIf="!user.isfollowing" mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
               [attr.aria-label]="'Follow ' + user.username">
               Follow
+            </button>
+            <button *ngIf="user.isfollowing" mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
+              [attr.aria-label]="'Follow ' + user.username">
+              UnFollow
             </button>
           </div>
 

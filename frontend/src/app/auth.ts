@@ -66,6 +66,13 @@ createPost(postData: CreatePostRequest): Observable<Post> {
         return this.http.get<User[]>(`${this.apiUrl}/users`)
  
   }
+  follow(userId: string):Observable<any>{
+    return this.http.post<Post>(`${this.apiUrl}/users/follow`, {userId: userId})
+  }
+  getProfile(username: string): Observable<any> {
+  return this.http.get(`${this.apiUrl}/users/profile/${username}`);
+}
+
 }
 export interface Post {
   id: number;

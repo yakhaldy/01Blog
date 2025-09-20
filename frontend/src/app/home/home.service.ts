@@ -38,4 +38,7 @@ export class HomeService {
   getAllUsers(): Observable<User[]>{
     return  this.auth.getAllUsers();
   }
+  follow(userID: string): Observable<any>{
+    return this.auth.follow(userID);
+  }
 }

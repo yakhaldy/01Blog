@@ -29,6 +29,9 @@ public class Profile {
         response.put("role", user.getRole());
         response.put("bio", user.getBio());
         response.put("avatar", user.getAvatar());
+        response.put("followingCount", user.getFollowing());
+        response.put("followersCount", user.getFollowers());
+
         // return ResponseEntity.status(403).body(Map.of("error", "test error"));
         return ResponseEntity.ok(response);
     }

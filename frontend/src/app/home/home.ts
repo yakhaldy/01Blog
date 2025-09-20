@@ -1,10 +1,11 @@
 // home.component.ts
 
 import {
-  Component, OnInit, ChangeDetectorRef, TrackByFunction
+  Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { forkJoin, finalize } from 'rxjs';
 
 // Angular Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -20,8 +21,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 
+import { isValidMediaType, isValidMediaSize } from '../helper/postHleper';
 
 // App Modules
 import { CommonModule } from '@angular/common';
@@ -34,13 +35,13 @@ import { isImage, isVideo } from './home.helpers';
 import { User, UpdatePostResult, NewPost } from './home.model';
 import { HomeService } from './home.service';
 import { Post } from '../auth';
-import { error, log } from 'node:console';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -67,6 +68,8 @@ export class Home implements OnInit {
   users: User[] = [];
   searchTerm = '';
   isLoading = true;
+  isLoadingPost = true;
+  isLoadingUsers = true;
   showMediaUpload = false;
   selectedFileName = '';
 
@@ -93,6 +96,7 @@ export class Home implements OnInit {
       return;
     }
 
+    // Sequential loading approach
     this.loadCurrentUser();
     this.loadPosts();
     this.loadUsers();
@@ -101,28 +105,36 @@ export class Home implements OnInit {
   private loadCurrentUser(): void {
     this.homeService.getCurrentUser().subscribe({
       next: (user) => {
+        console.log(user);
+        
         this.currentUser = user;
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (error) => {
         this.isLoading = false;
         this.handleAuthError(error);
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       }
     });
   }
-  private loadUsers(): void {
-   this.homeService.getAllUsers().subscribe({
-    next:(users) =>{
-      this.users = users;
-    },
-    error:(error)=>{
-        this.handleAuthError(error);
-    }
-   })
-  }
 
+  private loadUsers(): void {
+    this.homeService.getAllUsers().subscribe({
+      next: (users) => {
+        this.users = users;
+        this.isLoadingUsers = false;
+        console.log("==> ",users);
+        this.cdr.markForCheck();
+        
+      },
+      error: (error) => {
+        this.handleAuthError(error);
+        this.isLoadingUsers = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
 
   private handleAuthError(error: any): void {
     // if (error.status === 401 || error.status === 403) {
@@ -130,17 +142,19 @@ export class Home implements OnInit {
     //   this.router.navigate(['/login']);
     // }
     console.log(error);
-    
   }
 
   private loadPosts(): void {
     this.homeService.getAllPosts().subscribe({
       next: (posts) => {
         this.posts = posts;
-        this.cdr.detectChanges();        
+        this.isLoadingPost = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to load posts:', error);
+        this.isLoadingPost = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -153,9 +167,11 @@ export class Home implements OnInit {
     this.homeService.deletePost(post.id).subscribe({
       next: () => {
         this.posts = this.posts.filter(p => post.id !== p.id);
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to delete Post:', error);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -194,9 +210,12 @@ export class Home implements OnInit {
             if (index !== -1) {
               this.posts[index] = updatedPost;
             }
-            this.cdr.detectChanges();
+            this.cdr.markForCheck();
           },
-          error: (error) => this.handleUpdatePostError(error)
+          error: (error) => {
+            this.handleUpdatePostError(error);
+            this.cdr.markForCheck();
+          }
         });
       }
     });
@@ -222,23 +241,18 @@ export class Home implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      const allowedTypes = [
-        'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-        'video/mp4', 'video/webm', 'video/avi'
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Invalid file type.');
+      if (!isValidMediaType(file)) {
+        alert('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).');
         return;
       }
-
-      const maxSize = 10 * 1024 * 1024;
-      if (file.size > maxSize) {
+      if (!isValidMediaSize(file)) {
         alert('File size exceeds 10MB limit.');
         return;
       }
 
       this.newPost.mediaFile = file;
       this.selectedFileName = file.name;
+      this.cdr.markForCheck();
     }
   }
 
@@ -247,6 +261,7 @@ export class Home implements OnInit {
     this.selectedFileName = '';
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
+    this.cdr.markForCheck();
   }
 
   createPost(): void {
@@ -261,12 +276,12 @@ export class Home implements OnInit {
       next: (newPost) => {
         this.posts = [newPost, ...this.posts];
         this.resetPostForm();
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to create post:', error);
-          this.handleAuthError(error);
-        
+        this.handleAuthError(error);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -283,20 +298,33 @@ export class Home implements OnInit {
   likePoste(id: number): void {
     const post = this.posts.find(p => p.id === id);
     if (post) {
+      // Optimistic update
+      const originalIsLiked = post.isLiked;
+      const originalLikesCount = post.likesCount;
+      
       post.isLiked = !post.isLiked;
+      post.likesCount += post.isLiked ? 1 : -1;
+      
+      this.cdr.markForCheck();
+
       this.homeService.likePost(id).subscribe({
-        next:(updatedPost) =>{
-            const index = this.posts.findIndex(p => p.id === post.id);
-           this.posts[index].likesCount = updatedPost.likesCount;
+        next: (updatedPost) => {
+          const index = this.posts.findIndex(p => p.id === post.id);
+          if (index !== -1) {
+            this.posts[index].likesCount = updatedPost.likesCount;
+          }
+          this.cdr.markForCheck();
         },
-        error: (error)=>{
+        error: (error) => {
+          // Revert optimistic update on error
+          post.isLiked = originalIsLiked;
+          post.likesCount = originalLikesCount;
           this.handleAuthError(error);
+          this.cdr.markForCheck();
         }
-      })
+      });
     }
   }
-
-
 
   commentPoste(id: number): void {
     console.log('Comment on post', id);
@@ -305,14 +333,25 @@ export class Home implements OnInit {
   follow(user: User): void {
     if (!user.id) return;
     console.log('Following user:', user.username);
+    this.homeService.follow(user.id).subscribe({
+      next: (res)=>{
+        console.log(res);
+         const index = this.users.findIndex(u => u.id === user.id);
+          if (index !== -1) {
+            this.users[index].isfollowing = !this.users[index].isfollowing;
+          }
+          this.cdr.markForCheck();
+      },
+      error: (error)=>{
+        this.handleAuthError(error);
+      }
+    });
+
   }
 
   goToProfile(username: string): void {
     console.log('Go to profile:', username);
   }
-
-  // trackByUsername: TrackByFunction<User> = (index: number, user: User): string =>
-  //   user.username || index.toString();
 
   get isPostFormValid(): boolean {
     return this.newPost.description.trim().length > 0 && !this.isCharacterLimitExceeded;

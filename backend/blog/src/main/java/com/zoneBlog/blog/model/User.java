@@ -27,5 +27,7 @@ public class User {
     private String bio;
     private String avatar;
 
-    
+    private Long Followers;
+    private Long Following;
+
 }

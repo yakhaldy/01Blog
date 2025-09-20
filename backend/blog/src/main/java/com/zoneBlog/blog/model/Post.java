@@ -42,8 +42,8 @@ public class Post {
     @Column(name = "comments_count", columnDefinition = "bigint default 0")
     private Long commentsCount = 0L;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Like> likes;
+    // @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    // private List<Like> likes;
 
     private Boolean isLiked = false;
 

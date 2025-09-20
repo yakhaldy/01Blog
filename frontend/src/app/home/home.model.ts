@@ -1,11 +1,12 @@
 export interface User {
-  id?: string;
+  id: string;
   username: string;
-  email?: string;
+  email: string;
   avatar?: string;
   bio?: string;
   followingCount?: number;
   followersCount?: number;
+  isfollowing?: Boolean;
 }
 
 export interface UpdatePostResult {

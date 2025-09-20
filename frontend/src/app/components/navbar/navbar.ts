@@ -11,14 +11,13 @@ import { CommonModule } from '@angular/common';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
-export class Navbar implements OnInit, OnDestroy {
+export class Navbar implements OnInit {
   notificationCount = 3;
   userName = 'User';
   isDropdownOpen = false;
   
   currentRoute: string = '';
   
-  private destroy$ = new Subject<void>();
 
   constructor(private router: Router, private auth: Auth) { }
 
@@ -27,17 +26,16 @@ export class Navbar implements OnInit, OnDestroy {
     
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd), // Only listen to NavigationEnd events
-      takeUntil(this.destroy$) // Automatically unsubscribe when component is destroyed
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
       console.log('Route changed to:', this.currentRoute);
     });
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+  // ngOnDestroy(): void {
+  //   this.destroy$.next();
+  //   this.destroy$.complete();
+  // }
 
   toggleDropdown(): void {
     this.isDropdownOpen = !this.isDropdownOpen;

@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
+import { isValidMediaType ,isValidMediaSize } from '../helper/postHleper'
 interface UpdatePostData {
   content: string;
   imgUrl?: string | null;
@@ -92,22 +92,17 @@ export class UpdatePostDialog {
     const file = event.target.files[0];
     if (file) {
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'video/mp4', 'video/webm', 'video/avi'];
-      if (!allowedTypes.includes(file.type)) {
+      if (!isValidMediaType(file)) {
         alert('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).');
         return;
       }
-
- 
-      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-      if (file.size > maxSize) {
+      if (!isValidMediaSize(file)) {
         alert('File size exceeds 10MB limit.');
         return;
       }
 
       this.postUpdate.mediaFile = file;
       this.selectedFileName = file.name;
-      console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
     }
   }
 

@@ -18,7 +18,11 @@ import com.zoneBlog.blog.service.Register;
 import com.zoneBlog.blog.service.Profile;
 import com.zoneBlog.blog.service.Posts;
 import com.zoneBlog.blog.service.Users;
+import com.zoneBlog.blog.service.Helper;
+import com.zoneBlog.blog.repository.FollowRepository;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import java.util.Map;
@@ -27,7 +31,10 @@ import java.util.Map;
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
-
+    @Autowired
+    private Helper helper;
+    @Autowired
+    private FollowRepository followRepository;
     @Autowired
     private Register r;
 
@@ -124,9 +131,34 @@ public class AuthController {
     public ResponseEntity<?> getAllUsers(Authentication authentication) {
         try {
             List<User> users = user.getAllUsers(authentication);
-            return ResponseEntity.ok(users);
+            List<Map<String, Object>> response = new ArrayList<>(); 
+            User currentUser = helper.getCurrentUser(authentication); 
+
+            for (User user : users) {
+                Map<String, Object> userResponse = new HashMap<>(); 
+                userResponse.put("id", user.getId());
+                userResponse.put("username", user.getUsername());
+                userResponse.put("email", user.getEmail());
+                boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(currentUser.getId(),
+                        user.getId());
+                userResponse.put("isfollowing", isFollowing);
+                response.add(userResponse); 
+            }
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to like post: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get users: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("users/follow")
+    public ResponseEntity<?> follow(Authentication authentication, @RequestBody Map<String, Long> payload) {
+        try {
+            Long userId = payload.get("userId");
+            user.follow(authentication, userId);
+            return ResponseEntity.ok(Map.of("message", "follow user successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to follow user: " + e.getMessage()));
         }
     }
 

@@ -5,8 +5,8 @@ import {
   Directionality
 } from "./chunk-DON4SEJH.js";
 import "./chunk-EOAD7UTM.js";
-import "./chunk-4YCCEXQQ.js";
 import "./chunk-J46EEYGT.js";
+import "./chunk-4YCCEXQQ.js";
 import "./chunk-U7EDC2PH.js";
 export {
   BidiModule,
