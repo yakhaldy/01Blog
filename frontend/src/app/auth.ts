@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { User } from '../app/home/home.model';
-
+import { User, Post } from '../app/home/home.model';
 export interface CreatePostRequest {
   description: string;
   mediaFile?: File;
@@ -32,9 +31,13 @@ export class Auth {
   getCurrentUser(): Observable<any> {
     return this.http.get(`${this.apiUrl}/profile`);
   }
-  getToken(): string | null {
-    return localStorage.getItem('token');
+  getInfoUser(username: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/profile/${username}`);
   }
+  
+  // getToken(): string | null {
+  //   return localStorage.getItem('token');
+  // }
 
 
 
@@ -69,24 +72,18 @@ createPost(postData: CreatePostRequest): Observable<Post> {
   follow(userId: string):Observable<any>{
     return this.http.post<Post>(`${this.apiUrl}/users/follow`, {userId: userId})
   }
-  getProfile(username: string): Observable<any> {
-  return this.http.get(`${this.apiUrl}/users/profile/${username}`);
+//   getProfile(username: string): Observable<any> {
+//   return this.http.get(`${this.apiUrl}/users/profile/${username}`);
+// }
+getMyPosts():Observable<Post[]> {
+   return this.http.get<Post[]>(`${this.apiUrl}/posts/CurrentUserPost`)
+}
+getPostsUser(username:  string):Observable<Post[]> {
+   return this.http.get<Post[]>(`${this.apiUrl}/posts/${username}`);
+}
+updateProfile(data: FormData):Observable<any>{
+    return this.http.post(`${this.apiUrl}/profile`, data)
 }
 
-}
-export interface Post {
-  id: number;
-  description: string;
-  mediaUrl?: string;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    avatar?: string;
-  };
-  isLiked: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  likesCount: number;
-  commentsCount: number;
+   
 }

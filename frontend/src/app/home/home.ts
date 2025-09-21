@@ -32,9 +32,8 @@ import { FilterPipe } from '../pipes/filter-pipe';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 
 import { isImage, isVideo } from './home.helpers';
-import { User, UpdatePostResult, NewPost } from './home.model';
+import { User, UpdatePostResult, NewPost, Post } from './home.model';
 import { HomeService } from './home.service';
-import { Post } from '../auth';
 
 @Component({
   selector: 'app-home',
@@ -90,11 +89,11 @@ export class Home implements OnInit {
   }
 
   private initializeComponent(): void {
-    const token = this.homeService.getToken();
-    if (!token) {
-      this.router.navigate(['/login']);
-      return;
-    }
+    // const token = this.homeService.getToken();
+    // if (!token) {
+    //   this.router.navigate(['/login']);
+    //   return;
+    // }
 
     // Sequential loading approach
     this.loadCurrentUser();
@@ -147,6 +146,8 @@ export class Home implements OnInit {
   private loadPosts(): void {
     this.homeService.getAllPosts().subscribe({
       next: (posts) => {
+        console.log("all posts==>",posts);
+        
         this.posts = posts;
         this.isLoadingPost = false;
         this.cdr.markForCheck();
@@ -350,7 +351,7 @@ export class Home implements OnInit {
   }
 
   goToProfile(username: string): void {
-    console.log('Go to profile:', username);
+    this.router.navigate([`profile/${username}`]);
   }
 
   get isPostFormValid(): boolean {

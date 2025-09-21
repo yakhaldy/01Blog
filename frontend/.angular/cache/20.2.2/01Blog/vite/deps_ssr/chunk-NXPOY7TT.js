@@ -3,13 +3,13 @@ import {
   _CdkPrivateStyleLoader
 } from "./chunk-XGGHD6XU.js";
 import {
-  BidiModule
-} from "./chunk-T4PXRGKK.js";
-import {
   Platform,
   coerceElement,
   coerceNumberProperty
 } from "./chunk-VRLUFGSC.js";
+import {
+  BidiModule
+} from "./chunk-T4PXRGKK.js";
 import {
   APP_ID,
   CSP_NONCE,
@@ -3147,7 +3147,6 @@ export {
   hasModifierKey,
   FocusKeyManager,
   AriaDescriber,
-  MATERIAL_SANITY_CHECKS,
   MatCommonModule
 };
-//# sourceMappingURL=chunk-UJYZ6FXD.js.map
+//# sourceMappingURL=chunk-NXPOY7TT.js.map

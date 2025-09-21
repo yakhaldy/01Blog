@@ -18,11 +18,14 @@
       <!-- Profile Hero Content -->
       <div *ngIf="profileUser && !isLoading" class="hero-main">
         <div class="profile-banner">
-          <div class="banner-gradient"></div>
+          <div class="banner-gradient">
+              <img [src]="'assets/img/banner.png'"
+                   class="banner-image" loading="lazy">
+          </div>
           <div class="profile-main">
             <div class="avatar-section">
               <div class="avatar-container">
-                <img [src]="profileUser?.avatar || 'assets/img/default-avatar.png'"
+                <img [src]="profileUser.avatar || 'assets/img/default-avatar.png'"
                   [alt]="profileUser.username + ' avatar'" class="profile-avatar" loading="lazy">
                 <div class="avatar-ring"></div>
               </div>
@@ -30,11 +33,11 @@
               <!-- Quick Stats Floating Cards -->
               <div class="quick-stats">
                 <div class="stat-card">
-                  <span class="stat-number">{{ profileUser.followers || 0 }}</span>
+                  <span class="stat-number">{{ profileUser.followersCount || 0 }}</span>
                   <span class="stat-label">Followers</span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-number">{{ profileUser.following || 0 }}</span>
+                  <span class="stat-number">{{ profileUser.followingCount || 0 }}</span>
                   <span class="stat-label">Following</span>
                 </div>
                 <div class="stat-card">
@@ -73,14 +76,10 @@
                     Follow
                   </button>
                   <button *ngIf="profileUser.isfollowing" mat-raised-button class="secondary-btn unfollow-btn" 
-                    (click)="unfollowUser()">
+                    (click)="followUser()">
                     <mat-icon>person_remove</mat-icon>
                     Unfollow
                   </button>
-                  <button mat-raised-button class="secondary-btn message-btn" (click)="messageUser()">
-                    <mat-icon>message</mat-icon>
-                    Message
-                  </button>
                 </div>
               </div>
             </div>
@@ -89,179 +88,100 @@
       </div>
     </div>
   </section>
-
-  <!-- Content Section -->
-  <section class="profile-content">
-    <div class="content-wrapper">
-      
-      <!-- Navigation Pills -->
-      <div class="content-nav">
-        <div class="nav-pills">
-          <button class="nav-pill" [class.active]="activeTab === 'posts'" (click)="setActiveTab('posts')">
-            <mat-icon>article</mat-icon>
-            <span>Posts</span>
-            <div class="pill-indicator"></div>
-          </button>
-          <button class="nav-pill" [class.active]="activeTab === 'media'" (click)="setActiveTab('media')">
-            <mat-icon>photo_library</mat-icon>
-            <span>Media</span>
-            <div class="pill-indicator"></div>
-          </button>
-          <button class="nav-pill" [class.active]="activeTab === 'likes'" (click)="setActiveTab('likes')">
-            <mat-icon>favorite</mat-icon>
-            <span>Likes</span>
-            <div class="pill-indicator"></div>
-          </button>
+      <!-- Posts Feed -->
+      <section class="posts-container" role="region" aria-label="Posts feed">
+        <div *ngIf="isLoadingPost" class="loading-container">
+          <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
+          <p class="loading-text">Loading...</p>
         </div>
-      </div>
+        <!-- Posts will be dynamically added here -->
+        <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
+          <p class="empty-message">No posts yet. Be the first to share something!</p>
+        </div>
+        <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
+          <article *ngFor="let post of posts; " class="post-card" role="article"
+            [attr.aria-label]="'Post by ' + post.user.username">
 
-      <!-- Content Grid -->
-      <div class="content-grid">
-        
-        <!-- Main Content Area -->
-        <div class="main-content">
-          <!-- Loading Posts -->
-          <div *ngIf="isLoadingPosts" class="content-loading">
-            <div class="loading-cards">
-              <div class="loading-card" *ngFor="let item of [1,2,3]"></div>
-            </div>
-          </div>
+            <!-- Post Header -->
+            <header class="post-header">
+              <div class="post-author-info" >
+                <div class="author-avatar">
+                   <img [src]="profileUser?.avatar || 'assets/img/default-avatar.png'"
+                    [alt]="profileUser?.username + ' profile picture'" class="avatar-icon" loading="lazy">
+                </div>
+                <div class="author-details">
+                  <h4 class="author-name">{{ post.user.username }}</h4>
+                  <time class="post-time" [attr.datetime]="post.createdAt">
+                    {{ post.createdAt | date:'medium' }}
+                  </time>
+                </div>
+              </div>
 
-          <!-- Empty State -->
-          <div *ngIf="posts.length === 0 && !isLoadingPosts" class="empty-content">
-            <div class="empty-illustration">
-              <mat-icon class="empty-icon">{{ getEmptyIcon() }}</mat-icon>
-            </div>
-            <h3 class="empty-title">{{ getEmptyTitle() }}</h3>
-            <p class="empty-description">{{ getEmptyDescription() }}</p>
-          </div>
+              <!-- Post Actions Menu -->
+              <div class="post-actions" *ngIf="isMyPost(post)">
+                <button mat-icon-button [matMenuTriggerFor]="optionsMenu" class="Options" matTooltip="Options">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
 
-          <!-- Posts Grid -->
-          <div class="posts-grid" *ngIf="!isLoadingPosts && posts.length > 0">
-            <article *ngFor="let post of posts" class="profile-post-card" 
-              [attr.aria-label]="'Post by ' + post.user?.username">
+                <!-- Menu that shows when the button is clicked -->
+                <mat-menu #optionsMenu="matMenu" class="optionsMenu">
+                  <button mat-menu-item (click)="updatePost(post)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Update</span>
+                  </button>
+                  <button mat-menu-item (click)="deletePost(post)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </div>
+            </header>
 
-              <!-- Post Media Preview (if exists) -->
-              <div class="post-preview" *ngIf="post.mediaUrl">
-                <img *ngIf="isImage(post.mediaUrl)" [src]="post.mediaUrl" 
-                  [alt]="'Post media'" class="preview-image" loading="lazy">
-                <video *ngIf="isVideo(post.mediaUrl)" [src]="post.mediaUrl" 
-                  class="preview-video" muted>
+            <!-- Post Content -->
+            <div class="post-content">
+              <p class="post-description">{{ post.description }}</p>
+
+              <!-- Media Content -->
+              <div class="post-media" *ngIf="post.mediaUrl">
+                <!-- IMAGE -->
+                <img *ngIf="isImage(post.mediaUrl)" [src]="post.mediaUrl"
+                  [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
+
+                <!-- VIDEO -->
+                <video *ngIf="isVideo(post.mediaUrl)" [src]="post.mediaUrl" controls class="post-video"
+                  preload="metadata">
+                  Your browser does not support the video tag.
                 </video>
-                <div class="media-overlay">
-                  <mat-icon class="media-icon">{{ isVideo(post.mediaUrl) ? 'play_circle_filled' : 'photo' }}</mat-icon>
-                </div>
-              </div>
-
-              <!-- Post Content -->
-              <div class="post-preview-content">
-                <div class="post-header-mini">
-                  <time class="post-date">{{ post.createdAt | date:'MMM d' }}</time>
-                  <div class="post-actions-mini" *ngIf="isMyPost(post)">
-                    <button mat-icon-button [matMenuTriggerFor]="postMenu" class="mini-menu-btn">
-                      <mat-icon>more_horiz</mat-icon>
-                    </button>
-                    <mat-menu #postMenu="matMenu">
-                      <button mat-menu-item (click)="updatePost(post)">
-                        <mat-icon>edit</mat-icon>
-                        <span>Edit</span>
-                      </button>
-                      <button mat-menu-item (click)="deletePost(post)" class="delete-menu-item">
-                        <mat-icon>delete</mat-icon>
-                        <span>Delete</span>
-                      </button>
-                    </mat-menu>
-                  </div>
-                </div>
-
-                <p class="post-text">{{ post.description | slice:0:120 }}{{ post.description?.length > 120 ? '...' : '' }}</p>
-                
-                <div class="post-stats-mini">
-                  <span class="stat-mini">
-                    <mat-icon>favorite</mat-icon>
-                    {{ post.likesCount || 0 }}
-                  </span>
-                  <span class="stat-mini">
-                    <mat-icon>comment</mat-icon>
-                    {{ post.commentsCount || 0 }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Quick Actions Overlay -->
-              <div class="post-overlay">
-                <div class="quick-actions">
-                  <button mat-fab class="quick-action like-action" (click)="likePost(post.id!)" 
-                    [class.liked]="post.isLiked">
-                    <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
-                  </button>
-                  <button mat-fab class="quick-action comment-action" (click)="commentPost(post.id!)">
-                    <mat-icon>comment</mat-icon>
-                  </button>
-                  <button mat-fab class="quick-action view-action" (click)="viewPost(post.id!)">
-                    <mat-icon>visibility</mat-icon>
-                  </button>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <!-- Sidebar Info -->
-        <aside class="profile-sidebar">
-          
-          <!-- Profile Summary Card -->
-          <div class="summary-card">
-            <h3 class="card-title">Profile Summary</h3>
-            <div class="summary-items">
-              <div class="summary-item">
-                <mat-icon>person</mat-icon>
-                <div class="item-content">
-                  <span class="item-label">Username</span>
-                  <span class="item-value">{{ profileUser?.username }}</span>
-                </div>
-              </div>
-              <div class="summary-item">
-                <mat-icon>email</mat-icon>
-                <div class="item-content">
-                  <span class="item-label">Email</span>
-                  <span class="item-value">{{ profileUser?.email }}</span>
-                </div>
-              </div>
-              <div class="summary-item" *ngIf="profileUser?.createdAt">
-                <mat-icon>schedule</mat-icon>
-                <div class="item-content">
-                  <span class="item-label">Joined</span>
-                  <span class="item-value">{{ profileUser.createdAt | date:'MMMM yyyy' }}</span>
-                </div>
               </div>
             </div>
-          </div>
 
-        
-          <div class="activity-card" *ngIf="!isOwnProfile">
-            <h3 class="card-title">Similar Profiles</h3>
-            <div class="suggested-users" *ngIf="suggestedUsers?.length > 0">
-              <div class="suggested-user" *ngFor="let user of suggestedUsers | slice:0:3">
-                <div class="user-mini" (click)="goToProfile(user.username)">
-                  <div class="user-avatar-mini">
-                    <mat-icon>account_circle</mat-icon>
-                  </div>
-                  <div class="user-info-mini">
-                    <span class="user-name-mini">{{ user.username }}</span>
-                    <span class="user-followers-mini">{{ user.followers || 0 }} followers</span>
-                  </div>
-                </div>
-                <button mat-raised-button size="small" class="mini-follow-btn" 
-                  [class.following]="user.isfollowing" (click)="toggleFollow(user)">
-                  {{ user.isfollowing ? 'Following' : 'Follow' }}
+            <!-- Post Footer -->
+            <footer class="post-footer">
+              <div class="post-stats">
+                <span class="stat-item">
+                  <mat-icon>favorite_border</mat-icon>
+                  <span class="stat-count">{{ post.likesCount || 0 }}</span>
+                </span>
+                <span class="stat-item">
+                  <mat-icon>comment</mat-icon>
+                  <span class="stat-count">{{ post.commentsCount || 0 }}</span>
+                </span>
+              </div>
+
+              <div class="post-interactions">
+                <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
+                  <mat-icon [ngClass]="{ 'liked': post.isLiked }">
+                    {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+                  </mat-icon>
+                </button>
+
+                <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="commentPoste(post.id!)">
+                  <mat-icon>comment</mat-icon>
                 </button>
               </div>
-            </div>
-          </div>
+            </footer>
+          </article>
+        </div>
+      </section>
 
-        </aside>
-      </div>
-    </div>
-  </section>
 </div>

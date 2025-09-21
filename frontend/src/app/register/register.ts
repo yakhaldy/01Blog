@@ -34,7 +34,12 @@ export class Register {
       return;
     }
     if (this.user.email == "" ){
-       this.errorMessage = '"Email is Empty';
+       this.errorMessage = 'Email is Empty';
+      this.cdr.detectChanges();
+      return;
+    }
+     if (!this.isValidEmail(this.user.email)) {
+      this.errorMessage = 'Please enter a valid email address';
       this.cdr.detectChanges();
       return;
     }
@@ -75,6 +80,11 @@ export class Register {
         }
       }
     });
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
   goToPath(url: string) {

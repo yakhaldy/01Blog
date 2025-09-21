@@ -1,5 +1,5 @@
-// src/app/interceptors/auth.interceptor.ts (Updated)
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import {
     HttpEvent,
     HttpHandler,
@@ -18,7 +18,28 @@ import { Error403 } from '../components/error-403/error-403';
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-    constructor(private router: Router, private dialog: MatDialog) { }
+    private isBrowser: boolean;
+
+    constructor(
+        private router: Router, 
+        private dialog: MatDialog,
+        @Inject(PLATFORM_ID) platformId: Object
+    ) {
+        this.isBrowser = isPlatformBrowser(platformId);
+    }
+
+    private getToken(): string | null {
+        if (this.isBrowser) {
+            return localStorage.getItem('token');
+        }
+        return null;
+    }
+
+    private removeToken(): void {
+        if (this.isBrowser) {
+            localStorage.removeItem('token');
+        }
+    }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
@@ -27,7 +48,7 @@ export class AuthInterceptor implements HttpInterceptor {
             return next.handle(req);
         }
 
-        const token = localStorage.getItem('token');
+        const token = this.getToken();
 
         let authReq = req;
         if (token) {
@@ -41,10 +62,12 @@ export class AuthInterceptor implements HttpInterceptor {
         return next.handle(authReq).pipe(
             catchError((err: HttpErrorResponse) => {
                 if (err.status === 401) {
-                    localStorage.removeItem('token');
-                    this.router.navigate(['/login']);
+                    this.removeToken();
+                    if (this.isBrowser) {
+                        this.router.navigate(['/login']);
+                    }
                 } else if (err.status === 403) {
-                    if (this.dialog.openDialogs.length === 0) {
+                    if (this.isBrowser && this.dialog.openDialogs.length === 0) {
                         const dialogRef = this.dialog.open(Error403, {
                             width: '100vw',
                             height: '100vh',
@@ -55,7 +78,7 @@ export class AuthInterceptor implements HttpInterceptor {
                         });
                     }
                 } else if (err.status === 500) {
-                    if (this.dialog.openDialogs.length === 0) {
+                    if (this.isBrowser && this.dialog.openDialogs.length === 0) {
                         const dialogRef = this.dialog.open(Error500, {
                             width: '100vw',
                             height: '100vh',
@@ -64,7 +87,6 @@ export class AuthInterceptor implements HttpInterceptor {
                             panelClass: 'full-screen-dialog',
                             disableClose: true
                         });
-
                     }
                 }
                 return throwError(() => err);

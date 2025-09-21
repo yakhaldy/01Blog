@@ -29,6 +29,7 @@ public class JwtFilter extends OncePerRequestFilter {
         "/api/login",
         "/api/register"
     );
+    
 
     public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -97,9 +98,8 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } else {
             System.out.println("❌ Missing or invalid Authorization header");
-            // sendUnauthorizedResponse(response, "Missing or invalid Authorization
-            // header");
-            // return;
+        //    sendUnauthorizedResponse(response, "❌ Missing or invalid Authorization header" );
+        //         return;
         }
 
         filterChain.doFilter(request, response);

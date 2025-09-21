@@ -1,6 +1,6 @@
 import {
   _animationsDisabled
-} from "./chunk-T4IBH3ZE.js";
+} from "./chunk-GYPXSE2O.js";
 import {
   A11yModule,
   AriaDescriber,
@@ -8,7 +8,7 @@ import {
   MatCommonModule,
   _IdGenerator,
   _VisuallyHiddenLoader
-} from "./chunk-VYZBMMNK.js";
+} from "./chunk-KAC4JXD2.js";
 import "./chunk-DON4SEJH.js";
 import {
   _CdkPrivateStyleLoader
@@ -37,8 +37,8 @@ import {
   ɵɵdefineInjector,
   ɵɵdefineNgModule
 } from "./chunk-EOAD7UTM.js";
-import "./chunk-J46EEYGT.js";
 import "./chunk-4YCCEXQQ.js";
+import "./chunk-J46EEYGT.js";
 import "./chunk-U7EDC2PH.js";
 
 // node_modules/@angular/material/fesm2022/badge.mjs

@@ -15,6 +15,7 @@ import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.model.Like;
 import com.zoneBlog.blog.repository.PostRepository;
+import com.zoneBlog.blog.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -34,6 +35,9 @@ public class Posts {
 
     @Autowired
     private LikeRepository likeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private Helper helper;
@@ -74,11 +78,7 @@ public class Posts {
         }
         List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
         posts = posts.stream().map(p -> {
-            if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId())) {
-                p.setIsLiked(true);
-            } else {
-                p.setIsLiked(false);
-            }
+            p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId()));
             return p;
         }).collect(Collectors.toList());
         return posts;
@@ -92,7 +92,7 @@ public class Posts {
             throw new RuntimeException("You can only delete your own posts");
         }
 
-        deleteOldMediaFile(post.getMediaUrl());
+        helper.deleteOldMediaFile(post.getMediaUrl());
 
         postRepository.delete(post);
     }
@@ -102,18 +102,18 @@ public class Posts {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 
-    private void deleteOldMediaFile(String mediaUrl) {
-        // System.err.println("=========="+mediaUrl);
-        if (mediaUrl != null && mediaUrl.startsWith("http://localhost:8080/uploads/")) {
-            try {
-                String fileName = mediaUrl.substring("http://localhost:8080/uploads/".length());
-                Path filePath = Paths.get(helper.uploadDir, fileName);
-                Files.deleteIfExists(filePath);
-            } catch (IOException e) {
-                System.err.println("Failed to delete old media file: " + e.getMessage());
-            }
-        }
-    }
+    // private void deleteOldMediaFile(String mediaUrl) {
+    //     // System.err.println("=========="+mediaUrl);
+    //     if (mediaUrl != null && mediaUrl.startsWith("http://localhost:8080/uploads/")) {
+    //         try {
+    //             String fileName = mediaUrl.substring("http://localhost:8080/uploads/".length());
+    //             Path filePath = Paths.get(helper.uploadDir, fileName);
+    //             Files.deleteIfExists(filePath);
+    //         } catch (IOException e) {
+    //             System.err.println("Failed to delete old media file: " + e.getMessage());
+    //         }
+    //     }
+    // }
 
     public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request,
             MultipartFile mediaFile, String removeImage) {
@@ -139,12 +139,12 @@ public class Posts {
         post.setDescription(description);
 
         if (mediaFile != null && !mediaFile.isEmpty()) {
-            deleteOldMediaFile(post.getMediaUrl());
+            helper.deleteOldMediaFile(post.getMediaUrl());
             String mediaPath = helper.handleFileUpload(mediaFile);
             post.setMediaUrl(mediaPath);
         }
         if (removeImage != null && removeImage.equals("true")) {
-            deleteOldMediaFile(post.getMediaUrl());
+            helper.deleteOldMediaFile(post.getMediaUrl());
             post.setMediaUrl(null);
 
         }
@@ -162,7 +162,7 @@ public class Posts {
             throw new RuntimeException("Post not found");
         }
         if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId())) {
-           Like like =  likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId());
+            Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId());
             // likeRepository.deleteByUser_IdAndPost_Id(user.getId(), post.getId());
             likeRepository.delete(like);
         } else {
@@ -175,6 +175,44 @@ public class Posts {
 
         postRepository.save(post);
         return post;
+    }
+
+    public List<Post> getMyPosts(Authentication authentication) {
+        User user = helper.getCurrentUser(authentication);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        List<Post> posts = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId());
+        posts = posts.stream().map(p -> {
+            if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId())) {
+                p.setIsLiked(true);
+            } else {
+                p.setIsLiked(false);
+            }
+            return p;
+        }).collect(Collectors.toList());
+        return posts;
+    }
+
+    public List<Post> getPostsUser(Authentication authentication, String username) {
+        User CurrentUser = helper.getCurrentUser(authentication);
+        if (CurrentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        List<Post> posts = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId());
+        posts = posts.stream().map(p -> {
+            if (likeRepository.existsByUser_IdAndPost_Id(CurrentUser.getId(), p.getId())) {
+                p.setIsLiked(true);
+            } else {
+                p.setIsLiked(false);
+            }
+            return p;
+        }).collect(Collectors.toList());
+        return posts;
     }
 
 }

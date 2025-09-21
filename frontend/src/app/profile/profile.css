@@ -107,29 +107,16 @@
 
 .banner-gradient {
     height: 200px;
-    background: linear-gradient(135deg, 
-        rgba(99, 102, 241, 0.8) 0%, 
-        rgba(139, 69, 19, 0.6) 35%, 
-        rgba(34, 197, 94, 0.5) 70%, 
-        rgba(168, 85, 247, 0.7) 100%);
     position: relative;
 }
 
-.banner-gradient::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
-    animation: shimmerBanner 3s ease-in-out infinite;
+
+.banner-image{
+    height: 100%;
+    width: 100%;
 }
 
-@keyframes shimmerBanner {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
+
 
 /* Profile Main Info */
 .profile-main {
@@ -235,7 +222,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    padding-top: 20px;
+    padding-top: 60px;
 }
 
 .user-identity {
@@ -405,50 +392,6 @@
     flex-direction: column;
     gap: 2px;
     min-width: 0;
-}
-
-
-.user-name-mini {
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 600;
-    word-break: break-word;
-}
-
-.user-followers-mini {
-    color: #8b98a5;
-    font-size: 12px;
-    font-weight: 400;
-}
-
-.mini-follow-btn {
-    background: rgba(99, 102, 241, 0.1) !important;
-    color: rgba(99, 102, 241, 1) !important;
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    border-radius: 16px;
-    padding: 0 12px;
-    height: 28px;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-}
-
-.mini-follow-btn:hover {
-    background: rgba(99, 102, 241, 0.2) !important;
-    border-color: rgba(99, 102, 241, 0.5);
-}
-
-.mini-follow-btn.following {
-    background: rgba(0, 0, 0, 0.2) !important;
-    color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.mini-follow-btn.following:hover {
-    background: rgba(248, 113, 113, 0.1) !important;
-    color: #f87171 !important;
-    border-color: rgba(248, 113, 113, 0.3);
 }
 
 /* Material Design Overrides */

@@ -1,21 +1,20 @@
-import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
   _animationsDisabled
-} from "./chunk-LWHHDQWR.js";
+} from "./chunk-GYPXSE2O.js";
 import {
   MatCommonModule,
   _getEventTarget,
   isFakeMousedownFromScreenReader,
   isFakeTouchstartFromScreenReader,
   normalizePassiveListenerOptions
-} from "./chunk-UJYZ6FXD.js";
+} from "./chunk-KAC4JXD2.js";
 import {
   _CdkPrivateStyleLoader
-} from "./chunk-XGGHD6XU.js";
+} from "./chunk-YR3RM6JQ.js";
 import {
   Platform,
   coerceElement
-} from "./chunk-VRLUFGSC.js";
+} from "./chunk-QVP36YEQ.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -34,10 +33,10 @@ import {
   ɵɵdefineDirective,
   ɵɵdefineInjector,
   ɵɵdefineNgModule
-} from "./chunk-VR4PPWEQ.js";
+} from "./chunk-EOAD7UTM.js";
 import {
   __spreadValues
-} from "./chunk-6DU2HRTW.js";
+} from "./chunk-U7EDC2PH.js";
 
 // node_modules/@angular/material/fesm2022/ripple.mjs
 var RippleState;
@@ -668,8 +667,6 @@ var MatRippleModule = class _MatRippleModule {
 })();
 
 export {
-  RippleState,
-  RippleRef,
   defaultRippleAnimationConfig,
   RippleRenderer,
   MAT_RIPPLE_GLOBAL_OPTIONS,
@@ -677,4 +674,4 @@ export {
   _StructuralStylesLoader,
   MatRippleModule
 };
-//# sourceMappingURL=chunk-D3I5RYZZ.js.map
+//# sourceMappingURL=chunk-UZD4ZJUB.js.map

@@ -22,7 +22,7 @@
         <div *ngIf="currentUser && !isLoading" class="profile-content">
           <header class="profile-header">
             <div class="profile-avatar">
-              <img [src]="currentUser?.avatar || 'assets/img/default-avatar.png'"
+              <img [src]="currentUser.avatar || 'assets/img/default-avatar.png'"
                 [alt]="currentUser.username + ' profile picture'" class="avatar-img" loading="lazy">
             </div>
 
@@ -100,16 +100,18 @@
         </div>
         <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
           <article *ngFor="let post of posts; " class="post-card" role="article"
-            [attr.aria-label]="'Post by ' + post.user?.username">
+            [attr.aria-label]="'Post by ' + post.user.username">
 
             <!-- Post Header -->
             <header class="post-header">
-              <div class="post-author-info" (click)="goToProfile(post.user?.username || '')">
+              <div class="post-author-info" (click)="goToProfile(post.user.username || '')">
                 <div class="author-avatar">
-                  <mat-icon class="avatar-icon">account_circle</mat-icon>
+                  <!-- <mat-icon class="avatar-icon">account_circle</mat-icon> -->
+                  <img [src]="post.user.avatar || 'assets/img/default-avatar.png'"
+                    [alt]="post.user.username + ' profile picture'" class="avatar-icon" loading="lazy">
                 </div>
                 <div class="author-details">
-                  <h4 class="author-name">{{ post.user?.username }}</h4>
+                  <h4 class="author-name">{{ post.user.username }}</h4>
                   <time class="post-time" [attr.datetime]="post.createdAt">
                     {{ post.createdAt | date:'medium' }}
                   </time>
@@ -147,7 +149,7 @@
               <div class="post-media" *ngIf="post.mediaUrl">
                 <!-- IMAGE -->
                 <img *ngIf="isImage(post.mediaUrl)" [src]="post.mediaUrl"
-                  [alt]="'Media from post by ' + post.user?.username" class="post-image" loading="lazy">
+                  [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
 
                 <!-- VIDEO -->
                 <video *ngIf="isVideo(post.mediaUrl)" [src]="post.mediaUrl" controls class="post-video"
@@ -207,7 +209,7 @@
         <div class="users-list">
           <div *ngFor="let user of users | filter:searchTerm; " class="user-item" role="article"
             [attr.aria-label]="'User: ' + user.username">
-            <div class="user-info" (click)="goToProfile(user)">
+            <div class="user-info" (click)="goToProfile(user.username)">
               <div class="user-avatar">
                 <mat-icon class="avatar-icon">account_circle</mat-icon>
               </div>

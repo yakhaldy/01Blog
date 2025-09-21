@@ -3134,7 +3134,6 @@ export {
   hasModifierKey,
   FocusKeyManager,
   AriaDescriber,
-  MATERIAL_SANITY_CHECKS,
   MatCommonModule
 };
-//# sourceMappingURL=chunk-VYZBMMNK.js.map
+//# sourceMappingURL=chunk-KAC4JXD2.js.map

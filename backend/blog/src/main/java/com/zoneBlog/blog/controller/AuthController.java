@@ -27,6 +27,10 @@ import java.util.List;
 
 import java.util.Map;
 
+
+
+
+
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -123,6 +127,26 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to like post: " + e.getMessage()));
         }
     }
+    @GetMapping("/posts/CurrentUserPost")
+    public  ResponseEntity<?> getMyPosts(Authentication authentication) {
+         try {
+            List<Post> posts = Posts.getMyPosts(authentication);
+            return ResponseEntity.ok(posts);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
+        }
+    }
+    @GetMapping("/posts/{username}")
+    public ResponseEntity<?> getPostsUser(Authentication authentication,@PathVariable String username) {
+         try {
+            List<Post> posts = Posts.getPostsUser(authentication,username);
+            return ResponseEntity.ok(posts);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
+        }
+    }
+    
+    
 
     @Autowired
     private Users user;
@@ -161,5 +185,28 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to follow user: " + e.getMessage()));
         }
     }
+    @PostMapping("profile")
+    public ResponseEntity<?> updateProfile(Authentication authentication,
+            @RequestPart(value = "avatarFile", required = false) MultipartFile avatarFile,
+            @RequestPart("username") String username,
+            @RequestPart("bio") String bio,
+            @RequestPart(value = "removeImage", required = false) String removeImage) {
+        try {
+            profile.updateProfile(authentication,username,bio,removeImage,avatarFile);
+            return ResponseEntity.ok(Map.of("message", "update Profile successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @GetMapping("profile/{username}")
+    public ResponseEntity<?> getInfoUser(Authentication authentication,@PathVariable String username) {
+         try {
+             return profile.getInfoUser(authentication,username);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
+        }
+    }
+    
+    
 
 }

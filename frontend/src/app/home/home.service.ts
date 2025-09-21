@@ -1,17 +1,17 @@
 // home.service.ts
 
 import { Injectable } from '@angular/core';
-import { Auth, CreatePostRequest, Post } from '../auth';
+import { Auth, CreatePostRequest } from '../auth';
 import { Observable } from 'rxjs';
-import { User } from './home.model';
+import { User ,Post} from './home.model';
 
 @Injectable({ providedIn: 'root' })
 export class HomeService {
   constructor(private auth: Auth) {}
 
-  getToken(): string | null {
-    return this.auth.getToken();
-  }
+  // getToken(): string | null {
+  //   return this.auth.getToken();
+  // }
 
   getCurrentUser(): Observable<User> {
     return this.auth.getCurrentUser();

@@ -91,4 +91,16 @@ public class Helper {
         }
         return false;
     }
+
+       public void deleteOldMediaFile(String mediaUrl) {
+        if (mediaUrl != null && mediaUrl.startsWith("http://localhost:8080/uploads/")) {
+            try {
+                String fileName = mediaUrl.substring("http://localhost:8080/uploads/".length());
+                Path filePath = Paths.get(uploadDir, fileName);
+                Files.deleteIfExists(filePath);
+            } catch (IOException e) {
+                System.err.println("Failed to delete old media file: " + e.getMessage());
+            }
+        }
+    }
 }
