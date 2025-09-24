@@ -28,7 +28,7 @@ export class AuthInterceptor implements HttpInterceptor {
         this.isBrowser = isPlatformBrowser(platformId);
     }
 
-    private getToken(): string | null {
+    public getToken(): string | null {
         if (this.isBrowser) {
             return localStorage.getItem('token');
         }

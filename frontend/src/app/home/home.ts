@@ -5,7 +5,6 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { forkJoin, finalize } from 'rxjs';
 
 // Angular Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -81,7 +80,7 @@ export class Home implements OnInit {
     private router: Router,
     private homeService: HomeService,
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) { }
 
   ngOnInit(): void {
@@ -89,11 +88,11 @@ export class Home implements OnInit {
   }
 
   private initializeComponent(): void {
-    // const token = this.homeService.getToken();
-    // if (!token) {
-    //   this.router.navigate(['/login']);
-    //   return;
-    // }
+    const token = this.homeService.getToken();
+    if (!token) {
+      this.router.navigate(['/login']);
+      return;
+    }
 
     // Sequential loading approach
     this.loadCurrentUser();
