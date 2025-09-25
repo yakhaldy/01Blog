@@ -66,7 +66,7 @@ public class Helper {
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(file.getInputStream(), filePath);
 
-            return "http://localhost:8080/uploads/" + fileName;
+            return /*"http://localhost:8080/uploads/"+*/ fileName;
             // String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
             // .path("/uploads/")
             // .path(fileName)
@@ -93,10 +93,10 @@ public class Helper {
     }
 
        public void deleteOldMediaFile(String mediaUrl) {
-        if (mediaUrl != null && mediaUrl.startsWith("http://localhost:8080/uploads/")) {
+        if (mediaUrl != null /*&& mediaUrl.startsWith("http://localhost:8080/uploads/")*/) {
             try {
-                String fileName = mediaUrl.substring("http://localhost:8080/uploads/".length());
-                Path filePath = Paths.get(uploadDir, fileName);
+                // String fileName = mediaUrl.substring("http://localhost:8080/uploads/".length());
+                Path filePath = Paths.get(uploadDir, mediaUrl);
                 Files.deleteIfExists(filePath);
             } catch (IOException e) {
                 System.err.println("Failed to delete old media file: " + e.getMessage());

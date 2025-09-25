@@ -13,7 +13,7 @@ export interface CreatePostRequest {
 })
 export class Auth {
   private apiUrl = 'http://localhost:8080/api';
-
+  private urlImage = 'http://localhost:8080/uploads'
 
   constructor(private http: HttpClient) { }
 
@@ -85,5 +85,11 @@ updateProfile(data: FormData):Observable<any>{
     return this.http.post(`${this.apiUrl}/profile`, data)
 }
 
+ getImage(path: string | undefined): string | undefined {
+    if (path){
+      return `${this.urlImage}/${path}`
+    }
+    return undefined;
+  }
    
 }

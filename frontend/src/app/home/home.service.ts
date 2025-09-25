@@ -51,4 +51,7 @@ export class HomeService {
   follow(userID: string): Observable<any>{
     return this.auth.follow(userID);
   }
+  getImage(path: string | undefined): string | undefined {
+  return this.auth.getImage(path)
+ }
 }

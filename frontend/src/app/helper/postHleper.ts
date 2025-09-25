@@ -6,3 +6,5 @@ export function isValidMediaType(file: File): boolean {
 export function isValidMediaSize(file: File, maxSizeMB: number = 10): boolean {
   return file.size <= maxSizeMB * 1024 * 1024;
 }
+
+

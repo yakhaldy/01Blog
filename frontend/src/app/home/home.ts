@@ -34,6 +34,8 @@ import { isImage, isVideo } from './home.helpers';
 import { User, UpdatePostResult, NewPost, Post } from './home.model';
 import { HomeService } from './home.service';
 
+import { Auth } from '../auth'
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -81,6 +83,7 @@ export class Home implements OnInit {
     private homeService: HomeService,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
+    private auth: Auth
   ) { }
 
   ngOnInit(): void {
@@ -368,4 +371,8 @@ export class Home implements OnInit {
   // Optionally use these from home.helpers.ts
   isImage = isImage;
   isVideo = isVideo;
+
+getImage(path: string | undefined): string | undefined {
+  return this.homeService.getImage(path)
+ }
 }

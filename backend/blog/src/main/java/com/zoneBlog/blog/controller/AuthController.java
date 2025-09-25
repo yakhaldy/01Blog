@@ -163,6 +163,7 @@ public class AuthController {
                 userResponse.put("id", user.getId());
                 userResponse.put("username", user.getUsername());
                 userResponse.put("email", user.getEmail());
+                userResponse.put("avatar", user.getAvatar());
                 boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(currentUser.getId(),
                         user.getId());
                 userResponse.put("isfollowing", isFollowing);

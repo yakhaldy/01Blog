@@ -245,6 +245,9 @@ export class Profile implements OnInit {
   isMyPost(post: Post): boolean {
     return post.user?.username === this.currentUser?.username;
   }
+  getImage(path: string | undefined): string | undefined {
+    return this.auth.getImage(path)
+  }
 
   isImage = isImage;
   isVideo = isVideo;
