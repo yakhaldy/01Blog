@@ -161,7 +161,7 @@
 
             <!-- Post Footer -->
             <footer class="post-footer">
-              <div class="post-stats">
+              <!-- <div class="post-stats">
                 <span class="stat-item">
                   <mat-icon>favorite_border</mat-icon>
                   <span class="stat-count">{{ post.likesCount || 0 }}</span>
@@ -170,7 +170,7 @@
                   <mat-icon>comment</mat-icon>
                   <span class="stat-count">{{ post.commentsCount || 0 }}</span>
                 </span>
-              </div>
+              </div> -->
 
               <div class="post-interactions">
                 <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
@@ -178,10 +178,12 @@
                     {{ post.isLiked ? 'favorite' : 'favorite_border' }}
                   </mat-icon>
                 </button>
+                <span class="stat-count">{{ post.likesCount || 0 }}</span>
 
                 <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="commentPoste(post.id!)">
                   <mat-icon>comment</mat-icon>
                 </button>
+                <span class="stat-count">{{ post.commentsCount || 0 }}</span>
               </div>
             </footer>
           </article>
@@ -199,10 +201,11 @@
         <div class="search-container">
           <mat-form-field class="search-field" appearance="outline">
             <mat-icon matPrefix>search</mat-icon>
-            <input matInput [(ngModel)]="searchTerm" placeholder="Search users..." aria-label="Search users" style="color: aliceblue;">
+            <input matInput [(ngModel)]="searchTerm" placeholder="Search users..." aria-label="Search users"
+              style="color: aliceblue;">
           </mat-form-field>
         </div>
-         <div *ngIf="isLoadingUsers" class="loading-container">
+        <div *ngIf="isLoadingUsers" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
           <p class="loading-text">Loading...</p>
         </div>
@@ -213,19 +216,21 @@
               <div class="user-avatar">
                 <!-- <mat-icon class="avatar-icon">account_circle</mat-icon> -->
                 <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'"
-                    [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
+                  [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
               </div>
               <div class="user-details">
                 <h4 class="username">{{ user.username }}</h4>
               </div>
             </div>
 
-            <button *ngIf="!user.isfollowing" mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
-              [attr.aria-label]="'Follow ' + user.username">
+            <button *ngIf="!user.isfollowing" mat-raised-button color="primary" class="follow-btn"
+              (click)="follow(user)" [attr.aria-label]="'Follow ' + user.username">
+              <mat-icon>person_add</mat-icon>
               Follow
             </button>
             <button *ngIf="user.isfollowing" mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
               [attr.aria-label]="'Follow ' + user.username">
+              <mat-icon>person_remove</mat-icon>
               UnFollow
             </button>
           </div>

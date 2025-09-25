@@ -91,12 +91,6 @@ export class Home implements OnInit {
   }
 
   private initializeComponent(): void {
-    const token = this.homeService.getToken();
-    if (!token) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
     // Sequential loading approach
     this.loadCurrentUser();
     this.loadPosts();

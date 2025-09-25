@@ -9,8 +9,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.util.AntPathMatcher;
+
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -23,13 +26,14 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
 
     // Define public endpoints that should skip JWT validation
     private final List<String> publicEndpoints = Arrays.asList(
-        "/api/login",
-        "/api/register"
-    );
-    
+            "/api/login",
+            "/api/register",
+            "/uploads/**");
 
     public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -98,15 +102,15 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } else {
             System.out.println("❌ Missing or invalid Authorization header");
-        //    sendUnauthorizedResponse(response, "❌ Missing or invalid Authorization header" );
-        //         return;
+            sendUnauthorizedResponse(response, "❌ Missing or invalid Authorization header");
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
 
     private boolean isPublicEndpoint(String requestPath) {
-        return publicEndpoints.stream().anyMatch(requestPath::equals);
+        return publicEndpoints.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
     }
 
     private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
