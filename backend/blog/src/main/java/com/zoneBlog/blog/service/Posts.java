@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,21 +45,29 @@ public class Posts {
 
     public Post createPost(Authentication authentication, @RequestBody PostRequest request, MultipartFile mediaFile) {
         String description = request.getDescription();
+        String title = request.getTitle();
 
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-
+        if (title == null || title.trim().isEmpty()) {
+            throw new RuntimeException("Post title cannot be empty");
+        }
+         title = title.replaceAll("\r\n", "\n");
+        if (title.length() > 280) {
+            throw new RuntimeException("Post description cannot exceed 1000 characters");
+        }
         if (description == null || description.trim().isEmpty()) {
             throw new RuntimeException("Post description cannot be empty");
         }
         description = description.replaceAll("\r\n", "\n");
-        if (description.length() > 1000) {
+        if (description.length() > 5000) {
             throw new RuntimeException("Post description cannot exceed 1000 characters");
         }
 
         Post post = new Post();
+        post.setTitle(title);
         post.setDescription(description.trim());
         post.setUser(user);
         post.setCreatedAt(LocalDateTime.now());
@@ -103,16 +112,18 @@ public class Posts {
     }
 
     // private void deleteOldMediaFile(String mediaUrl) {
-    //     // System.err.println("=========="+mediaUrl);
-    //     if (mediaUrl != null && mediaUrl.startsWith("http://localhost:8080/uploads/")) {
-    //         try {
-    //             String fileName = mediaUrl.substring("http://localhost:8080/uploads/".length());
-    //             Path filePath = Paths.get(helper.uploadDir, fileName);
-    //             Files.deleteIfExists(filePath);
-    //         } catch (IOException e) {
-    //             System.err.println("Failed to delete old media file: " + e.getMessage());
-    //         }
-    //     }
+    // // System.err.println("=========="+mediaUrl);
+    // if (mediaUrl != null &&
+    // mediaUrl.startsWith("http://localhost:8080/uploads/")) {
+    // try {
+    // String fileName =
+    // mediaUrl.substring("http://localhost:8080/uploads/".length());
+    // Path filePath = Paths.get(helper.uploadDir, fileName);
+    // Files.deleteIfExists(filePath);
+    // } catch (IOException e) {
+    // System.err.println("Failed to delete old media file: " + e.getMessage());
+    // }
+    // }
     // }
 
     public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request,
@@ -213,6 +224,15 @@ public class Posts {
             return p;
         }).collect(Collectors.toList());
         return posts;
+    }
+
+    public Post getPost(Authentication authentication, Long id) {
+        User CurrentUser = helper.getCurrentUser(authentication);
+        if (CurrentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        return postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 
 }

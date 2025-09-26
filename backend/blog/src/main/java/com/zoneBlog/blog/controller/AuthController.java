@@ -27,10 +27,6 @@ import java.util.List;
 
 import java.util.Map;
 
-
-
-
-
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -71,10 +67,12 @@ public class AuthController {
     public ResponseEntity<?> createPost(
             Authentication authentication,
             @RequestPart("description") String description,
+            @RequestPart("title") String title,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
         try {
             PostRequest request = new PostRequest();
             request.setDescription(description);
+            request.setTitle(title);
             Post post = Posts.createPost(authentication, request, mediaFile);
             return ResponseEntity.ok(post);
         } catch (Exception e) {
@@ -127,26 +125,26 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to like post: " + e.getMessage()));
         }
     }
+
     @GetMapping("/posts/CurrentUserPost")
-    public  ResponseEntity<?> getMyPosts(Authentication authentication) {
-         try {
+    public ResponseEntity<?> getMyPosts(Authentication authentication) {
+        try {
             List<Post> posts = Posts.getMyPosts(authentication);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
         }
     }
+
     @GetMapping("/posts/{username}")
-    public ResponseEntity<?> getPostsUser(Authentication authentication,@PathVariable String username) {
-         try {
-            List<Post> posts = Posts.getPostsUser(authentication,username);
+    public ResponseEntity<?> getPostsUser(Authentication authentication, @PathVariable String username) {
+        try {
+            List<Post> posts = Posts.getPostsUser(authentication, username);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
         }
     }
-    
-    
 
     @Autowired
     private Users user;
@@ -155,11 +153,11 @@ public class AuthController {
     public ResponseEntity<?> getAllUsers(Authentication authentication) {
         try {
             List<User> users = user.getAllUsers(authentication);
-            List<Map<String, Object>> response = new ArrayList<>(); 
-            User currentUser = helper.getCurrentUser(authentication); 
+            List<Map<String, Object>> response = new ArrayList<>();
+            User currentUser = helper.getCurrentUser(authentication);
 
             for (User user : users) {
-                Map<String, Object> userResponse = new HashMap<>(); 
+                Map<String, Object> userResponse = new HashMap<>();
                 userResponse.put("id", user.getId());
                 userResponse.put("username", user.getUsername());
                 userResponse.put("email", user.getEmail());
@@ -167,7 +165,7 @@ public class AuthController {
                 boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(currentUser.getId(),
                         user.getId());
                 userResponse.put("isfollowing", isFollowing);
-                response.add(userResponse); 
+                response.add(userResponse);
             }
 
             return ResponseEntity.ok(response);
@@ -186,28 +184,38 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to follow user: " + e.getMessage()));
         }
     }
+
     @PostMapping("profile")
     public ResponseEntity<?> updateProfile(Authentication authentication,
             @RequestPart(value = "avatarFile", required = false) MultipartFile avatarFile,
             @RequestPart("username") String username,
-            @RequestPart("bio") String bio,
+            @RequestPart(value = "bio", required = false) String bio,
             @RequestPart(value = "removeImage", required = false) String removeImage) {
         try {
-            profile.updateProfile(authentication,username,bio,removeImage,avatarFile);
+            profile.updateProfile(authentication, username, bio, removeImage, avatarFile);
             return ResponseEntity.ok(Map.of("message", "update Profile successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @GetMapping("profile/{username}")
-    public ResponseEntity<?> getInfoUser(Authentication authentication,@PathVariable String username) {
-         try {
-             return profile.getInfoUser(authentication,username);
+    public ResponseEntity<?> getInfoUser(Authentication authentication, @PathVariable String username) {
+        try {
+            return profile.getInfoUser(authentication, username);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
         }
     }
-    
-    
+
+    @GetMapping("post/{id}")
+    public ResponseEntity<?> getPost(Authentication authentication, @PathVariable Long id) {
+        try {
+           Post posts = Posts.getPost(authentication, id);
+            return ResponseEntity.ok(posts);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get post: " + e.getMessage()));
+        }
+    }
 
 }

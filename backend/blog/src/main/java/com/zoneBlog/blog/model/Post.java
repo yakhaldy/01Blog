@@ -22,7 +22,10 @@ public class Post {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, length = 280)
+    private String title;
+
+    @Column(nullable = false, length = 5000)
     private String description;
 
     @Column(name = "media_url")

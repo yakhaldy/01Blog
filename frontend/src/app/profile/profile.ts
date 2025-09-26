@@ -248,6 +248,10 @@ export class Profile implements OnInit {
   getImage(path: string | undefined): string | undefined {
     return this.auth.getImage(path)
   }
+  goToPost(id: number): void {
+    console.log('go to post', id);
+    this.router.navigate([`post/${id}`]);
+  }
 
   isImage = isImage;
   isVideo = isVideo;

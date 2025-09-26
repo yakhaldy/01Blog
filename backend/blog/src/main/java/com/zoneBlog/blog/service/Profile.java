@@ -84,12 +84,14 @@ public class Profile {
         if (username.length() > 30) {
             throw new RuntimeException("Username exceeds maximum character limit");
         }
-        bio = bio.replaceAll("\r\n", "\n");
-        if (bio.length() > 200) {
-            throw new RuntimeException("Bio exceeds maximum character limit");
+        if (bio != null){
+            bio = bio.replaceAll("\r\n", "\n");
+            if (bio.length() > 200) {
+                throw new RuntimeException("Bio exceeds maximum character limit");
+            }
+            user.setBio(bio);
         }
         user.setUsername(username);
-        user.setBio(bio);
 
         if (avatarFile != null && !avatarFile.isEmpty()) {
             helper.deleteOldMediaFile(user.getAvatar());

@@ -230,7 +230,7 @@
     width: auto; 
     margin-top: 0; 
     z-index: auto; 
-    height: auto; 
+    height: auto;
 }
 
 .post-form {
@@ -712,6 +712,7 @@
 /* Post Content */
 .post-content {
     margin-bottom: 12px;
+    cursor: pointer;
 }
 
 .post-description {
@@ -1026,3 +1027,7 @@
         line-height: 18px;
     }
 }
+
+
+
+

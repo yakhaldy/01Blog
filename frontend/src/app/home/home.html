@@ -54,14 +54,22 @@
       <section class="create-post-card" role="region" aria-label="Create new post">
         <form class="post-form" (ngSubmit)="createPost()" #postForm="ngForm">
           <div class="post-input-container">
+             <mat-form-field class="post-textarea" appearance="outline">
+             <input matInput [(ngModel)]="newPost.title" name="postTitle" rows="3" id="input"
+                placeholder="What's title?" maxlength="280" aria-label="Post content" #postTextarea
+                style="color: aliceblue;"></textarea>
+              <mat-hint>{{ postTitelCharacterCount }}/280</mat-hint>
+            </mat-form-field>
+
             <mat-form-field class="post-textarea" appearance="outline">
               <textarea matInput [(ngModel)]="newPost.description" name="postDescription" rows="3" id="input"
-                placeholder="What's happening?" maxlength="1000" aria-label="Post content" #postTextarea
+                placeholder="What's happening?" maxlength="5000" aria-label="Post content" #postTextarea
                 style="color: aliceblue;"></textarea>
-              <mat-hint>{{ postCharacterCount }}/1000</mat-hint>
+              <mat-hint>{{ postCharacterCount }}/5000</mat-hint>
             </mat-form-field>
 
             <!-- Media Upload Section -->
+             
             <!-- File Input -->
             <label for="file-input" class="file-upload-label">
               <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
@@ -100,7 +108,7 @@
         </div>
         <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
           <article *ngFor="let post of posts; " class="post-card" role="article"
-            [attr.aria-label]="'Post by ' + post.user.username">
+            [attr.aria-label]="'Post by ' + post.user.username" >
 
             <!-- Post Header -->
             <header class="post-header">
@@ -142,8 +150,8 @@
             </header>
 
             <!-- Post Content -->
-            <div class="post-content">
-              <p class="post-description">{{ post.description }}</p>
+            <div class="post-content" (click)="goToPost(post.id!)">
+              <p class="post-description">{{ post.title }}</p>
 
               <!-- Media Content -->
               <div class="post-media" *ngIf="post.mediaUrl">
@@ -180,7 +188,7 @@
                 </button>
                 <span class="stat-count">{{ post.likesCount || 0 }}</span>
 
-                <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="commentPoste(post.id!)">
+                <button mat-icon-button matTooltip="Comment" class="interaction-btn"  (click)="goToPost(post.id!)">
                   <mat-icon>comment</mat-icon>
                 </button>
                 <span class="stat-count">{{ post.commentsCount || 0 }}</span>

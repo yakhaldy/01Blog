@@ -24,12 +24,14 @@ export interface UpdateProfileResult {
 }
 
 export interface NewPost {
+  title: string;
   description: string;
   mediaFile?: File;
 }
 
 export interface Post {
   id: number;
+  title: string;
   description: string;
   mediaUrl?: string;
   user: {
@@ -37,10 +39,22 @@ export interface Post {
     username: string;
     email: string;
     avatar?: string;
+    bio?: string;
   };
   isLiked: boolean;
   createdAt: Date;
   updatedAt: Date;
   likesCount: number;
   commentsCount: number;
+}
+
+
+
+export interface Comment {
+  id: number;
+  content: string;
+  user: User;
+  createdAt: string;
+  likesCount: number;
+  isLiked: boolean;
 }

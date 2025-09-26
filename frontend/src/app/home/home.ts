@@ -74,6 +74,7 @@ export class Home implements OnInit {
   selectedFileName = '';
 
   newPost: NewPost = {
+    title: '',
     description: '',
     mediaFile: undefined
   };
@@ -101,7 +102,7 @@ export class Home implements OnInit {
     this.homeService.getCurrentUser().subscribe({
       next: (user) => {
         console.log(user);
-        
+
         this.currentUser = user;
         this.isLoading = false;
         this.cdr.markForCheck();
@@ -119,9 +120,9 @@ export class Home implements OnInit {
       next: (users) => {
         this.users = users;
         this.isLoadingUsers = false;
-        console.log("==> ",users);
+        console.log("==> ", users);
         this.cdr.markForCheck();
-        
+
       },
       error: (error) => {
         this.handleAuthError(error);
@@ -142,8 +143,8 @@ export class Home implements OnInit {
   private loadPosts(): void {
     this.homeService.getAllPosts().subscribe({
       next: (posts) => {
-        console.log("all posts==>",posts);
-        
+        console.log("all posts==>", posts);
+
         this.posts = posts;
         this.isLoadingPost = false;
         this.cdr.markForCheck();
@@ -264,12 +265,15 @@ export class Home implements OnInit {
   createPost(): void {
     if (!this.isPostFormValid) return;
 
-    const postData = {
-      description: this.newPost.description.trim(),
-      mediaFile: this.newPost.mediaFile
-    };
+    const formData = new FormData();
+    formData.append('title', this.newPost.title.trim());
+    formData.append('description', this.newPost.description.trim());
 
-    this.homeService.createPost(postData).subscribe({
+    if (this.newPost.mediaFile) {
+      formData.append('mediaFile', this.newPost.mediaFile);
+    }
+
+    this.homeService.createPost(formData).subscribe({
       next: (newPost) => {
         this.posts = [newPost, ...this.posts];
         this.resetPostForm();
@@ -283,8 +287,9 @@ export class Home implements OnInit {
     });
   }
 
+
   private resetPostForm(): void {
-    this.newPost = { description: '', mediaFile: undefined };
+    this.newPost = { title: '', description: '', mediaFile: undefined };
     this.selectedFileName = '';
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
@@ -298,10 +303,10 @@ export class Home implements OnInit {
       // Optimistic update
       const originalIsLiked = post.isLiked;
       const originalLikesCount = post.likesCount;
-      
+
       post.isLiked = !post.isLiked;
       post.likesCount += post.isLiked ? 1 : -1;
-      
+
       this.cdr.markForCheck();
 
       this.homeService.likePost(id).subscribe({
@@ -323,23 +328,24 @@ export class Home implements OnInit {
     }
   }
 
-  commentPoste(id: number): void {
-    console.log('Comment on post', id);
+  goToPost(id: number): void {
+    console.log('go to post', id);
+    this.router.navigate([`post/${id}`]);
   }
 
   follow(user: User): void {
     if (!user.id) return;
     console.log('Following user:', user.username);
     this.homeService.follow(user.id).subscribe({
-      next: (res)=>{
+      next: (res) => {
         console.log(res);
-         const index = this.users.findIndex(u => u.id === user.id);
-          if (index !== -1) {
-            this.users[index].isfollowing = !this.users[index].isfollowing;
-          }
-          this.cdr.markForCheck();
+        const index = this.users.findIndex(u => u.id === user.id);
+        if (index !== -1) {
+          this.users[index].isfollowing = !this.users[index].isfollowing;
+        }
+        this.cdr.markForCheck();
       },
-      error: (error)=>{
+      error: (error) => {
         this.handleAuthError(error);
       }
     });
@@ -351,7 +357,7 @@ export class Home implements OnInit {
   }
 
   get isPostFormValid(): boolean {
-    return this.newPost.description.trim().length > 0 && !this.isCharacterLimitExceeded;
+    return this.newPost.description.trim().length > 0 && !this.isCharacterLimitExceeded && this.isCharacterTitleLimitExceeded;
   }
 
   get postCharacterCount(): number {
@@ -362,11 +368,20 @@ export class Home implements OnInit {
     return this.postCharacterCount > 1000;
   }
 
+
+  get postTitelCharacterCount(): number {
+    return this.newPost.title.length;
+  }
+  get isCharacterTitleLimitExceeded(): boolean {
+    return this.postTitelCharacterCount > 1000;
+  }
+
+
   // Optionally use these from home.helpers.ts
   isImage = isImage;
   isVideo = isVideo;
 
-getImage(path: string | undefined): string | undefined {
-  return this.homeService.getImage(path)
- }
+  getImage(path: string | undefined): string | undefined {
+    return this.homeService.getImage(path)
+  }
 }

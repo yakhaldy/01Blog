@@ -41,15 +41,10 @@ export class Auth {
 
 
 
-createPost(postData: CreatePostRequest): Observable<Post> {
-    const formData = new FormData();
-    formData.append('description', postData.description);
-    
-    if (postData.mediaFile) {
-      formData.append('mediaFile', postData.mediaFile);
-    }
+createPost(postData: FormData): Observable<Post> {
+ 
 
-    return this.http.post<Post>(`${this.apiUrl}/posts`, formData);
+    return this.http.post<Post>(`${this.apiUrl}/posts`, postData);
   }
 
     
@@ -90,6 +85,9 @@ updateProfile(data: FormData):Observable<any>{
       return `${this.urlImage}/${path}`
     }
     return undefined;
+  }
+   getPost(id: number): Observable<Post> {
+    return this.http.get<Post>(`${this.apiUrl}/post/${id}`)
   }
    
 }

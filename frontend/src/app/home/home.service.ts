@@ -27,7 +27,7 @@ export class HomeService {
     return this.auth.deletePost(id);
   }
 
-  createPost(postData: CreatePostRequest): Observable<Post> {
+  createPost(postData: FormData): Observable<Post> {
     return this.auth.createPost(postData);
   }
 
