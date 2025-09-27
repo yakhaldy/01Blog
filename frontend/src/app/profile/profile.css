@@ -6,8 +6,10 @@
     position: relative;
     overflow-x: hidden;
     color: #ffffff;
-    padding-top: 80px; /* Account for fixed navbar */
+    padding-top: 80px;
+    /* Account for fixed navbar */
 }
+
 /* Background Elements */
 .creative-bg {
     position: fixed;
@@ -56,10 +58,13 @@
 }
 
 @keyframes floatUpDown {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px) scale(1);
         opacity: 0.3;
     }
+
     50% {
         transform: translateY(-20px) scale(1.1);
         opacity: 0.6;
@@ -111,7 +116,7 @@
 }
 
 
-.banner-image{
+.banner-image {
     height: 100%;
     width: 100%;
 }
@@ -169,8 +174,13 @@
 }
 
 @keyframes rotateBorder {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .profile-avatar:hover {
@@ -378,9 +388,17 @@
 }
 
 @keyframes shimmer {
-    0% { opacity: 0.3; }
-    50% { opacity: 0.6; }
-    100% { opacity: 0.3; }
+    0% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 0.3;
+    }
 }
 
 
@@ -406,63 +424,63 @@
     .profile-container {
         padding-top: 70px;
     }
-    
+
     .profile-hero {
         padding: 20px 15px;
         margin-bottom: 20px;
     }
-    
+
     .profile-main {
         grid-template-columns: 1fr;
         gap: 24px;
         padding: 0 20px 30px;
         margin-top: -40px;
     }
-    
+
     .avatar-section {
         order: 1;
         align-items: center;
     }
-    
+
     .profile-avatar {
         width: 100px;
         height: 100px;
     }
-    
+
     .avatar-ring {
         width: 120px;
         height: 120px;
     }
-    
+
     .quick-stats {
         justify-content: center;
     }
-    
+
     .profile-info-section {
         order: 2;
         text-align: center;
         gap: 20px;
     }
-    
+
     .display-name {
         font-size: 24px;
     }
-    
+
     .action-buttons,
     .external-actions {
         justify-content: center;
         flex-wrap: wrap;
     }
-    
-   
-    
- 
-    
+
+
+
+
+
     .posts-grid {
         grid-template-columns: 1fr;
     }
-    
-    
+
+
     .floating-shapes {
         display: none;
     }
@@ -472,61 +490,61 @@
     .profile-hero {
         padding: 15px 10px;
     }
-    
+
     .profile-main {
         padding: 0 15px 20px;
     }
-    
+
     .banner-gradient {
         height: 140px;
     }
-    
+
     .profile-avatar {
         width: 80px;
         height: 80px;
     }
-    
+
     .avatar-ring {
         width: 100px;
         height: 100px;
     }
-    
+
     .display-name {
         font-size: 20px;
     }
-    
+
     .quick-stats {
         gap: 8px;
     }
-    
+
     .stat-card {
         padding: 8px 12px;
     }
-    
+
     .stat-number {
         font-size: 14px;
     }
-    
+
     .stat-label {
         font-size: 10px;
     }
-    
+
     .primary-btn,
     .secondary-btn {
         height: 36px;
         font-size: 14px;
         padding: 0 16px;
     }
-    
-    
+
+
     .posts-grid {
         gap: 16px;
     }
-    
+
     .profile-post-card {
         border-radius: 12px;
     }
- 
+
 }
 
 /* Custom Scrollbar */
@@ -546,4 +564,146 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(99, 102, 241, 0.5);
+}
+
+/* Backdrop for report popup */
+.report-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Popup container */
+.report-popup {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 25%, #1a202c 50%, #2d3748 75%, #1a1a1a 100%);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  animation: slideInDialog 0.3s ease-out;
+}
+
+/* Title */
+.report-title {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(47, 51, 54, 0.8);
+  padding-bottom: 12px;
+}
+
+/* Material form field inside report */
+.report-popup .mat-form-field {
+  width: 100%;
+  --mdc-outlined-text-field-outline-color: rgba(47, 51, 54, 0.6);
+  --mdc-outlined-text-field-focus-outline-color: #1d9bf0;
+  --mdc-outlined-text-field-label-text-color: #8b98a5;
+  --mdc-outlined-text-field-input-text-color: #ffffff;
+  --mdc-outlined-text-field-container-color: transparent;
+  --mdc-outlined-text-field-hover-outline-color: rgba(47, 51, 54, 0.8);
+}
+
+/* Textarea */
+.report-textarea {
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 24px;
+  padding: 12px 0;
+  background: transparent;
+  border: none;
+  resize: none;
+  width:  100%;
+}
+.content-textarea{
+    width: 100%;
+}
+
+.report-textarea::placeholder {
+  color: #8b98a5;
+}
+
+/* Action buttons */
+.report-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.report-actions button {
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 0 20px;
+  height: 36px;
+  min-width: 80px;
+  transition: all 0.2s ease;
+}
+
+/* Cancel button */
+.report-actions button[mat-button] {
+  color: #8b98a5;
+  border: 1px solid rgba(139, 152, 165, 0.3);
+  background: transparent;
+}
+
+.report-actions button[mat-button]:hover {
+  color: #ffffff;
+  border-color: rgba(139, 152, 165, 0.6);
+  background: rgba(139, 152, 165, 0.1);
+}
+
+/* Submit (warn) button */
+.report-actions button[mat-raised-button] {
+  background: #e0245e;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.report-actions button[mat-raised-button]:hover {
+  background: #c81e53;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(224, 36, 94, 0.3);
+}
+
+/* Dialog appearance animation */
+@keyframes slideInDialog {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .report-popup {
+    width: 95vw;
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .report-title {
+    font-size: 18px;
+  }
+
+  .report-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .report-actions button {
+    width: 100%;
+  }
 }

@@ -1,10 +1,10 @@
 <div class="profile-container">
-     <div class="creative-bg">
+  <div class="creative-bg">
     <div class="floating-circle circle-1"></div>
     <div class="floating-circle circle-2"></div>
     <div class="floating-circle circle-3"></div>
   </div>
- <app-navbar></app-navbar>
+  <app-navbar></app-navbar>
 
   <!-- Profile Hero Section -->
   <section class="profile-hero">
@@ -19,8 +19,7 @@
       <div *ngIf="profileUser && !isLoading" class="hero-main">
         <div class="profile-banner">
           <div class="banner-gradient">
-              <img [src]="'assets/img/banner.png'"
-                   class="banner-image" loading="lazy">
+            <img [src]="'assets/img/banner.png'" class="banner-image" loading="lazy">
           </div>
           <div class="profile-main">
             <div class="avatar-section">
@@ -29,7 +28,7 @@
                   [alt]="profileUser.username + ' avatar'" class="profile-avatar" loading="lazy">
                 <div class="avatar-ring"></div>
               </div>
-              
+
               <!-- Quick Stats Floating Cards -->
               <div class="quick-stats">
                 <div class="stat-card">
@@ -67,20 +66,32 @@
                   <mat-icon>edit</mat-icon>
                   Edit Profile
                 </button>
-                
+
                 <!-- Other User Actions -->
                 <div *ngIf="!isOwnProfile" class="external-actions">
-                  <button *ngIf="!profileUser.isfollowing" mat-raised-button class="primary-btn follow-btn" 
+                  <button *ngIf="!profileUser.isfollowing" mat-raised-button class="primary-btn follow-btn"
                     (click)="followUser()">
                     <mat-icon>person_add</mat-icon>
                     Follow
                   </button>
-                  <button *ngIf="profileUser.isfollowing" mat-raised-button class="secondary-btn unfollow-btn" 
+                  <button *ngIf="profileUser.isfollowing" mat-raised-button class="secondary-btn unfollow-btn"
                     (click)="followUser()">
                     <mat-icon>person_remove</mat-icon>
                     Unfollow
                   </button>
+
                 </div>
+                <button mat-menu-item (click)="openReportPopup()" class="interaction-btn">
+                  <mat-icon>report</mat-icon>
+                </button>
+
+                <!-- Trigger Button -->
+                <!-- <button mat-raised-button color="warn" (click)="openReportPopup()">Report Profile</button> -->
+
+                <!-- Report Popup -->
+
+
+
               </div>
             </div>
           </div>
@@ -88,76 +99,94 @@
       </div>
     </div>
   </section>
-      <!-- Posts Feed -->
-      <section class="posts-container" role="region" aria-label="Posts feed">
-        <div *ngIf="isLoadingPost" class="loading-container">
-          <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
-          <p class="loading-text">Loading...</p>
-        </div>
-        <!-- Posts will be dynamically added here -->
-        <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
-          <p class="empty-message">No posts yet. Be the first to share something!</p>
-        </div>
-        <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
-          <article *ngFor="let post of posts; " class="post-card" role="article"
-            [attr.aria-label]="'Post by ' + post.user.username">
 
-            <!-- Post Header -->
-            <header class="post-header">
-              <div class="post-author-info" >
-                <div class="author-avatar">
-                   <img [src]="getImage(profileUser?.avatar) || 'assets/img/default-avatar.png'"
-                    [alt]="profileUser?.username + ' profile picture'" class="avatar-icon" loading="lazy">
-                </div>
-                <div class="author-details">
-                  <h4 class="author-name">{{ post.user.username }}</h4>
-                  <time class="post-time" [attr.datetime]="post.createdAt">
-                    {{ post.createdAt | date:'medium' }}
-                  </time>
-                </div>
-              </div>
+  <div *ngIf="showReportPopup" class="report-popup-backdrop" >
+    <div class="report-popup" >
+      <h2 class="report-title">Report Profile</h2>
 
-              <!-- Post Actions Menu -->
-              <div class="post-actions" *ngIf="isMyPost(post)">
-                <button mat-icon-button [matMenuTriggerFor]="optionsMenu" class="Options" matTooltip="Options">
-                  <mat-icon>more_vert</mat-icon>
-                </button>
+      <mat-form-field class="content-textarea" appearance="fill" >
+        <mat-label>Reason for reporting</mat-label>
+        <textarea class="report-textarea" matInput rows="5" [(ngModel)]="reportReason"></textarea>
+      </mat-form-field>
 
-                <!-- Menu that shows when the button is clicked -->
-                <mat-menu #optionsMenu="matMenu" class="optionsMenu">
-                  <button mat-menu-item (click)="updatePost(post)">
-                    <mat-icon>edit</mat-icon>
-                    <span>Update</span>
-                  </button>
-                  <button mat-menu-item (click)="deletePost(post)">
-                    <mat-icon>delete</mat-icon>
-                    <span>Delete</span>
-                  </button>
-                </mat-menu>
-              </div>
-            </header>
+      <div class="report-actions">
+        <button mat-button (click)="cancelReport()">Cancel</button>
+        <button mat-raised-button color="warn" (click)="submitReport()">Submit</button>
+      </div>
+    </div>
+  </div>
 
-            <!-- Post Content -->
-            <div class="post-content" (click)="goToPost(post.id!)">
-              <p class="post-description">{{ post.description }}</p>
 
-              <!-- Media Content -->
-              <div class="post-media" *ngIf="post.mediaUrl">
-                <!-- IMAGE -->
-                <img *ngIf="isImage(post.mediaUrl)" [src]="getImage(post.mediaUrl)"
-                  [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
+  <!-- Posts Feed -->
+  <section class="posts-container" role="region" aria-label="Posts feed">
+    <div *ngIf="isLoadingPost" class="loading-container">
+      <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
+      <p class="loading-text">Loading...</p>
+    </div>
+    <!-- Posts will be dynamically added here -->
+    <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
+      <p class="empty-message">No posts yet. Be the first to share something!</p>
+    </div>
+    <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
+      <article *ngFor="let post of posts; " class="post-card" role="article"
+        [attr.aria-label]="'Post by ' + post.user.username">
 
-                <!-- VIDEO -->
-                <video *ngIf="isVideo(post.mediaUrl)" [src]="getImage(post.mediaUrl)" controls class="post-video"
-                  preload="metadata">
-                  Your browser does not support the video tag.
-                </video>
-              </div>
+        <!-- Post Header -->
+        <header class="post-header">
+          <div class="post-author-info">
+            <div class="author-avatar">
+              <img [src]="getImage(profileUser?.avatar) || 'assets/img/default-avatar.png'"
+                [alt]="profileUser?.username + ' profile picture'" class="avatar-icon" loading="lazy">
             </div>
+            <div class="author-details">
+              <h4 class="author-name">{{ post.user.username }}</h4>
+              <time class="post-time" [attr.datetime]="post.createdAt">
+                {{ post.createdAt | date:'medium' }}
+              </time>
+            </div>
+          </div>
 
-            <!-- Post Footer -->
-            <footer class="post-footer">
-              <div class="post-stats">
+          <!-- Post Actions Menu -->
+          <div class="post-actions" *ngIf="isMyPost(post)">
+            <button mat-icon-button [matMenuTriggerFor]="optionsMenu" class="Options" matTooltip="Options">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <!-- Menu that shows when the button is clicked -->
+            <mat-menu #optionsMenu="matMenu" class="optionsMenu">
+              <button mat-menu-item (click)="updatePost(post)">
+                <mat-icon>edit</mat-icon>
+                <span>Update</span>
+              </button>
+              <button mat-menu-item (click)="deletePost(post)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          </div>
+        </header>
+
+        <!-- Post Content -->
+        <div class="post-content" (click)="goToPost(post.id!)">
+          <p class="post-description">{{ post.description }}</p>
+
+          <!-- Media Content -->
+          <div class="post-media" *ngIf="post.mediaUrl">
+            <!-- IMAGE -->
+            <img *ngIf="isImage(post.mediaUrl)" [src]="getImage(post.mediaUrl)"
+              [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
+
+            <!-- VIDEO -->
+            <video *ngIf="isVideo(post.mediaUrl)" [src]="getImage(post.mediaUrl)" controls class="post-video"
+              preload="metadata">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
+        <!-- Post Footer -->
+        <footer class="post-footer">
+          <!-- <div class="post-stats">
                 <span class="stat-item">
                   <mat-icon>favorite_border</mat-icon>
                   <span class="stat-count">{{ post.likesCount || 0 }}</span>
@@ -166,22 +195,24 @@
                   <mat-icon>comment</mat-icon>
                   <span class="stat-count">{{ post.commentsCount || 0 }}</span>
                 </span>
-              </div>
+              </div> -->
 
-              <div class="post-interactions">
-                <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
-                  <mat-icon [ngClass]="{ 'liked': post.isLiked }">
-                    {{ post.isLiked ? 'favorite' : 'favorite_border' }}
-                  </mat-icon>
-                </button>
+          <div class="post-interactions">
+            <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
+              <mat-icon [ngClass]="{ 'liked': post.isLiked }">
+                {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+              </mat-icon>
+            </button>
+            <span class="stat-count">{{ post.likesCount || 0 }}</span>
 
-                <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="commentPoste(post.id!)">
-                  <mat-icon>comment</mat-icon>
-                </button>
-              </div>
-            </footer>
-          </article>
-        </div>
-      </section>
+            <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="goToPost(post.id!)">
+              <mat-icon>comment</mat-icon>
+            </button>
+            <span class="stat-count">{{ post.commentsCount || 0 }}</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+  </section>
 
 </div>

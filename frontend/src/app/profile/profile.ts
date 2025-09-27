@@ -8,6 +8,10 @@ import { isImage, isVideo } from '../home/home.helpers'
 import { MatDialog } from '@angular/material/dialog';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+
 import { EditProfile } from '../components/edit-profile/edit-profile'
 import { Navbar } from '../components/navbar/navbar';
 import { User, Post, UpdatePostResult, UpdateProfileResult } from '../home/home.model'
@@ -17,7 +21,9 @@ import { Auth } from '../auth'
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, Navbar, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatMenuModule],
+  imports: [CommonModule, Navbar, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatMenuModule, FormsModule,                  
+    MatFormFieldModule,
+    MatInputModule, ],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css', '..//home/home.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +37,9 @@ export class Profile implements OnInit {
   isLoading: boolean = true;
   isLoadingPost: boolean = true;
   posts: Post[] = [];
+
+  showReportPopup = false;
+  reportReason = '';
 
 
   constructor(
@@ -251,6 +260,32 @@ export class Profile implements OnInit {
   goToPost(id: number): void {
     console.log('go to post', id);
     this.router.navigate([`post/${id}`]);
+  }
+
+  openReportPopup() {
+    this.showReportPopup = true;
+  }
+
+  cancelReport() {
+    this.showReportPopup = false;
+    this.reportReason = '';
+  }
+
+  submitReport() {
+    // Handle report logic here (e.g., send to API)
+    console.log('Report submitted:', this.reportReason, " ", this.profileUser?.username);
+    this.auth.Report({id: this.profileUser?.username, reportReason: this.reportReason}).subscribe({
+          next: () => {
+         
+          },
+          error: (error) => {
+            console.error('Report failed:', error);
+            this.cdr.markForCheck();
+          }
+        });
+    // Close popup
+    this.showReportPopup = false;
+    this.reportReason = '';
   }
 
   isImage = isImage;

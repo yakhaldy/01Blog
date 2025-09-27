@@ -55,7 +55,7 @@
         <form class="post-form" (ngSubmit)="createPost()" #postForm="ngForm">
           <div class="post-input-container">
              <mat-form-field class="post-textarea" appearance="outline">
-             <input matInput [(ngModel)]="newPost.title" name="postTitle" rows="3" id="input"
+             <textarea matInput [(ngModel)]="newPost.title" name="postTitle" rows="3" id="input"
                 placeholder="What's title?" maxlength="280" aria-label="Post content" #postTextarea
                 style="color: aliceblue;"></textarea>
               <mat-hint>{{ postTitelCharacterCount }}/280</mat-hint>

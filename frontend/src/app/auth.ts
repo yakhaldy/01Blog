@@ -89,5 +89,9 @@ updateProfile(data: FormData):Observable<any>{
    getPost(id: number): Observable<Post> {
     return this.http.get<Post>(`${this.apiUrl}/post/${id}`)
   }
+
+  Report(data: any){
+    return this.http.post(`${this.apiUrl}/profile/report`, data)
+  }
    
 }
