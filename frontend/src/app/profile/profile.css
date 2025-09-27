@@ -707,3 +707,26 @@
     width: 100%;
   }
 }
+
+/* Validation Messages */
+.validation-message {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+}
+
+.validation-message.error {
+    color: #f91880;
+    background: rgba(249, 24, 128, 0.1);
+    border: 1px solid rgba(249, 24, 128, 0.3);
+}
+
+.validation-message.error::before {
+    content: "⚠️";
+    font-size: 16px;
+}

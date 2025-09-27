@@ -21,9 +21,9 @@ import { Auth } from '../auth'
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, Navbar, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatMenuModule, FormsModule,                  
+  imports: [CommonModule, Navbar, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatMenuModule, FormsModule,
     MatFormFieldModule,
-    MatInputModule, ],
+    MatInputModule,],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css', '..//home/home.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +40,8 @@ export class Profile implements OnInit {
 
   showReportPopup = false;
   reportReason = '';
+  errorReport= '';
+  isErrorReport = false;
 
 
   constructor(
@@ -272,21 +274,31 @@ export class Profile implements OnInit {
   }
 
   submitReport() {
-    // Handle report logic here (e.g., send to API)
-    console.log('Report submitted:', this.reportReason, " ", this.profileUser?.username);
-    this.auth.Report({id: this.profileUser?.username, reportReason: this.reportReason}).subscribe({
-          next: () => {
-         
-          },
-          error: (error) => {
-            console.error('Report failed:', error);
-            this.cdr.markForCheck();
-          }
-        });
-    // Close popup
-    this.showReportPopup = false;
-    this.reportReason = '';
+    console.log('Report submitted:', this.reportReason, this.profileUser?.id); 
+    this.auth.Report({
+      reportedUserId: this.profileUser?.id,
+      reportReason: this.reportReason
+    }).subscribe({
+      next: () => {
+        console.log('Report successfully sent');
+        this.isErrorReport = false;
+
+        this.showReportPopup = false;
+        this.reportReason = '';
+        this.cdr.markForCheck();
+
+      },
+      error: (error) => {
+        console.error('Report failed:', error);
+        this.errorReport = error.error.error;
+        this.isErrorReport = true;
+        this.cdr.markForCheck();
+      }
+    });
+      //  this.showReportPopup = false;
+      //   this.reportReason = '';
   }
+
 
   isImage = isImage;
   isVideo = isVideo;

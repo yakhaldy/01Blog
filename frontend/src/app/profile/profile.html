@@ -100,11 +100,11 @@
     </div>
   </section>
 
-  <div *ngIf="showReportPopup" class="report-popup-backdrop" >
-    <div class="report-popup" >
+  <div *ngIf="showReportPopup" class="report-popup-backdrop">
+    <div class="report-popup">
       <h2 class="report-title">Report Profile</h2>
 
-      <mat-form-field class="content-textarea" appearance="fill" >
+      <mat-form-field class="content-textarea" appearance="fill">
         <mat-label>Reason for reporting</mat-label>
         <textarea class="report-textarea" matInput rows="5" [(ngModel)]="reportReason"></textarea>
       </mat-form-field>
@@ -112,6 +112,9 @@
       <div class="report-actions">
         <button mat-button (click)="cancelReport()">Cancel</button>
         <button mat-raised-button color="warn" (click)="submitReport()">Submit</button>
+      </div>
+      <div *ngIf="isErrorReport" class="validation-message error">
+        {{ errorReport }}
       </div>
     </div>
   </div>

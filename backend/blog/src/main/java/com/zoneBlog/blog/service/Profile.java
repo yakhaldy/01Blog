@@ -10,10 +10,14 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.zoneBlog.blog.dataTransferObj.ReportRequest;
+import com.zoneBlog.blog.model.Report;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.FollowRepository;
+import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +28,8 @@ public class Profile {
     private UserRepository userRepository;
     @Autowired
     private FollowRepository followRepository;
+    @Autowired
+    private ReportRepository reportRepository;
     @Autowired
     private Helper helper;
 
@@ -84,7 +90,7 @@ public class Profile {
         if (username.length() > 30) {
             throw new RuntimeException("Username exceeds maximum character limit");
         }
-        if (bio != null){
+        if (bio != null) {
             bio = bio.replaceAll("\r\n", "\n");
             if (bio.length() > 200) {
                 throw new RuntimeException("Bio exceeds maximum character limit");
@@ -103,6 +109,32 @@ public class Profile {
             user.setAvatar(null);
         }
         userRepository.save(user);
+    }
+
+    public void report(Authentication authentication, @RequestBody ReportRequest request) {
+        User currentUser = helper.getCurrentUser(authentication);
+        if (currentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        User reportedUser = userRepository.findById(request.getReportedUserId()).orElse(null);
+        if (reportedUser == null) {
+            throw new RuntimeException("reported User not found");
+        }
+
+        if (currentUser.getId().equals(reportedUser.getId())) {
+            throw new IllegalArgumentException("You cannot report yourself.");
+        }
+        if (reportRepository.existsByReportedUserAndReportedBy(reportedUser, currentUser)) {
+            throw new RuntimeException("You have already reported this user.");
+        }
+
+        Report report = new Report();
+        report.setReportedUser(reportedUser);
+        report.setReportedBy(currentUser);
+        report.setReportReason(request.getReportReason());
+
+        reportRepository.save(report);
+
     }
 
 }

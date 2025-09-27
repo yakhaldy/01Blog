@@ -3,6 +3,7 @@ package com.zoneBlog.blog.controller;
 import com.zoneBlog.blog.dataTransferObj.LoginRequest;
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.dataTransferObj.RegisterRequest;
+import com.zoneBlog.blog.dataTransferObj.ReportRequest;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.User;
 
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api")
@@ -207,6 +209,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
         }
     }
+    @PostMapping("profile/report")
+    public  ResponseEntity<?> report(Authentication authentication, @RequestBody ReportRequest request) {
+       try {
+            profile.report(authentication, request);
+            return ResponseEntity.ok(Map.of("message", "report Profile successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
+        }
+    }
+    
 
     @GetMapping("post/{id}")
     public ResponseEntity<?> getPost(Authentication authentication, @PathVariable Long id) {
