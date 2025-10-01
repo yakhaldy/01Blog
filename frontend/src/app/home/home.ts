@@ -72,7 +72,7 @@ export class Home implements OnInit {
   isLoadingUsers = true;
   showMediaUpload = false;
   selectedFileName = '';
-
+  isSubmittingPost = false;
   newPost: NewPost = {
     title: '',
     description: '',
@@ -263,7 +263,9 @@ export class Home implements OnInit {
   }
 
   createPost(): void {
-    if (!this.isPostFormValid) return;
+    if (!this.isPostFormValid || this.isSubmittingPost) return;
+
+    this.isSubmittingPost = true;
 
     const formData = new FormData();
     formData.append('title', this.newPost.title.trim());
@@ -276,11 +278,13 @@ export class Home implements OnInit {
     this.homeService.createPost(formData).subscribe({
       next: (newPost) => {
         this.posts = [newPost, ...this.posts];
+        this.isSubmittingPost = false;
         this.resetPostForm();
         this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to create post:', error);
+        this.isSubmittingPost = false;
         this.handleAuthError(error);
         this.cdr.markForCheck();
       }

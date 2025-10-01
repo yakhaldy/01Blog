@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.zoneBlog.blog.model.Follow;
-
+import java.util.*;
 
 @Repository
 public interface FollowRepository extends JpaRepository<Follow, Long> {
@@ -20,4 +20,5 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
 
     void deleteByFollower_IdAndFollowing_Id(Long followerId, Long followingId);
+     List<Follow> findByFollower_Id(Long followerId);
 }

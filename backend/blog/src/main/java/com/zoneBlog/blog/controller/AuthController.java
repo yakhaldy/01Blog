@@ -28,7 +28,6 @@ import java.util.List;
 
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -148,6 +147,17 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/posts/comment")
+    public ResponseEntity<?> createComment(Authentication authentication, @RequestPart("content") String content,
+            @RequestPart("postId") Long postId) {
+        try {
+            Posts.createComment(authentication, content, postId);
+            return ResponseEntity.ok(Map.of("message", "Comment post successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to Comment post: " + e.getMessage()));
+        }
+    }
+
     @Autowired
     private Users user;
 
@@ -209,21 +219,21 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
         }
     }
+
     @PostMapping("profile/report")
-    public  ResponseEntity<?> report(Authentication authentication, @RequestBody ReportRequest request) {
-       try {
+    public ResponseEntity<?> report(Authentication authentication, @RequestBody ReportRequest request) {
+        try {
             profile.report(authentication, request);
             return ResponseEntity.ok(Map.of("message", "report Profile successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
         }
     }
-    
 
     @GetMapping("post/{id}")
     public ResponseEntity<?> getPost(Authentication authentication, @PathVariable Long id) {
         try {
-           Post posts = Posts.getPost(authentication, id);
+            Post posts = Posts.getPost(authentication, id);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get post: " + e.getMessage()));

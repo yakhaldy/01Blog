@@ -828,6 +828,31 @@
     height: 18px;
 }
 
+.submit-post-btn {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 1) 0%, rgba(168, 85, 247, 1) 100%) !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 20px;
+    padding: 0 20px;
+    height: 36px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.submit-post-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.submit-post-btn:disabled {
+    background: rgba(107, 114, 128, 0.5) !important;
+    cursor: not-allowed;
+}
+
 /* Loading Animation for Images */
 .post-image {
     background: linear-gradient(90deg, rgba(47, 51, 54, 0.2) 0%, rgba(47, 51, 54, 0.4) 50%, rgba(47, 51, 54, 0.2) 100%);

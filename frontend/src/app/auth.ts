@@ -34,10 +34,6 @@ export class Auth {
   getInfoUser(username: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/profile/${username}`);
   }
-  
-  // getToken(): string | null {
-  //   return localStorage.getItem('token');
-  // }
 
 
 
@@ -67,9 +63,7 @@ createPost(postData: FormData): Observable<Post> {
   follow(userId: string):Observable<any>{
     return this.http.post<Post>(`${this.apiUrl}/users/follow`, {userId: userId})
   }
-//   getProfile(username: string): Observable<any> {
-//   return this.http.get(`${this.apiUrl}/users/profile/${username}`);
-// }
+
 getMyPosts():Observable<Post[]> {
    return this.http.get<Post[]>(`${this.apiUrl}/posts/CurrentUserPost`)
 }
@@ -92,6 +86,10 @@ updateProfile(data: FormData):Observable<any>{
 
   Report(data: any){
     return this.http.post(`${this.apiUrl}/profile/report`, data)
+  }
+
+  createComment(data: object):Observable<any>{
+    return this.http.post(`${this.apiUrl}/posts/comment`, data)
   }
    
 }

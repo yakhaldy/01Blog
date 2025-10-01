@@ -1,11 +1,9 @@
 package com.zoneBlog.blog.service;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,17 +12,20 @@ import org.springframework.security.core.Authentication;
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.User;
+import com.zoneBlog.blog.model.Follow;
 import com.zoneBlog.blog.model.Like;
 import com.zoneBlog.blog.repository.PostRepository;
 import com.zoneBlog.blog.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
+import com.zoneBlog.blog.model.Comment;
 
+import com.zoneBlog.blog.repository.FollowRepository;
 import com.zoneBlog.blog.repository.LikeRepository;
+import com.zoneBlog.blog.repository.CommentRepository;
 
-import java.nio.file.Path;
+
 import java.util.stream.Collectors;
-import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -39,6 +40,13 @@ public class Posts {
 
     @Autowired
     private UserRepository userRepository;
+
+     @Autowired
+    private CommentRepository CommentRepository;
+
+    
+     @Autowired
+    private FollowRepository followRepository;
 
     @Autowired
     private Helper helper;
@@ -56,14 +64,14 @@ public class Posts {
         }
          title = title.replaceAll("\r\n", "\n");
         if (title.length() > 280) {
-            throw new RuntimeException("Post description cannot exceed 1000 characters");
+            throw new RuntimeException("Post description cannot exceed 280 characters");
         }
         if (description == null || description.trim().isEmpty()) {
             throw new RuntimeException("Post description cannot be empty");
         }
         description = description.replaceAll("\r\n", "\n");
         if (description.length() > 5000) {
-            throw new RuntimeException("Post description cannot exceed 1000 characters");
+            throw new RuntimeException("Post description cannot exceed 5000 characters");
         }
 
         Post post = new Post();
@@ -80,18 +88,34 @@ public class Posts {
         return postRepository.save(post);
     }
 
-    public List<Post> getAllPosts(Authentication authentication) {
-        User user = helper.getCurrentUser(authentication);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
-        posts = posts.stream().map(p -> {
-            p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId()));
-            return p;
-        }).collect(Collectors.toList());
-        return posts;
+public List<Post> getAllPosts(Authentication authentication /* , int page, int size*/) {
+    User user = helper.getCurrentUser(authentication);
+    if (user == null) {
+        throw new RuntimeException("User not found");
     }
+
+    List<Follow> followings = followRepository.findByFollower_Id(user.getId());
+
+    List<Long> followingIds = followings.stream()
+                                       .map(f -> f.getFollowing().getId())
+                                       .collect(Collectors.toList());
+
+    followingIds.add(user.getId());
+
+    List<Post> posts = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds);
+    
+    //     Pageable pageable = PageRequest.of(page, size);
+
+    // Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
+
+    posts = posts.stream().map(p -> {
+        p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId()));
+        return p;
+    }).collect(Collectors.toList());
+
+    return posts;
+}
+
 
     public void deletePost(Long id, Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
@@ -110,21 +134,6 @@ public class Posts {
         return postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
     }
-
-    // private void deleteOldMediaFile(String mediaUrl) {
-    // // System.err.println("=========="+mediaUrl);
-    // if (mediaUrl != null &&
-    // mediaUrl.startsWith("http://localhost:8080/uploads/")) {
-    // try {
-    // String fileName =
-    // mediaUrl.substring("http://localhost:8080/uploads/".length());
-    // Path filePath = Paths.get(helper.uploadDir, fileName);
-    // Files.deleteIfExists(filePath);
-    // } catch (IOException e) {
-    // System.err.println("Failed to delete old media file: " + e.getMessage());
-    // }
-    // }
-    // }
 
     public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request,
             MultipartFile mediaFile, String removeImage) {
@@ -233,6 +242,31 @@ public class Posts {
         }
         return postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
+    }
+
+    public void createComment(Authentication authentication, String content, Long postId){
+        User CurrentUser = helper.getCurrentUser(authentication);
+        if (CurrentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        Post post = postRepository.findById(postId).orElse(null);
+        if ( post == null ){
+            throw new RuntimeException("post not found");
+        }
+
+        content = content.replaceAll("\r\n", "\n");
+        if (content.length() > 500) {
+            throw new RuntimeException("Comment content cannot exceed 500 characters");
+        }
+
+        Comment comment = new Comment();
+
+        comment.setContent(content);
+        comment.setPostId(postId);
+        comment.setUser(CurrentUser);
+
+        CommentRepository.save(comment);
+        
     }
 
 }

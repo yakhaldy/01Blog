@@ -230,21 +230,21 @@ export class SingalPost implements OnInit {
       postId: this.postId
     };
 
-    // this.auth.createComment(commentData).subscribe({
-    //   next: (newComment) => {
-    //     this.comments.unshift(newComment);
-    //     this.newComment = '';
-    //     this.isSubmittingComment = false;
-    //     this.showSuccessMessage('Comment posted successfully!');
-    //     this.cdr.markForCheck();
-    //   },
-    //   error: (error) => {
-    //     console.error('Error posting comment:', error);
-    //     this.isSubmittingComment = false;
-    //     this.showErrorMessage('Failed to post comment. Please try again.');
-    //     this.cdr.markForCheck();
-    //   }
-    // });
+    this.auth.createComment(commentData).subscribe({
+      next: (newComment) => {
+        this.comments.unshift(newComment);
+        this.newComment = '';
+        this.isSubmittingComment = false;
+        // this.showSuccessMessage('Comment posted successfully!');
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Error posting comment:', error);
+        this.isSubmittingComment = false;
+        // this.showErrorMessage('Failed to post comment. Please try again.');
+        this.cdr.markForCheck();
+      }
+    });
   }
   editComment(comment: Comment): void {
     // Implement edit comment functionality
