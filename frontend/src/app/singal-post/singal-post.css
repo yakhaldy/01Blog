@@ -962,3 +962,29 @@ html {
     outline: 2px solid rgba(99, 102, 241, 0.5);
     outline-offset: 2px;
 }
+
+
+/* .comment-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+} */
+
+
+.comment-edit-input {
+  width: 100%;
+  resize: vertical;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+.comment-edit-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+
+
+
+

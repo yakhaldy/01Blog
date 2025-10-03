@@ -35,6 +35,7 @@ import { User, UpdatePostResult, NewPost, Post } from './home.model';
 import { HomeService } from './home.service';
 
 import { Auth } from '../auth'
+import { title } from 'process';
 
 @Component({
   selector: 'app-home',
@@ -161,13 +162,47 @@ export class Home implements OnInit {
     return post.user?.username === this.currentUser?.username;
   }
 
+  showModal = false;
+  isOpen = false;
+
+  PostToDelete?: Post; // add this at the top of your component
+
   deletePost(post: Post): void {
-    this.homeService.deletePost(post.id).subscribe({
+    this.PostToDelete = post;
+    this.open();
+  }
+
+  open() {
+    this.showModal = true;
+    this.isOpen = false;
+
+
+    this.isOpen = true;
+
+  }
+
+  close() {
+    this.isOpen = false;
+
+    this.showModal = false;
+    this.PostToDelete = undefined;
+
+  }
+
+
+  confirm() {
+    if (!this.PostToDelete) return;
+    this.isOpen = false;
+    this.showModal = false;
+
+    this.homeService.deletePost(this.PostToDelete.id).subscribe({
       next: () => {
-        this.posts = this.posts.filter(p => post.id !== p.id);
+
+        this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
         this.cdr.markForCheck();
       },
       error: (error) => {
+
         console.error('Failed to delete Post:', error);
         this.cdr.markForCheck();
       }
@@ -179,6 +214,7 @@ export class Home implements OnInit {
       width: '700px',
       maxWidth: '90vw',
       data: {
+        title: post.title,
         content: post.description,
         imgUrl: post.mediaUrl,
         postId: post.id
@@ -191,6 +227,7 @@ export class Home implements OnInit {
       if (result) {
         const updateData = new FormData();
         updateData.append('description', result.description);
+        updateData.append('title', result.title);
 
         if (result.mediaFile) {
           updateData.append('mediaFile', result.mediaFile);

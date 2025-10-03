@@ -40,7 +40,7 @@ export class Profile implements OnInit {
 
   showReportPopup = false;
   reportReason = '';
-  errorReport= '';
+  errorReport = '';
   isErrorReport = false;
 
 
@@ -57,14 +57,34 @@ export class Profile implements OnInit {
       const paramUsername = params.get('username');
 
       if (paramUsername) {
-        this.loadUserProfile(paramUsername);
-        this.loadUserPosts(paramUsername);
-        this.isOwnProfile = false;
+        this.auth.getCurrentUser().subscribe({
+          next: (currentUser) => {
+            this.currentUser = currentUser;
+
+            if (paramUsername === currentUser.username) {
+              this.isOwnProfile = true;
+             this.loadCurrentUserProfile();
+              this.loadCurrentUserPosts();
+            } else {
+              // Viewing someone else's profile
+              this.isOwnProfile = false;
+              this.loadUserProfile(paramUsername);
+              this.loadUserPosts(paramUsername);
+            }
+
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error('Failed to fetch current user:', err);
+          }
+        });
       } else {
+        // No username param – current user's profile
         this.isOwnProfile = true;
         this.loadCurrentUserProfile();
         this.loadCurrentUserPosts();
       }
+
     });
 
   }
@@ -197,13 +217,48 @@ export class Profile implements OnInit {
       });
     }
   }
+
+  showModal = false;
+  isOpen = false;
+
+  PostToDelete?: Post; // add this at the top of your component
+
   deletePost(post: Post): void {
-    this.auth.deletePost(post.id).subscribe({
+    this.PostToDelete = post;
+    this.open();
+  }
+
+  open() {
+    this.showModal = true;
+    this.isOpen = false;
+
+
+    this.isOpen = true;
+
+  }
+
+  close() {
+    this.isOpen = false;
+
+    this.showModal = false;
+    this.PostToDelete = undefined;
+
+  }
+
+
+  confirm() {
+    if (!this.PostToDelete) return;
+    this.isOpen = false;
+    this.showModal = false;
+
+    this.auth.deletePost(this.PostToDelete.id).subscribe({
       next: () => {
-        this.posts = this.posts.filter(p => post.id !== p.id);
+
+        this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
         this.cdr.markForCheck();
       },
       error: (error) => {
+
         console.error('Failed to delete Post:', error);
         this.cdr.markForCheck();
       }
@@ -215,6 +270,7 @@ export class Profile implements OnInit {
       width: '700px',
       maxWidth: '90vw',
       data: {
+        title: post.title,
         content: post.description,
         imgUrl: post.mediaUrl,
         postId: post.id
@@ -227,6 +283,7 @@ export class Profile implements OnInit {
       if (result) {
         const updateData = new FormData();
         updateData.append('description', result.description);
+        updateData.append('title', result.title);
 
         if (result.mediaFile) {
           updateData.append('mediaFile', result.mediaFile);
@@ -238,6 +295,8 @@ export class Profile implements OnInit {
 
         this.auth.updatePost(post.id!, updateData).subscribe({
           next: (updatedPost) => {
+            console.log("updatePost :", updatedPost);
+
             const index = this.posts.findIndex(p => p.id === post.id);
             if (index !== -1) {
               this.posts[index] = updatedPost;
@@ -246,7 +305,6 @@ export class Profile implements OnInit {
           },
           error: (error) => {
 
-            this.cdr.markForCheck();
           }
         });
       }
@@ -274,7 +332,7 @@ export class Profile implements OnInit {
   }
 
   submitReport() {
-    console.log('Report submitted:', this.reportReason, this.profileUser?.id); 
+    console.log('Report submitted:', this.reportReason, this.profileUser?.id);
     this.auth.Report({
       reportedUserId: this.profileUser?.id,
       reportReason: this.reportReason
@@ -295,8 +353,8 @@ export class Profile implements OnInit {
         this.cdr.markForCheck();
       }
     });
-      //  this.showReportPopup = false;
-      //   this.reportReason = '';
+    //  this.showReportPopup = false;
+    //   this.reportReason = '';
   }
 
 

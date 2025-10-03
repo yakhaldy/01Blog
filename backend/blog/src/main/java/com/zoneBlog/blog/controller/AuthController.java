@@ -1,9 +1,11 @@
 package com.zoneBlog.blog.controller;
 
+import com.zoneBlog.blog.dataTransferObj.CommentRequest;
 import com.zoneBlog.blog.dataTransferObj.LoginRequest;
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.dataTransferObj.RegisterRequest;
 import com.zoneBlog.blog.dataTransferObj.ReportRequest;
+import com.zoneBlog.blog.model.Comment;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.User;
 
@@ -27,6 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import java.util.Map;
+
+
 
 @RestController
 @RequestMapping("/api")
@@ -105,10 +109,12 @@ public class AuthController {
     public ResponseEntity<?> updatePost(@PathVariable Long id, Authentication authentication,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile,
             @RequestPart("description") String description,
+            @RequestPart("title") String title,
             @RequestPart(value = "removeImage", required = false) String removeImage) {
         try {
             PostRequest request = new PostRequest();
             request.setDescription(description);
+            request.setTitle(title);
             Post post = Posts.updatePost(id, authentication, request, mediaFile, removeImage);
             return ResponseEntity.ok(post);
         } catch (Exception e) {
@@ -148,15 +154,35 @@ public class AuthController {
     }
 
     @PostMapping("/posts/comment")
-    public ResponseEntity<?> createComment(Authentication authentication, @RequestPart("content") String content,
-            @RequestPart("postId") Long postId) {
+    public ResponseEntity<?> createComment(Authentication authentication, @RequestBody CommentRequest request) {
         try {
-            Posts.createComment(authentication, content, postId);
-            return ResponseEntity.ok(Map.of("message", "Comment post successfully"));
+            Comment comment = Posts.createComment(authentication, request.getContent(), request.getPostId());
+            return ResponseEntity.ok(comment);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to Comment post: " + e.getMessage()));
         }
     }
+    
+    @GetMapping("/posts/getComment{postId}")
+    public ResponseEntity<?>  getPostComments(Authentication authentication,@PathVariable Long postId) {
+        try {
+            List<Comment> comments = Posts.getPostComments(authentication, postId);
+            return ResponseEntity.ok(comments);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to Comment post: " + e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/posts/comment/{commentId}")
+    public ResponseEntity<?>  updateComment(Authentication authentication,@PathVariable Long commentId,@RequestBody CommentRequest request) {
+         try {
+            Comment comment = Posts.updateComment(authentication, commentId,request);
+            return ResponseEntity.ok(comment);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
+        }
+    }
+    
 
     @Autowired
     private Users user;

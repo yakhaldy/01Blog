@@ -2,9 +2,19 @@
 
 <mat-dialog-content class="dialog-content">
     <div class="imput-continer">
+       
+         <mat-form-field class="post-textarea" appearance="outline">
+             <textarea matInput [(ngModel)]="postUpdate.title" name="postTitle" rows="4"
+                placeholder="What's happening?" maxlength="280" aria-label="Post title"
+                [class.error]="isCharacterTitleLimitExceeded">
+        </textarea>
+            <mat-hint [class.error-hint]="isCharacterLimitExceeded">
+                {{ postTitleCharacterCount }}/280
+            </mat-hint>
+        </mat-form-field>
         <mat-form-field class="post-textarea" appearance="outline">
             <textarea matInput [(ngModel)]="postUpdate.description" name="postDescription" rows="4"
-                placeholder="What's happening?" maxlength="1000" aria-label="Post content"
+                placeholder="What's happening?" maxlength="5000" aria-label="Post content"
                 [class.error]="isCharacterLimitExceeded">
         </textarea>
             <mat-hint [class.error-hint]="isCharacterLimitExceeded">

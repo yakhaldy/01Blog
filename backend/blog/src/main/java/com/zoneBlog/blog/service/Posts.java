@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 
+import com.zoneBlog.blog.dataTransferObj.CommentRequest;
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.User;
@@ -119,21 +120,27 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
 
     public void deletePost(Long id, Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
-        Post post = getPostById(id);
+         if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        Post post = postRepository.findById(id).orElse(null);
+        if (post == null) {
+            throw new RuntimeException("Post not found");
+        }
 
         if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals("ADMIN")) {
             throw new RuntimeException("You can only delete your own posts");
         }
 
-        helper.deleteOldMediaFile(post.getMediaUrl());
+        likeRepository.deleteByPost_Id(post.getId());
+        CommentRepository.deleteByPost_Id(post.getId());
 
         postRepository.delete(post);
+        helper.deleteOldMediaFile(post.getMediaUrl());
+
     }
 
-    public Post getPostById(Long id) {
-        return postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-    }
+
 
     public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request,
             MultipartFile mediaFile, String removeImage) {
@@ -141,7 +148,10 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-        Post post = getPostById(id);
+         Post post = postRepository.findById(id).orElse(null);
+        if (post == null) {
+            throw new RuntimeException("Post not found");
+        }
 
         if (!post.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("You can only update your own posts");
@@ -152,11 +162,22 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         }
 
         description = description.replaceAll("\r\n", "\n");
-        if (description.length() > 1000) {
+        if (description.length() > 5000) {
             throw new RuntimeException("Post description cannot exceed 1000 characters");
         }
-
         post.setDescription(description);
+
+         String title = request.getTitle();
+        if (title == null || title.trim().isEmpty()) {
+            throw new RuntimeException("Post title cannot be empty");
+        }
+
+        title = title.replaceAll("\r\n", "\n");
+        if (title.length() > 280) {
+            throw new RuntimeException("Post title cannot exceed 280 characters");
+        }
+
+        post.setTitle(title);;
 
         if (mediaFile != null && !mediaFile.isEmpty()) {
             helper.deleteOldMediaFile(post.getMediaUrl());
@@ -177,10 +198,11 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-        Post post = getPostById(id);
+         Post post = postRepository.findById(id).orElse(null);
         if (post == null) {
             throw new RuntimeException("Post not found");
         }
+    
         if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId())) {
             Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId());
             // likeRepository.deleteByUser_IdAndPost_Id(user.getId(), post.getId());
@@ -244,7 +266,7 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
                 .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 
-    public void createComment(Authentication authentication, String content, Long postId){
+    public Comment createComment(Authentication authentication, String content, Long postId){
         User CurrentUser = helper.getCurrentUser(authentication);
         if (CurrentUser == null) {
             throw new RuntimeException("User not found");
@@ -262,11 +284,57 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         Comment comment = new Comment();
 
         comment.setContent(content);
-        comment.setPostId(postId);
+        comment.setPost(post);
         comment.setUser(CurrentUser);
 
         CommentRepository.save(comment);
-        
+
+        post.setCommentsCount(CommentRepository.countByPost_Id(post.getId()));
+        postRepository.save(post);
+
+        return comment;
     }
+    public List<Comment> getPostComments(Authentication authentication, Long postId){
+         User CurrentUser = helper.getCurrentUser(authentication);
+        if (CurrentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        Post post = postRepository.findById(postId).orElse(null);
+        if ( post == null ){
+            throw new RuntimeException("post not found");
+        }
+
+        List<Comment> comments = CommentRepository.findBypost_Id(postId);
+        return comments;
+    }
+
+       public Comment updateComment(Authentication authentication, Long commentId, CommentRequest request){
+         User CurrentUser = helper.getCurrentUser(authentication);
+        if (CurrentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        
+        Comment comment = CommentRepository.findById(commentId).orElse(null);
+        if (comment == null) {
+            throw new RuntimeException("comment not found");
+        }
+
+           if (!comment.getUser().getId().equals(CurrentUser.getId())) {
+            throw new RuntimeException("You can only update your own comments");
+        }
+        String content = request.getContent();
+        if (content == null || content.trim().isEmpty()) {
+            throw new RuntimeException("Post description cannot be empty");
+        }
+
+        content = content.replaceAll("\r\n", "\n");
+        if (content.length() > 500) {
+            throw new RuntimeException("Comment content cannot exceed 500 characters");
+        }
+        comment.setContent(content);
+        CommentRepository.save(comment);
+        return comment;
+    }
+
 
 }

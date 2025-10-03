@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,16 +7,18 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'; // Added MatSnackBarModule
+import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Added MatDialogModule
+import { MatTooltipModule } from '@angular/material/tooltip'; // Added for tooltips used in HTML
 import { isImage, isVideo } from '../home/home.helpers';
-import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
+import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog'; // *Imported missing component*
 import { Navbar } from '../components/navbar/navbar';
 import { User, Post, Comment, UpdatePostResult } from '../home/home.model';
 import { Auth } from '../auth';
 
 @Component({
   selector: 'app-singal-post',
+  standalone: true, // Assuming this is a standalone component based on imports array
   imports: [
     CommonModule,
     FormsModule,
@@ -25,10 +27,13 @@ import { Auth } from '../auth';
     MatProgressSpinnerModule,
     MatButtonModule,
     MatMenuModule,
-    MatDividerModule
+    MatDividerModule,
+    MatSnackBarModule, // Added
+    MatDialogModule, // Added
+    MatTooltipModule // Added
   ],
   templateUrl: './singal-post.html',
-  styleUrls: ['./singal-post.css', '..//home/home.css'],
+  styleUrls: ['./singal-post.css', '../home/home.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 
@@ -45,13 +50,17 @@ export class SingalPost implements OnInit {
   error: string | null = null;
   postId: number = 0;
 
+  editingCommentId: number | null = null;
+  editedContent: string = '';
+
+  // @ViewChild and ElementRef were imported but not used, so they were removed from the imports.
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private auth: Auth,
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog, // haydha 
-    private snackBar: MatSnackBar
+    private dialog: MatDialog, // Kept for updatePostDialog
+    private snackBar: MatSnackBar // Kept for messaging
   ) { }
 
   ngOnInit(): void {
@@ -70,6 +79,9 @@ export class SingalPost implements OnInit {
 
     this.loadCurrentUser();
   }
+
+  // --- Post Logic ---
+
   loadPost(): void {
     this.isLoading = true;
     this.error = null;
@@ -88,54 +100,19 @@ export class SingalPost implements OnInit {
       }
     });
   }
-  loadCurrentUser(): void {
-    this.auth.getCurrentUser().subscribe({
-      next: (user) => {
-        this.currentUser = user;
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.log('User not logged in');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-  loadComments(): void {
-    this.isLoadingComments = true;
-
-    // this.isLoadingComments = false;
-
-
-    // this.auth.getPostComments(this.postId).subscribe({
-    //   next: (comments) => {
-    //     this.comments = comments;
-    //     this.isLoadingComments = false;
-    //     this.cdr.markForCheck();
-    //   },
-    //   error: (error) => {
-    //     console.error('Error loading comments:', error);
-    //     this.isLoadingComments = false;
-    //     this.cdr.markForCheck();
-    //   }
-    // });
-  }
-
-
-  isMyPost(): boolean {
-    return this.post?.user.username === this.currentUser?.username;
-  }
-  isMyComment(comment: Comment): boolean {
-    return comment.user?.username === this.currentUser?.username;
-  }
 
   editPost(): void {
+    // Only open dialog if post exists
+    if (!this.post) return;
+
     const dialogRef = this.dialog.open(UpdatePostDialog, {
       width: '700px',
       maxWidth: '90vw',
       data: {
-        content: this.post?.description,
-        imgUrl: this.post?.mediaUrl,
-        postId: this.post?.id
+        content: this.post.description,
+        title: this.post.title, // Assuming UpdatePostDialog also handles title
+        imgUrl: this.post.mediaUrl,
+        postId: this.post.id
       },
       disableClose: false,
       autoFocus: true
@@ -145,6 +122,7 @@ export class SingalPost implements OnInit {
       if (result) {
         const updateData = new FormData();
         updateData.append('description', result.description);
+        updateData.append('title', result.title);
 
         if (result.mediaFile) {
           updateData.append('mediaFile', result.mediaFile);
@@ -154,72 +132,102 @@ export class SingalPost implements OnInit {
           updateData.append('removeImage', 'true');
         }
 
-        this.auth.updatePost(this.post?.id!, updateData).subscribe({
+        this.auth.updatePost(this.post!.id, updateData).subscribe({
           next: (updatedPost) => {
             this.post = updatedPost;
+            this.showSuccessMessage('Post updated successfully!');
             this.cdr.markForCheck();
           },
           error: (error) => {
-
+            this.showErrorMessage('Failed to update post.');
+            console.error('Failed to update post:', error);
             this.cdr.markForCheck();
           }
         });
       }
     });
   }
+
   deletePost(): void {
-    if (this.post) {
+    if (this.post && confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       this.auth.deletePost(this.post.id).subscribe({
         next: () => {
+          this.showSuccessMessage('Post deleted successfully!');
           this.router.navigate([`/`]);
         },
         error: (error) => {
           console.error('Failed to delete Post:', error);
+          this.showErrorMessage('Failed to delete post.');
           this.cdr.markForCheck();
         }
       });
     }
   }
-  goToProfile(username: string): void {
-    this.router.navigate([`profile/${username}`]);
-  }
-  getImage(path: string | undefined): string | undefined {
-    return this.auth.getImage(path)
-  }
-  reportPost() {
-    console.log("report Post");
 
-  }
   likePoste(): void {
-    if (this.post) {
-      // Optimistic update
-      const originalIsLiked = this.post.isLiked;
-      const originalLikesCount = this.post.likesCount;
-
-      this.post.isLiked = !this.post.isLiked;
-      this.post.likesCount += this.post.isLiked ? 1 : -1;
-
-      this.cdr.markForCheck();
-
-      this.auth.likePost(this.post.id).subscribe({
-        next: (updatedPost) => {
-          if (this.post) {
-            this.post.likesCount = updatedPost.likesCount;
-          }
-          this.cdr.markForCheck();
-        },
-        error: (error) => {
-          if (this.post) {
-            this.post.isLiked = originalIsLiked;
-            this.post.likesCount = originalLikesCount;
-            this.cdr.markForCheck();
-          }
-        }
-      });
+    if (!this.post || !this.currentUser) {
+      this.showErrorMessage('You must be logged in to like posts.');
+      return;
     }
+
+    // Optimistic update
+    const originalIsLiked = this.post.isLiked;
+    const originalLikesCount = this.post.likesCount;
+
+    this.post.isLiked = !this.post.isLiked;
+    this.post.likesCount += this.post.isLiked ? 1 : -1;
+
+    this.cdr.markForCheck();
+
+    this.auth.likePost(this.post.id).subscribe({
+      next: (updatedPost) => {
+        if (this.post) {
+          this.post.likesCount = updatedPost.likesCount;
+        }
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        if (this.post) {
+          // Revert on error
+          this.post.isLiked = originalIsLiked;
+          this.post.likesCount = originalLikesCount;
+          this.showErrorMessage('Failed to like/unlike post.');
+          this.cdr.markForCheck();
+        }
+      }
+    });
   }
+
+  // --- Comment Logic ---
+
+  loadComments(): void {
+    this.isLoadingComments = true;
+
+    this.auth.getPostComments(this.postId).subscribe({
+      next: (comments) => {
+        this.comments = comments;
+        this.isLoadingComments = false;
+        // Also update the post's comment count if the post object is loaded
+        if (this.post) {
+          this.post.commentsCount = comments.length;
+        }
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Error loading comments:', error);
+        this.isLoadingComments = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+
   submitComment(): void {
     if (!this.newComment.trim() || this.isSubmittingComment) {
+      return;
+    }
+    if (!this.currentUser) {
+      this.showErrorMessage('You must be logged in to comment.');
       return;
     }
 
@@ -235,55 +243,179 @@ export class SingalPost implements OnInit {
         this.comments.unshift(newComment);
         this.newComment = '';
         this.isSubmittingComment = false;
-        // this.showSuccessMessage('Comment posted successfully!');
+        if (this.post) {
+          this.post.commentsCount = (this.post.commentsCount || 0) + 1;
+        }
+        this.showSuccessMessage('Comment posted successfully!'); // *Uncommented and implemented*
         this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error posting comment:', error);
         this.isSubmittingComment = false;
-        // this.showErrorMessage('Failed to post comment. Please try again.');
+        this.showErrorMessage('Failed to post comment. Please try again.'); // *Uncommented and implemented*
         this.cdr.markForCheck();
       }
     });
   }
+
+  // editComment(comment: Comment): void {
+  //   // *Implementation for editComment*
+  //   const newContent = prompt('Edit your comment:', comment.content);
+  //   // if (newContent && newContent.trim() !== comment.content) {
+  //   //     const trimmedContent = newContent.trim();
+  //   //   this.auth.updateComment(comment.id, { content: trimmedContent }).subscribe({
+  //   //     next: (updatedComment) => {
+  //   //       const index = this.comments.findIndex(c => c.id === comment.id);
+  //   //       if (index !== -1) {
+  //   //         this.comments[index] = updatedComment;
+  //   //       }
+  //   //       this.showSuccessMessage('Comment updated successfully!');
+  //   //       this.cdr.markForCheck();
+  //   //     },
+  //   //     error: (error) => {
+  //   //         console.error('Failed to update comment:', error);
+  //   //       this.showErrorMessage('Failed to update comment. Please try again.');
+  //   //     }
+  //   //   });
+  //   // }
+  // }
+
+
   editComment(comment: Comment): void {
-    // Implement edit comment functionality
-    const newContent = prompt('Edit your comment:', comment.content);
-    if (newContent && newContent.trim() !== comment.content) {
-      // this.auth.updateComment(comment.id, { content: newContent.trim() }).subscribe({
-      //   next: (updatedComment) => {
-      //     const index = this.comments.findIndex(c => c.id === comment.id);
-      //     if (index !== -1) {
-      //       this.comments[index] = updatedComment;
-      //     }
-      //     this.showSuccessMessage('Comment updated successfully!');
-      //     this.cdr.markForCheck();
-      //   },
-      //   error: (error) => {
-      //     this.showErrorMessage('Failed to update comment. Please try again.');
-      //   }
-      // });
-    }
-  }
-  deleteComment(comment: Comment): void {
-    // if (confirm('Are you sure you want to delete this comment?')) {
-    //   this.auth.deleteComment(comment.id).subscribe({
-    //     next: () => {
-    //       this.comments = this.comments.filter(c => c.id !== comment.id);
-    //       this.showSuccessMessage('Comment deleted successfully!');
-    //       this.cdr.markForCheck();
-    //     },
-    //     error: (error) => {
-    //       console.error('Failed to delete comment:', error);
-    //       this.showErrorMessage('Failed to delete comment. Please try again.');
-    //     }
-    //   });
-    // }
+    this.editingCommentId = comment.id;
+    this.editedContent = comment.content;
   }
 
-  isImage = isImage;
-  isVideo = isVideo;
+  saveEditedComment(comment: Comment): void {
+    if (this.editedContent.length > 500) return;
+
+    this.auth.updateComment(comment.id, { content: this.editedContent }).subscribe({
+      next: (updatedComment) => {
+        comment.content = this.editedContent;
+        this.cancelEdit();
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Failed to update comment:', error);
+        this.showErrorMessage('Failed to update comment. Please try again.');
+      }
+    });
+
+
+  }
+
+  cancelEdit(): void {
+    this.editingCommentId = null;
+    this.editedContent = '';
+  }
+
+
+ showModal = false;
+  isOpen = false;
+
+ commentToDelete?: Comment; // add this at the top of your component
+
+deleteComment(comment: Comment): void {
+  this.commentToDelete = comment;
+  this.open(); // Show door modal
+}
+
+  open() {
+    this.showModal = true;
+    this.isOpen = false;
+
+
+      this.isOpen = true;
+  
+  }
+
+ close() {
+  this.isOpen = false;
+
+    this.showModal = false;
+    this.commentToDelete = undefined; 
+
 }
 
 
+confirm() {
+  if (!this.commentToDelete) return;
 
+  // this.auth.deleteComment(this.commentToDelete.id).subscribe({
+  //   next: () => {
+  //     this.comments = this.comments.filter(c => c.id !== this.commentToDelete!.id);
+  //     if (this.post) {
+  //       this.post.commentsCount = (this.post.commentsCount || 0) - 1;
+  //     }
+  //     this.cdr.markForCheck();
+  //     this.commentToDelete = undefined; // Reset
+  //     this.close();
+  //   },
+  //   error: (error) => {
+  //     console.error('Failed to delete comment:', error);
+  //     this.showErrorMessage('Failed to delete comment. Please try again.');
+  //     this.commentToDelete = undefined; // Reset even on error
+  //     this.close();
+  //   }
+  // });
+      this.close();
+
+}
+
+
+  // --- Helper Methods ---
+
+  loadCurrentUser(): void {
+    this.auth.getCurrentUser().subscribe({
+      next: (user) => {
+        this.currentUser = user;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // console.log('User not logged in'); // Log is fine, no action needed for non-logged user
+        this.currentUser = null;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  isMyPost(): boolean {
+    return this.post?.user.username === this.currentUser?.username;
+  }
+
+  isMyComment(comment: Comment): boolean {
+    console.log("isMyComment");
+
+    return comment.user?.username === this.currentUser?.username;
+  }
+
+  goToProfile(username: string): void {
+    this.router.navigate([`profile/${username}`]);
+  }
+
+  getImage(path: string | undefined): string | undefined {
+    return this.auth.getImage(path)
+  }
+
+
+
+  // --- Message Utilities ---
+
+  private showSuccessMessage(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: ['snackbar-success']
+    });
+  }
+
+  private showErrorMessage(message: string): void {
+    this.snackBar.open(message, 'Close', {
+      duration: 5000,
+      panelClass: ['snackbar-error']
+    });
+  }
+
+  // Exported functions
+  isImage = isImage;
+  isVideo = isVideo;
+}

@@ -11,6 +11,7 @@ export interface User {
 }
 
 export interface UpdatePostResult {
+  title: string;
   description: string;
   mediaFile?: File;
   removeCurrentImage?: boolean;
@@ -53,6 +54,14 @@ export interface Comment {
   content: string;
   user: User;
   createdAt: string;
-  likesCount: number;
-  isLiked: boolean;
+}
+
+
+export interface Report {
+  id: number;
+  reporterUsername: string;
+  reportedUsername: string;
+  reason: string;
+  timestamp: Date;
+  status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
 }

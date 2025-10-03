@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Auth } from '../../auth';
-import { filter, takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
+
+import { User } from '../../home/home.model'
 
 @Component({
   selector: 'app-navbar',
@@ -13,9 +14,9 @@ import { CommonModule } from '@angular/common';
 })
 export class Navbar implements OnInit {
   notificationCount = 3;
-  userName = 'User';
+  currentUser: User | null = null;
   isDropdownOpen = false;
-  
+  isAdmin = false;
   currentRoute: string = '';
   
 
@@ -28,14 +29,14 @@ export class Navbar implements OnInit {
       filter(event => event instanceof NavigationEnd), // Only listen to NavigationEnd events
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
-      console.log('Route changed to:', this.currentRoute);
+    });
+
+     this.auth.getCurrentUser().subscribe(user => {      
+      this.currentUser = user;
+      this.isAdmin = user.role.includes("ADMIN") ; // ✅ Set isAdmin flag
     });
   }
 
-  // ngOnDestroy(): void {
-  //   this.destroy$.next();
-  //   this.destroy$.complete();
-  // }
 
   toggleDropdown(): void {
     this.isDropdownOpen = !this.isDropdownOpen;
@@ -70,8 +71,12 @@ export class Navbar implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  onSettings(): void {
-    console.log('Navigate to settings');
-    this.router.navigate(['/settings']);
+  onDashboard(): void {
+    console.log('Navigate to Dashboard');
+    this.router.navigate(['/dashboard']);
+  }
+
+  getImage(path: string | undefined): string | undefined {
+    return this.auth.getImage(path)
   }
 }

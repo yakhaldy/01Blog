@@ -114,8 +114,7 @@
                     </div>
                     <div class="comment-input-container">
                         <textarea [(ngModel)]="newComment" placeholder="Write a comment..." class="comment-textarea"
-                            rows="3" maxlength="500">
-            </textarea>
+                            rows="3" maxlength="500"></textarea>
                         <div class="comment-form-actions">
                             <span class="character-count">{{ newComment.length }}/500</span>
                             <button mat-raised-button class="submit-comment-btn"
@@ -160,13 +159,18 @@
 
                         <div class="comment-actions" *ngIf="isMyComment(comment)">
 
+                            <button mat-icon-button [matMenuTriggerFor]="optionsMenu" class="Options"
+                                matTooltip="Options">
+                                <mat-icon>more_vert</mat-icon>
+                            </button>
 
-                            <mat-menu #commentOptionsMenu="matMenu">
+                            <!-- Menu that shows when the button is clicked -->
+                            <mat-menu #optionsMenu="matMenu" class="optionsMenu">
                                 <button mat-menu-item (click)="editComment(comment)">
                                     <mat-icon>edit</mat-icon>
-                                    <span>Edit</span>
+                                    <span>Update</span>
                                 </button>
-                                <button mat-menu-item (click)="deleteComment(comment)" class="delete-option">
+                                <button mat-menu-item (click)="deleteComment(comment)">
                                     <mat-icon>delete</mat-icon>
                                     <span>Delete</span>
                                 </button>
@@ -175,21 +179,22 @@
                     </div>
 
                     <div class="comment-content">
-                        <p class="comment-text">{{ comment.content }}</p>
+                        <ng-container *ngIf="editingCommentId === comment.id; else viewMode">
+                            <textarea [(ngModel)]="editedContent" rows="3" class="comment-edit-input" maxlength="500"></textarea>
+                            <div class="comment-edit-actions">
+                                <span class="character-count">{{ editedContent.length }}/500</span>
+                                <button mat-button color="primary" (click)="saveEditedComment(comment)">Save</button>
+                                <button mat-button color="warn" (click)="cancelEdit()">Cancel</button>
+                            </div>
+                        </ng-container>
+
+                        <ng-template #viewMode>
+                            <p class="comment-text">{{ comment.content }}</p>
+                        </ng-template>
                     </div>
 
-                    <!-- <div class="comment-footer">
-                        <button mat-button class="comment-like-btn" [class.liked]="comment.isLiked"
-                            (click)="toggleCommentLike(comment)">
-                            <mat-icon>{{ comment.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
-                            <span>{{ comment.likesCount || 0 }}</span>
-                        </button>
 
-                        <button mat-button class="comment-reply-btn" (click)="replyToComment(comment)">
-                            <mat-icon>reply</mat-icon>
-                            Reply
-                        </button>
-                    </div> -->
+
                 </article>
             </div>
         </section>
@@ -207,4 +212,21 @@
             </button>
         </div>
     </section>
+
+
+    <div class="door-backdrop" *ngIf="showModal" (click)="close()">
+  <div class="door" (click)="$event.stopPropagation()">
+    <div class="door-panel" [class.open]="isOpen">
+      <div class="door-message">
+        <h3>Are you sure you want to delete this comment?</h3>
+        <p>Good luck</p>
+      </div>
+      <div class="door-buttons">
+        <button (click)="confirm()">Yes</button>
+        <button (click)="close()">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>

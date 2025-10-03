@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { User, Post } from '../app/home/home.model';
+import { User, Post, Comment } from '../app/home/home.model';
 export interface CreatePostRequest {
   description: string;
   mediaFile?: File;
@@ -90,6 +90,16 @@ updateProfile(data: FormData):Observable<any>{
 
   createComment(data: object):Observable<any>{
     return this.http.post(`${this.apiUrl}/posts/comment`, data)
+  }
+  
+   getPostComments(postId: number):Observable<Comment[]>{
+    return this.http.get<Comment[]>(`${this.apiUrl}/posts/getComment${postId}`,)
+  }
+
+  
+
+  updateComment(id: number, data: object):Observable<Comment>{
+    return this.http.patch<Comment>(`${this.apiUrl}/posts/comment/${id}`,data)
   }
    
 }

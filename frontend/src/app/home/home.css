@@ -1056,3 +1056,102 @@
 
 
 
+
+
+.door-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeInBackdrop 0.3s ease-out forwards;
+}
+
+@keyframes fadeInBackdrop {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.door {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transform: scale(0.95);
+    animation: scaleIn 0.3s ease forwards;
+}
+
+@keyframes scaleIn {
+    to { transform: scale(1); }
+}
+
+.door-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.door-message h3 {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+}
+
+.door-message p {
+    color: #8b98a5;
+    font-size: 14px;
+    text-align: center;
+    margin: 0;
+}
+
+.door-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.door-buttons button {
+    flex: 1;
+    height: 40px;
+    font-weight: 600;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.door-buttons button:first-child {
+    background: linear-gradient(135deg, rgba(248, 113, 113, 1) 0%, rgba(239, 68, 68, 1) 100%);
+    color: #ffffff;
+}
+
+.door-buttons button:first-child:hover {
+    box-shadow: 0 10px 25px rgba(248, 113, 113, 0.3);
+    transform: translateY(-2px);
+}
+
+.door-buttons button:last-child {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.door-buttons button:last-child:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.5);
+    color: rgba(99, 102, 241, 1);
+    transform: translateY(-2px);
+}
+

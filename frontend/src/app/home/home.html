@@ -198,6 +198,22 @@
             </footer>
           </article>
         </div>
+
+            <div class="door-backdrop" *ngIf="showModal" (click)="close()">
+  <div class="door" (click)="$event.stopPropagation()">
+    <div class="door-panel" [class.open]="isOpen">
+      <div class="door-message">
+        <h3>Are you sure you want to delete this comment?</h3>
+        <p>Good luck</p>
+      </div>
+      <div class="door-buttons">
+        <button (click)="confirm()">Yes</button>
+        <button (click)="close()">No</button>
+      </div>
+    </div>
+  </div>
+</div>
+
       </section>
     </main>
 
@@ -252,4 +268,8 @@
       </section>
     </aside>
   </div>
+
+
+
+
 </div>

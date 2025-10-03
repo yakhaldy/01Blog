@@ -9,12 +9,14 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { isValidMediaType ,isValidMediaSize } from '../helper/postHleper'
 interface UpdatePostData {
+  title: string;
   content: string;
   imgUrl?: string | null;
   postId: number;
 }
 
 interface PostUpdate {
+  title: string;
   description: string;
   mediaFile?: File;
 }
@@ -36,6 +38,7 @@ interface PostUpdate {
 })
 export class UpdatePostDialog {
   postUpdate: PostUpdate = {
+    title: '',
     description: '',
     mediaFile: undefined
   };
@@ -48,8 +51,9 @@ export class UpdatePostDialog {
   ) {
 
     this.postUpdate.description = this.data.content || '';
+    this.postUpdate.title = this.data.title || '';
+
     this.currentImageUrl = this.data.imgUrl || '';
-    console.log("-----",this.currentImageUrl);
     
   }
 
@@ -59,6 +63,7 @@ export class UpdatePostDialog {
     }
     
     const result = {
+      title: this.postUpdate.title.trim(),
       description: this.postUpdate.description.trim(),
       mediaFile: this.postUpdate.mediaFile,
       removeCurrentImage: this.shouldRemoveCurrentImage()
@@ -74,16 +79,22 @@ export class UpdatePostDialog {
   get postCharacterCount(): number {
     return this.postUpdate.description.length;
   }
+  get postTitleCharacterCount(): number {
+    return this.postUpdate.description.length;
+  }
 
   get isPostValid(): boolean {
     return this.postUpdate.description.trim().length > 0 && 
-           this.postUpdate.description.length <= 1000;
+           this.postUpdate.description.length <= 5000 &&  this.postUpdate.title.trim().length > 0 && 
+           this.postUpdate.title.length <= 280;
   }
 
   get isCharacterLimitExceeded(): boolean {
-    return this.postUpdate.description.length > 1000;
+    return this.postUpdate.description.length > 5000;
   }
-
+ get isCharacterTitleLimitExceeded(): boolean {
+    return this.postUpdate.title.length > 280;
+  }
   private shouldRemoveCurrentImage(): boolean {
     return this.currentImageUrl == '' && this.selectedFileName == '';
   }
