@@ -132,6 +132,7 @@ public class Profile {
         report.setReportedUser(reportedUser);
         report.setReportedBy(currentUser);
         report.setReportReason(request.getReportReason());
+        report.setStatus("pending");
 
         reportRepository.save(report);
 

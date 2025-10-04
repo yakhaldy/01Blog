@@ -94,6 +94,9 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
     if (user == null) {
         throw new RuntimeException("User not found");
     }
+    if (user.getRole().equals("ROLE_ADMIN")){
+        return postRepository.findAll();
+    }
 
     List<Follow> followings = followRepository.findByFollower_Id(user.getId());
 

@@ -174,16 +174,14 @@ export class Home implements OnInit {
 
   open() {
     this.showModal = true;
-    this.isOpen = false;
-
-
+    setTimeout(() => {
     this.isOpen = true;
+    }, 10);
 
   }
 
   close() {
     this.isOpen = false;
-
     this.showModal = false;
     this.PostToDelete = undefined;
 

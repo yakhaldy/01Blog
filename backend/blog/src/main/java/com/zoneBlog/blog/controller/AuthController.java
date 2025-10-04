@@ -7,6 +7,7 @@ import com.zoneBlog.blog.dataTransferObj.RegisterRequest;
 import com.zoneBlog.blog.dataTransferObj.ReportRequest;
 import com.zoneBlog.blog.model.Comment;
 import com.zoneBlog.blog.model.Post;
+import com.zoneBlog.blog.model.Report;
 import com.zoneBlog.blog.model.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import com.zoneBlog.blog.service.Register;
 import com.zoneBlog.blog.service.Profile;
 import com.zoneBlog.blog.service.Posts;
 import com.zoneBlog.blog.service.Users;
+import com.zoneBlog.blog.service.Admin;
 import com.zoneBlog.blog.service.Helper;
 import com.zoneBlog.blog.repository.FollowRepository;
 
@@ -29,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import java.util.Map;
-
-
 
 @RestController
 @RequestMapping("/api")
@@ -162,9 +162,9 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to Comment post: " + e.getMessage()));
         }
     }
-    
+
     @GetMapping("/posts/getComment{postId}")
-    public ResponseEntity<?>  getPostComments(Authentication authentication,@PathVariable Long postId) {
+    public ResponseEntity<?> getPostComments(Authentication authentication, @PathVariable Long postId) {
         try {
             List<Comment> comments = Posts.getPostComments(authentication, postId);
             return ResponseEntity.ok(comments);
@@ -174,15 +174,15 @@ public class AuthController {
     }
 
     @PatchMapping("/posts/comment/{commentId}")
-    public ResponseEntity<?>  updateComment(Authentication authentication,@PathVariable Long commentId,@RequestBody CommentRequest request) {
-         try {
-            Comment comment = Posts.updateComment(authentication, commentId,request);
+    public ResponseEntity<?> updateComment(Authentication authentication, @PathVariable Long commentId,
+            @RequestBody CommentRequest request) {
+        try {
+            Comment comment = Posts.updateComment(authentication, commentId, request);
             return ResponseEntity.ok(comment);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
         }
     }
-    
 
     @Autowired
     private Users user;
@@ -263,6 +263,41 @@ public class AuthController {
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get post: " + e.getMessage()));
+        }
+    }
+
+    @Autowired
+    private Admin Admin;
+
+    @GetMapping("admin/getReports")
+    public ResponseEntity<?> getReports(Authentication authentication) {
+        try {
+            List<Report> reports = Admin.getReports(authentication);
+            return ResponseEntity.ok(reports);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get reports: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("admin/dashboardStats")
+    public ResponseEntity<?> getDashboardStats(Authentication authentication) {
+        try {
+            Map<String, Long> dashboardStats = Admin.getDashboardStats(authentication);
+            return ResponseEntity.ok(dashboardStats);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Failed to get Dashboard Stats: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("admin/deleteUser/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, Authentication authentication) {
+        try {
+            Admin.deleteUser(authentication, id );
+            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Failed to deleted user: " + e.getMessage()));
         }
     }
 

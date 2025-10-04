@@ -26,14 +26,14 @@ export class Navbar implements OnInit {
     this.currentRoute = this.router.url;
     
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd), // Only listen to NavigationEnd events
+      filter(event => event instanceof NavigationEnd),
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
     });
 
      this.auth.getCurrentUser().subscribe(user => {      
       this.currentUser = user;
-      this.isAdmin = user.role.includes("ADMIN") ; // ✅ Set isAdmin flag
+      this.isAdmin = user.role.includes("ADMIN") ; 
     });
   }
 

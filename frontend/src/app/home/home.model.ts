@@ -8,6 +8,8 @@ export interface User {
   followersCount?: number;
   isfollowing?: Boolean;
   role: string;
+  isBanned: boolean;
+  postsCount: number;
 }
 
 export interface UpdatePostResult {
@@ -57,11 +59,21 @@ export interface Comment {
 }
 
 
+
+
 export interface Report {
-  id: number;
-  reporterUsername: string;
-  reportedUsername: string;
-  reason: string;
-  timestamp: Date;
-  status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
+  id: string;
+  reportedUser: User;
+  reportedBy?: User;
+  reportReason: string;
+  reportedAt: string;
+  status: 'pending' | 'resolved' ;
+}
+
+export interface DashboardStats {
+  totalUsers: number;
+  totalPosts: number;
+  totalReports: number;
+  bannedUsers: number;
+  activeReports: number;
 }

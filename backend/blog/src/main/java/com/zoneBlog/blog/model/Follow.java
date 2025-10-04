@@ -1,5 +1,8 @@
 package com.zoneBlog.blog.model;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -23,10 +26,12 @@ public class Follow {
 
     @ManyToOne
     @JoinColumn(name = "follower_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User follower;
 
     @ManyToOne
     @JoinColumn(name = "following_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User following;
 
 }

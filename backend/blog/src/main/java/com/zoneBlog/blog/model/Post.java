@@ -6,6 +6,10 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.*;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,6 +24,7 @@ public class Post {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Column(nullable = false, length = 280)
@@ -45,12 +50,11 @@ public class Post {
     @Column(name = "comments_count", columnDefinition = "bigint default 0")
     private Long commentsCount = 0L;
 
-    // @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    // @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval =
+    // true)
     // private List<Like> likes;
 
     private Boolean isLiked = false;
-
-
 
     @PrePersist
     protected void onCreate() {

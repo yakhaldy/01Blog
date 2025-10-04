@@ -2,13 +2,10 @@ package com.zoneBlog.blog.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -20,14 +17,21 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Reported user
     @ManyToOne
+    @JoinColumn(name = "reported_user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User reportedUser;
 
     private String reportReason;
 
+    // Reporter
     @ManyToOne
+    @JoinColumn(name = "reported_by_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User reportedBy;
 
     private LocalDateTime reportedAt = LocalDateTime.now();
 
+    private String status;
 }

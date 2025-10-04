@@ -258,27 +258,7 @@ export class SingalPost implements OnInit {
     });
   }
 
-  // editComment(comment: Comment): void {
-  //   // *Implementation for editComment*
-  //   const newContent = prompt('Edit your comment:', comment.content);
-  //   // if (newContent && newContent.trim() !== comment.content) {
-  //   //     const trimmedContent = newContent.trim();
-  //   //   this.auth.updateComment(comment.id, { content: trimmedContent }).subscribe({
-  //   //     next: (updatedComment) => {
-  //   //       const index = this.comments.findIndex(c => c.id === comment.id);
-  //   //       if (index !== -1) {
-  //   //         this.comments[index] = updatedComment;
-  //   //       }
-  //   //       this.showSuccessMessage('Comment updated successfully!');
-  //   //       this.cdr.markForCheck();
-  //   //     },
-  //   //     error: (error) => {
-  //   //         console.error('Failed to update comment:', error);
-  //   //       this.showErrorMessage('Failed to update comment. Please try again.');
-  //   //     }
-  //   //   });
-  //   // }
-  // }
+
 
 
   editComment(comment: Comment): void {
@@ -313,7 +293,7 @@ export class SingalPost implements OnInit {
  showModal = false;
   isOpen = false;
 
- commentToDelete?: Comment; // add this at the top of your component
+ commentToDelete?: Comment; 
 
 deleteComment(comment: Comment): void {
   this.commentToDelete = comment;
@@ -322,10 +302,10 @@ deleteComment(comment: Comment): void {
 
   open() {
     this.showModal = true;
-    this.isOpen = false;
 
-
+    setTimeout(() => {
       this.isOpen = true;
+    }, 10);
   
   }
 

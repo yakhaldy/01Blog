@@ -33,4 +33,7 @@ public class User {
     private Long Followers;
     private Long Following;
 
+    @Column(nullable = false)
+    private Boolean isBanned = false;
+
 }

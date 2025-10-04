@@ -11,7 +11,8 @@
     position: relative;
     overflow-x: hidden;
     color: #ffffff;
-    padding-top: 80px; /* Account for fixed navbar */
+    padding-top: 80px;
+    /* Account for fixed navbar */
 }
 
 /* Background Elements */
@@ -62,10 +63,13 @@
 }
 
 @keyframes floatUpDown {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px) scale(1);
         opacity: 0.3;
     }
+
     50% {
         transform: translateY(-20px) scale(1.1);
         opacity: 0.6;
@@ -95,7 +99,8 @@
 
 .main-feed {
     grid-area: main-feed;
-    min-width: 0; /* Prevents overflow issues */
+    min-width: 0;
+    /* Prevents overflow issues */
 }
 
 .sidebar-right {
@@ -226,10 +231,10 @@
 /* Create Post Card */
 .create-post-card {
     padding: 16px;
-    position: relative; 
-    width: auto; 
-    margin-top: 0; 
-    z-index: auto; 
+    position: relative;
+    width: auto;
+    margin-top: 0;
+    z-index: auto;
     height: auto;
 }
 
@@ -369,7 +374,8 @@
 .posts-container {
     display: flex;
     flex-direction: column;
-    margin-top: 20px; /* Reduced from 250px */
+    margin-top: 20px;
+    /* Reduced from 250px */
 }
 
 .posts-list {
@@ -418,7 +424,8 @@
 .users-list {
     display: flex;
     flex-direction: column;
-    max-height: 60vh; /* Reduced from 70vh */
+    max-height: 60vh;
+    /* Reduced from 70vh */
     overflow: auto;
 }
 
@@ -869,6 +876,7 @@
     0% {
         background-position: -200% 0;
     }
+
     100% {
         background-position: 200% 0;
     }
@@ -880,6 +888,7 @@
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -922,7 +931,7 @@
         gap: 15px;
         max-width: 900px;
     }
-    
+
     .sidebar-right {
         display: none;
     }
@@ -932,67 +941,67 @@
     .home-container {
         padding-top: 70px;
     }
-    
+
     .home-layout {
         grid-template-columns: 1fr;
-        grid-template-areas: 
+        grid-template-areas:
             "main-feed"
             "sidebar-left";
         padding: 10px;
         gap: 10px;
         max-width: 100%;
     }
-    
+
     .sidebar-left {
         position: static;
         height: auto;
         max-height: none;
         order: 2;
     }
-    
+
     .main-feed {
         order: 1;
     }
-    
+
     .profile-card,
     .create-post-card,
     .users-card {
         border-radius: 12px;
         margin-bottom: 15px;
     }
-    
+
     .floating-circle {
         display: none;
     }
-    
+
     .post-card {
         padding: 12px;
         margin-bottom: 12px;
     }
-    
+
     .post-header {
         margin-bottom: 8px;
     }
-    
+
     .author-avatar .avatar-icon {
         font-size: 40px;
         width: 40px;
         height: 40px;
     }
-    
+
     .post-stats {
         gap: 12px;
     }
-    
+
     .post-interactions {
         gap: 2px;
     }
-    
+
     .interaction-btn {
         width: 32px;
         height: 32px;
     }
-    
+
     .post-image,
     .post-video {
         max-height: 400px;
@@ -1003,50 +1012,50 @@
     .home-layout {
         padding: 5px;
     }
-    
+
     .profile-card,
     .create-post-card {
         padding: 12px;
     }
-    
+
     .profile-stats {
         gap: 16px;
     }
-    
+
     .post-actions {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
     }
-    
+
     .follow-btn {
         font-size: 13px;
         padding: 0 12px;
     }
-    
+
     .post-card {
         padding: 8px 12px;
     }
-    
+
     .post-footer {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
     }
-    
+
     .post-interactions {
         justify-content: center;
         margin-left: 0;
     }
-    
+
     .author-name {
         font-size: 14px;
     }
-    
+
     .post-time {
         font-size: 14px;
     }
-    
+
     .post-description {
         font-size: 14px;
         line-height: 18px;
@@ -1056,102 +1065,106 @@
 
 
 
-
+/* Confirmation Modal */
 
 .door-backdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
     z-index: 1000;
-    animation: fadeInBackdrop 0.3s ease-out forwards;
-}
-
-@keyframes fadeInBackdrop {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .door {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 40px 32px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    transform: scale(0.95);
-    animation: scaleIn 0.3s ease forwards;
-}
-
-@keyframes scaleIn {
-    to { transform: scale(1); }
+    perspective: 1000px;
 }
 
 .door-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 50%, #1a202c 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    transform: rotateY(-90deg);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.door-panel.open {
+    transform: rotateY(0deg);
+}
+
+.door-message {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.warning-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(245, 158, 11, 1);
+    margin-bottom: 16px;
 }
 
 .door-message h3 {
-    color: #ffffff;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
-    margin: 0;
-    text-align: center;
+    color: #ffffff;
+    margin: 0 0 12px 0;
 }
 
 .door-message p {
+    font-size: 16px;
     color: #8b98a5;
-    font-size: 14px;
-    text-align: center;
+    line-height: 1.6;
     margin: 0;
+}
+
+.door-message strong {
+    color: #ffffff;
+    font-weight: 700;
 }
 
 .door-buttons {
     display: flex;
-    justify-content: space-between;
-    gap: 16px;
+    gap: 12px;
+    justify-content: center;
 }
 
 .door-buttons button {
-    flex: 1;
-    height: 40px;
-    font-weight: 600;
-    border-radius: 20px;
+    padding: 12px 32px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 15px;
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
 }
 
-.door-buttons button:first-child {
-    background: linear-gradient(135deg, rgba(248, 113, 113, 1) 0%, rgba(239, 68, 68, 1) 100%);
+.confirm-btn {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 1), rgba(220, 38, 38, 1));
     color: #ffffff;
 }
 
-.door-buttons button:first-child:hover {
-    box-shadow: 0 10px 25px rgba(248, 113, 113, 0.3);
+.confirm-btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
 }
 
-.door-buttons button:last-child {
+.cancel-btn {
     background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.door-buttons button:last-child:hover {
-    background: rgba(99, 102, 241, 0.2);
-    border-color: rgba(99, 102, 241, 0.5);
-    color: rgba(99, 102, 241, 1);
+.cancel-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
     transform: translateY(-2px);
 }
-
