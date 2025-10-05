@@ -114,4 +114,8 @@ export class Auth {
     return this.http.delete(`${this.apiUrl}/admin/deleteUser/${id}`)
   }
 
+  banUser(id: string): Observable<any>{
+    return this.http.post(`${this.apiUrl}/admin/banUser`, {userId: id})
+  }
+
 }

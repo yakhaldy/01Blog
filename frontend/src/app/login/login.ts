@@ -29,14 +29,14 @@ export class Login {
         this.router.navigate(['/']);
       },
       error: (err) => {
-        if (err.status === 401) {          
+        // if (err.status === 401) {          
           this.errorMessage = err.error.error;
            this.cdr.detectChanges();
-        } else {
-          console.log('Login failed', err);
-          this.errorMessage = 'An unexpected error occurred';
-          this.cdr.detectChanges();
-        }
+        // } else {
+        //   console.log('Login failed', err);
+        //   this.errorMessage = 'An unexpected error occurred';
+        //   this.cdr.detectChanges();
+        // }
       }
     });
   }

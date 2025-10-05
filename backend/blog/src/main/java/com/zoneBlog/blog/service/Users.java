@@ -1,6 +1,9 @@
 package com.zoneBlog.blog.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Service;
 import com.zoneBlog.blog.model.Follow;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.FollowRepository;
+import com.zoneBlog.blog.repository.PostRepository;
+import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
 
 @Service
@@ -19,15 +24,43 @@ public class Users {
 
     @Autowired
     private FollowRepository followRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+     @Autowired
+    private ReportRepository reportRepository;
+
     @Autowired
     private Helper helper;
 
-    public List<User> getAllUsers(Authentication authentication) {
+    public List<Map<String, Object>> getAllUsers(Authentication authentication) {
         User currentUser = helper.getCurrentUser(authentication);
         if (currentUser == null) {
             throw new RuntimeException("Authenticated user not found");
         }
-        return userRepository.findByUsernameNot(currentUser.getUsername());
+        List<User> users = userRepository.findByUsernameNot(currentUser.getUsername());
+        List<Map<String, Object>> response = new ArrayList<>();
+
+        for (User user : users) {
+            Map<String, Object> userResponse = new HashMap<>();
+            userResponse.put("id", user.getId());
+            userResponse.put("username", user.getUsername());
+            userResponse.put("email", user.getEmail());
+            userResponse.put("avatar", user.getAvatar());
+            userResponse.put("isBanned", user.getIsBanned());
+            userResponse.put("followersCount", user.getFollowers());
+            userResponse.put("followingCount", user.getFollowing());
+            userResponse.put("postsCount", postRepository.countByUser_Id(user.getId()));
+            userResponse.put("reportsCount", reportRepository.countByReportedUser_Id(user.getId()));
+
+
+            boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(currentUser.getId(),
+                    user.getId());
+            userResponse.put("isfollowing", isFollowing);
+            response.add(userResponse);
+        }
+        return response;
     }
 
     public void follow(Authentication authentication, Long userId) {

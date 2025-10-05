@@ -4,16 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.zoneBlog.blog.dataTransferObj.LoginRequest;
+import com.zoneBlog.blog.model.User;
+import com.zoneBlog.blog.repository.UserRepository;
 import com.zoneBlog.blog.security.JwtUtil;
 
 @Service
@@ -23,28 +23,36 @@ public class Login {
     public AuthenticationManager authenticationManager;
     @Autowired
     public JwtUtil jwtUtil;
+    @Autowired
+    public UserRepository userRepository;
 
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public Map<String, Object> login(@RequestBody LoginRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
 
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password));
-            // SecurityContextHolder.getContext().setAuthentication(auth); 
+
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (user.getIsBanned()) {
+                throw new RuntimeException("Your account is Banned.");
+            }
+
             String token = jwtUtil.generateToken(email);
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Login successful!");
             response.put("token", token);
 
-            return ResponseEntity.ok(response);
+            return response;
 
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
+            throw new RuntimeException("Invalid email or password");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Something went wrong: " + e.getMessage()));
+            throw new RuntimeException(e.getMessage());
         }
     }
 }
-              

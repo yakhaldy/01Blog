@@ -1,5 +1,7 @@
 package com.zoneBlog.blog.model;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
@@ -35,5 +37,7 @@ public class User {
 
     @Column(nullable = false)
     private Boolean isBanned = false;
+
+    private LocalDateTime bannedAt;
 
 }

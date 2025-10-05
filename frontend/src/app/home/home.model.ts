@@ -10,6 +10,7 @@ export interface User {
   role: string;
   isBanned: boolean;
   postsCount: number;
+  reportsCount: number;
 }
 
 export interface UpdatePostResult {

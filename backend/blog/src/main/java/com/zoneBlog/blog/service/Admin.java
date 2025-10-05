@@ -1,5 +1,6 @@
 package com.zoneBlog.blog.service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,5 +53,20 @@ public class Admin {
             throw new RuntimeException("User not found");
         }
         userRepository.delete(user);
+    }
+
+    public void banUser(Authentication authentication, Long id){
+         User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        if (user.getIsBanned()){
+            user.setIsBanned(false);
+        }else {
+            user.setIsBanned(true);
+            user.setBannedAt(LocalDateTime.now());
+        }
+
+        userRepository.save(user);
     }
 }

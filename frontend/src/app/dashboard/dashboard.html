@@ -132,6 +132,10 @@
                   <mat-icon>people</mat-icon>
                   <span>{{ user.followersCount || 0 }} followers</span>
                 </div>
+                <div class="meta-item">
+                  <mat-icon>report</mat-icon>
+                  <span>{{ user.reportsCount || 0 }} reports</span>
+                </div>
                 <span *ngIf="user.isBanned" class="status-chip banned">Banned</span>
                 <span *ngIf="user.role === 'ROLE_ADMIN'" class="status-chip admin">Admin</span>
               </div>
@@ -230,9 +234,9 @@
                     <p class="report-date">{{ report.reportedAt | date:'medium' }}</p>
                   </div>
                 </div>
-                <mat-chip [class]="'status-chip ' + report.status">
+                <!-- <mat-chip [class]="'status-chip ' + report.status">
                   {{ report.status }}
-                </mat-chip>
+                </mat-chip> -->
               </div>
 
               <div class="report-body">
@@ -256,14 +260,14 @@
               </div>
 
               <div class="report-actions" *ngIf="report.status === 'pending'">
-                <button mat-raised-button class="action-btn resolve" (click)="resolveReport(report)">
+                <button mat-raised-button class="action-btn resolve" (click)="openResolveReport(report)">
                   <mat-icon>check</mat-icon>
                   Resolve
                 </button>
-                <button mat-raised-button class="action-btn dismiss" (click)="dismissReport(report)">
+                <!-- <button mat-raised-button class="action-btn dismiss" (click)="dismissReport(report)">
                   <mat-icon>close</mat-icon>
                   Dismiss
-                </button>
+                </button> -->
               </div>
             </div>
           </div>
@@ -300,4 +304,126 @@
       </div>
     </div>
   </div>
+
+  <!-- ============================================== -->
+
+  <div class="door-backdrop-UserDetails" *ngIf="showUserDetailsModal" (click)="closeUserDetailsModal()">
+    <div class="user-details-modal" [class.open]="isUserDetailsModalOpen" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="modal-user-info" *ngIf="selectedReportedUser">
+          <img [src]="getImage(selectedReportedUser.avatar) || 'assets/img/default-avatar.png'"
+            [alt]="selectedReportedUser.username" class="modal-avatar">
+          <div class="modal-user-details">
+            <h2 class="modal-username">{{ selectedReportedUser.username }}</h2>
+            <p class="modal-email">{{ selectedReportedUser.email }}</p>
+            <div class="modal-stats">
+              <div class="modal-stat">
+                <mat-icon>article</mat-icon>
+                <span>{{ userPosts.length }} posts</span>
+              </div>
+              <div class="modal-stat">
+                <mat-icon>comment</mat-icon>
+                <span>{{ userComments.length }} comments</span>
+              </div>
+              <div class="modal-stat">
+                <mat-icon>people</mat-icon>
+                <span>{{ selectedReportedUser.followersCount || 0 }} followers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button mat-icon-button class="close-modal-btn" (click)="closeUserDetailsModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Posts Section -->
+        <div class="section" *ngIf="userPosts.length > 0">
+          <h3 class="section-title">
+            <mat-icon>article</mat-icon>
+            User Posts
+          </h3>
+          <div class="posts-grid">
+            <div class="modal-post-card" *ngFor="let post of userPosts">
+              <p class="modal-post-date">{{ post.createdAt | date:'medium' }}</p>
+              <p class="modal-post-title">{{ post.title }}</p>
+              <img *ngIf="post.mediaUrl" [src]="getImage(post.mediaUrl)" [alt]="post.title" class="modal-post-image">
+              <div class="modal-post-meta">
+                <div class="meta-item">
+                  <mat-icon>favorite</mat-icon>
+                  <span>{{ post.likesCount || 0 }}</span>
+                </div>
+                <div class="meta-item">
+                  <mat-icon>comment</mat-icon>
+                  <span>{{ post.commentsCount || 0 }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="section" *ngIf="userComments.length > 0">
+          <h3 class="section-title">
+            <mat-icon>comment</mat-icon>
+            User Comments
+          </h3>
+          <div class="comments-list">
+            <div class="comment-card" *ngFor="let comment of userComments">
+              <div class="comment-header">
+                <img [src]="getImage(selectedReportedUser?.avatar) || 'assets/img/default-avatar.png'"
+                  [alt]="selectedReportedUser?.username" class="comment-avatar">
+                <div class="comment-info">
+                  <p class="comment-author">{{ selectedReportedUser?.username }}</p>
+                  <p class="comment-date">{{ comment.createdAt | date:'medium' }}</p>
+                </div>
+              </div>
+              <p class="comment-content">{{ comment.content }}</p>
+              <p class="comment-post-title">On post: {{ comment.post?.title || 'Unknown post' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="userPosts.length === 0 && userComments.length === 0">
+          <mat-icon>inbox</mat-icon>
+          <p>No content found for this user</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button mat-raised-button class="modal-action-btn dismiss-btn" (click)="dismissCurrentReport()">
+          <mat-icon>close</mat-icon>
+          Dismiss Report
+        </button>
+        <!-- <button mat-raised-button class="modal-action-btn ban-btn" (click)="banReportedUser()">
+          <mat-icon>block</mat-icon>
+          Ban User
+        </button> -->
+
+        <button mat-raised-button *ngIf="selectedReportedUser" class="modal-action-btn ban-btn" (click)="openBanUserModal(selectedReportedUser)">
+          <mat-icon>block</mat-icon>
+          <span>{{ selectedReportedUser.isBanned ? 'Unban' : 'Ban' }} User</span>
+        </button>
+
+        <!-- <button mat-raised-button class="modal-action-btn delete-btn" (click)="deleteReportedUser()">
+          <mat-icon>delete</mat-icon>
+          Delete User
+        </button> -->
+
+        <button mat-raised-button *ngIf="selectedReportedUser"  class="modal-action-btn delete-btn" (click)="openDeleteUserModal(selectedReportedUser)">
+          <mat-icon>delete</mat-icon>
+          <span>Delete User</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+  <!-- </div> -->
+  <!-- ============================================== -->
+
 </div>

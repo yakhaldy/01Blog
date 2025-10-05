@@ -14,10 +14,17 @@ import { Router } from '@angular/router';
 
 import { Navbar } from '../components/navbar/navbar';
 import { Auth } from '../auth';
-import { User, Post ,Report , DashboardStats } from '../home/home.model';
+import { User, Post, Report, DashboardStats } from '../home/home.model';
 
 
-
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  post?: {
+    title: string;
+  };
+}
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -71,12 +78,17 @@ export class Dashboard implements OnInit {
   selectedPost?: Post;
   selectedReport?: Report;
   actionType: 'delete' | 'ban' | 'remove' = 'delete';
+  showUserDetailsModal = false;
+  isUserDetailsModalOpen = false;
+  selectedReportedUser?: User;
+  userPosts: Post[] = [];
+  userComments: Comment[] = [];
 
   constructor(
     private auth: Auth,
     private cdr: ChangeDetectorRef,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -169,10 +181,10 @@ export class Dashboard implements OnInit {
     this.actionType = 'ban';
     this.openModal();
   }
-
+ 
   confirmDeleteUser(): void {
     if (!this.selectedUser) return;
-    
+
     this.auth.deleteUser(this.selectedUser.id).subscribe({
       next: () => {
         this.users = this.users.filter(u => u.id !== this.selectedUser!.id);
@@ -188,21 +200,21 @@ export class Dashboard implements OnInit {
 
   confirmBanUser(): void {
     if (!this.selectedUser) return;
-    
-    // this.auth.banUser(this.selectedUser.id).subscribe({
-    //   next: () => {
-    //     const user = this.users.find(u => u.id === this.selectedUser!.id);
-    //     if (user) {
-    //       user.isBanned = true;
-    //     }
-    //     this.closeModal();
-    //     this.cdr.markForCheck();
-    //   },
-    //   error: (error) => {
-    //     console.error('Failed to ban user:', error);
-    //     this.cdr.markForCheck();
-    //   },
-    // });
+
+    this.auth.banUser(this.selectedUser.id).subscribe({
+      next: () => {
+        const user = this.users.find(u => u.id === this.selectedUser!.id);
+        if (user) {
+          user.isBanned = true;
+        }
+        this.closeModal();
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Failed to ban user:', error);
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   // Post Actions
@@ -214,7 +226,7 @@ export class Dashboard implements OnInit {
 
   confirmDeletePost(): void {
     if (!this.selectedPost) return;
-    
+
     this.auth.deletePost(this.selectedPost.id).subscribe({
       next: () => {
         this.posts = this.posts.filter(p => p.id !== this.selectedPost!.id);
@@ -228,36 +240,47 @@ export class Dashboard implements OnInit {
     });
   }
 
-  // Report Actions
-  resolveReport(report: Report): void {
-    // this.auth.updateReportStatus(report.id, 'resolved').subscribe({
-    //   next: () => {
-    //     const index = this.reports.findIndex(r => r.id === report.id);
-    //     if (index !== -1) {
-    //       this.reports[index].status = 'resolved';
-    //     }
-    //     this.cdr.markForCheck();
-    //   },
-    //   error: (error) => {
-    //     console.error('Failed to resolve report:', error);
-    //   },
-    // });
+  /*
+
+   openModal(): void {
+    this.showDeleteModal = true;
+    setTimeout(() => {
+      this.isModalOpen = true;
+    }, 10);
   }
 
-  dismissReport(report: Report): void {
-    // this.auth.updateReportStatus(report.id, 'dismissed').subscribe({
-    //   next: () => {
-    //     const index = this.reports.findIndex(r => r.id === report.id);
-    //     if (index !== -1) {
-    //       this.reports[index].status = 'dismissed';
-    //     }
-    //     this.cdr.markForCheck();
-    //   },
-    //   error: (error) => {
-    //     console.error('Failed to dismiss report:', error);
-    //   },
-    // });
+  */
+
+  // Report Actions
+  openResolveReport(report: Report): void {
+    this.selectedReportedUser = report.reportedUser;
+    this.userPosts = this.posts.filter(p => p.user.username == report.reportedUser.username);
+    this.userComments = [];
+    this.openUserDetailsModal();
   }
+
+  openUserDetailsModal(): void {    
+    this.showUserDetailsModal = true;
+    this.isUserDetailsModalOpen = true;
+  }
+
+  dismissCurrentReport() {
+    console.log("dismiss Current Report");
+    this.closeUserDetailsModal()
+
+  }
+  // this.auth.updateReportStatus(report.id, 'resolved').subscribe({
+  //   next: () => {
+  //     const index = this.reports.findIndex(r => r.id === report.id);
+  //     if (index !== -1) {
+  //       this.reports[index].status = 'resolved';
+  //     }
+  //     this.cdr.markForCheck();
+  //   },
+  //   error: (error) => {
+  //     console.error('Failed to resolve report:', error);
+  //   },
+  // });
 
   viewReportedUser(userId: string): void {
     const user = this.users.find(u => u.id === userId);
@@ -268,17 +291,22 @@ export class Dashboard implements OnInit {
 
   // Modal Controls
   openModal(): void {
-    this.showDeleteModal = true;
-    setTimeout(() => {
-      this.isModalOpen = true;
-    }, 10);
+    if (this.showUserDetailsModal){
+        this.showDeleteModal = true;
+        this.isModalOpen = true;
+    }else {
+      this.showDeleteModal = true;
+      setTimeout(() => {
+        this.isModalOpen = true;
+      }, 10);
+    }
   }
 
   closeModal(): void {
     this.isModalOpen = false;
-      this.showDeleteModal = false;
-      this.selectedUser = undefined;
-      this.selectedPost = undefined;
+    this.showDeleteModal = false;
+    this.selectedUser = undefined;
+    this.selectedPost = undefined;
   }
 
   confirmAction(): void {
@@ -291,6 +319,11 @@ export class Dashboard implements OnInit {
     }
   }
 
+  closeUserDetailsModal(): void {
+    this.isUserDetailsModalOpen = false;
+    this.showUserDetailsModal = false;
+  }
+
   // Utility
   getImage(path: string | undefined): string | undefined {
     return this.auth.getImage(path);
@@ -300,8 +333,8 @@ export class Dashboard implements OnInit {
     if (!this.searchTerm) return this.users;
     const term = this.searchTerm.toLowerCase();
     return this.users.filter(
-      u => u.username.toLowerCase().includes(term) || 
-           u.email.toLowerCase().includes(term)
+      u => u.username.toLowerCase().includes(term) ||
+        u.email.toLowerCase().includes(term)
     );
   }
 
@@ -309,8 +342,8 @@ export class Dashboard implements OnInit {
     if (!this.searchTerm) return this.posts;
     const term = this.searchTerm.toLowerCase();
     return this.posts.filter(
-      p => p.title.toLowerCase().includes(term) || 
-           p.user.username.toLowerCase().includes(term)
+      p => p.title.toLowerCase().includes(term) ||
+        p.user.username.toLowerCase().includes(term)
     );
   }
 
@@ -318,8 +351,7 @@ export class Dashboard implements OnInit {
     if (!this.searchTerm) return this.reports;
     const term = this.searchTerm.toLowerCase();
     return this.reports.filter(
-      r => r.reportReason.toLowerCase().includes(term) || 
-           r.reportedUser?.username.toLowerCase().includes(term)
+      r => r.reportedUser?.username.toLowerCase().includes(term)
     );
   }
 }

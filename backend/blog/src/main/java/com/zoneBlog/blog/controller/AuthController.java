@@ -8,7 +8,6 @@ import com.zoneBlog.blog.dataTransferObj.ReportRequest;
 import com.zoneBlog.blog.model.Comment;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.Report;
-import com.zoneBlog.blog.model.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +25,6 @@ import com.zoneBlog.blog.service.Admin;
 import com.zoneBlog.blog.service.Helper;
 import com.zoneBlog.blog.repository.FollowRepository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import java.util.Map;
@@ -38,8 +35,7 @@ import java.util.Map;
 public class AuthController {
     @Autowired
     private Helper helper;
-    @Autowired
-    private FollowRepository followRepository;
+
     @Autowired
     private Register r;
 
@@ -53,7 +49,13 @@ public class AuthController {
 
     @PostMapping("/login")
     private ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        return l.login(request);
+        // return l.login(request);
+        try {
+            Map<String, Object> response =  l.login(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @Autowired
@@ -190,21 +192,7 @@ public class AuthController {
     @GetMapping("users")
     public ResponseEntity<?> getAllUsers(Authentication authentication) {
         try {
-            List<User> users = user.getAllUsers(authentication);
-            List<Map<String, Object>> response = new ArrayList<>();
-            User currentUser = helper.getCurrentUser(authentication);
-
-            for (User user : users) {
-                Map<String, Object> userResponse = new HashMap<>();
-                userResponse.put("id", user.getId());
-                userResponse.put("username", user.getUsername());
-                userResponse.put("email", user.getEmail());
-                userResponse.put("avatar", user.getAvatar());
-                boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(currentUser.getId(),
-                        user.getId());
-                userResponse.put("isfollowing", isFollowing);
-                response.add(userResponse);
-            }
+           List<Map<String, Object>> response = user.getAllUsers(authentication);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -293,11 +281,23 @@ public class AuthController {
     @DeleteMapping("admin/deleteUser/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id, Authentication authentication) {
         try {
-            Admin.deleteUser(authentication, id );
+            Admin.deleteUser(authentication, id);
             return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "Failed to deleted user: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("admin/banUser")
+    public ResponseEntity<?> banUser(Authentication authentication, @RequestBody Map<String, Long> payload) {
+        try {
+            Long userId = payload.get("userId");
+            Admin.banUser(authentication, userId);
+            return ResponseEntity.ok(Map.of("message", "ban User successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Failed to ban User: " + e.getMessage()));
         }
     }
 

@@ -131,7 +131,7 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
             throw new RuntimeException("Post not found");
         }
 
-        if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals("ADMIN")) {
+        if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals("ROLE_ADMIN")) {
             throw new RuntimeException("You can only delete your own posts");
         }
 
