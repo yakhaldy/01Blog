@@ -1,10 +1,51 @@
-<div class="home-container">
-        <div class="creative-bg">
-    <div class="floating-circle circle-1"></div>
-    <div class="floating-circle circle-2"></div>
-    <div class="floating-circle circle-3"></div>
-    <div class="floating-triangle"></div>
-    <div class="floating-square"></div>
+<div class="notifications-container">
+  <div class="admin-container">
+    <div class="creative-bg">
+      <div class="floating-circle circle-1"></div>
+      <div class="floating-circle circle-2"></div>
+      <div class="floating-circle circle-3"></div>
+    </div>
+
+    <app-navbar></app-navbar>
+
+    <div class="notifications-wrapper">
+      <mat-card *ngFor="let notification of notifications" class="notification-card"
+        [ngClass]="{'unread': !notification.isRead}">
+        <mat-card-header>
+           <img [src]="getImage( notification.sender.avatar) || 'assets/img/default-avatar.png'"
+                [alt]="notification.sender.username + ' profile picture'" class="avatar-img" loading="lazy">
+          <mat-card-title>{{ notification.sender?.username }}</mat-card-title>
+          <mat-card-subtitle>{{ formatNotificationType(notification.type) }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <p>{{ notification.message }}</p>
+
+          <ng-container [ngSwitch]="notification.type">
+            <div *ngSwitchCase="'LIKE'">
+              <p>Liked your <a [routerLink]="['/post', notification.post?.id]">post</a>.</p>
+            </div>
+            <div *ngSwitchCase="'COMMENT'">
+              <p>Commented on your <a [routerLink]="['/post', notification.post?.id]">post</a>.</p>
+            </div>
+            <div *ngSwitchCase="'FOLLOW'">
+              <p>Started following you.</p>
+            </div>
+            <div *ngSwitchCase="'POST'">
+              <p>Published a <a [routerLink]="['/post', notification.post?.id]">new post</a>.</p>
+            </div>
+          </ng-container>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <span class="timestamp">{{ notification.createdAt | date:'short' }}</span>
+          <span class="status" *ngIf="!notification.isRead">• Unread</span>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
   </div>
- <app-navbar></app-navbar>
 </div>

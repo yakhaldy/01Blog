@@ -1,118 +1,113 @@
-.home-container {
-    background-image: linear-gradient(to top, #a8dfed 0%, #e8e9eb 100%);
+.notifications-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 25%, #1a202c 50%, #2d3748 75%, #1a1a1a 100%);
     background-attachment: fixed;
-    background-repeat: no-repeat;
-    font-family: 'Vibur', cursive;
-    font-family: 'Abel', sans-serif;
-    opacity: .95;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    color: #ffffff;
+    padding-top: 80px;
 }
 
+/* Background Elements */
 .creative-bg {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     pointer-events: none;
     z-index: 1;
+    overflow: hidden;
+    opacity: 0.3;
 }
 
 .floating-circle {
     position: absolute;
     border-radius: 50%;
-    background: linear-gradient(45deg, rgba(0, 123, 255, 0.1), rgba(108, 117, 125, 0.1));
-    animation: floatUpDown 6s ease-in-out infinite;
+    backdrop-filter: blur(1px);
+    animation: floatUpDown 12s ease-in-out infinite;
 }
 
 .circle-1 {
-    width: 100px;
-    height: 100px;
-    top: 15%;
-    left: 10%;
+    width: 80px;
+    height: 80px;
+    top: 10%;
+    left: 5%;
+    background: radial-gradient(circle, rgba(29, 155, 240, 0.1), transparent);
     animation-delay: 0s;
-    background: linear-gradient(45deg, rgba(0, 123, 255, 0.08), rgba(40, 167, 69, 0.08));
 }
 
 .circle-2 {
     width: 60px;
     height: 60px;
     top: 70%;
-    right: 15%;
-    animation-delay: 2s;
-    background: linear-gradient(45deg, rgba(255, 193, 7, 0.1), rgba(220, 53, 69, 0.1));
+    right: 10%;
+    background: radial-gradient(circle, rgba(29, 155, 240, 0.08), transparent);
+    animation-delay: 4s;
 }
 
 .circle-3 {
-    width: 80px;
-    height: 80px;
-    bottom: 30%;
-    left: 8%;
-    animation-delay: 4s;
-    background: linear-gradient(45deg, rgba(108, 117, 125, 0.06), rgba(0, 123, 255, 0.06));
-}
-
-.floating-triangle {
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-left: 25px solid transparent;
-    border-right: 25px solid transparent;
-    border-bottom: 40px solid rgba(0, 123, 255, 0.1);
-    top: 25%;
-    right: 20%;
-    animation: rotate360 12s linear infinite;
-}
-
-.floating-square {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: rgba(40, 167, 69, 0.08);
-    top: 60%;
-    right: 30%;
-    animation: rotateSquare 10s ease-in-out infinite;
-    transform-origin: center;
+    width: 100px;
+    height: 100px;
+    bottom: 20%;
+    left: 3%;
+    background: radial-gradient(circle, rgba(29, 155, 240, 0.06), transparent);
+    animation-delay: 8s;
 }
 
 @keyframes floatUpDown {
-
-    0%,
-    100% {
+    0%, 100% {
         transform: translateY(0px) scale(1);
+        opacity: 0.3;
     }
-
     50% {
-        transform: translateY(-20px) scale(1.05);
+        transform: translateY(-20px) scale(1.1);
+        opacity: 0.6;
     }
 }
 
-@keyframes rotate360 {
-    from {
-        transform: rotate(0deg);
-    }
 
-    to {
-        transform: rotate(360deg);
-    }
+
+.notifications-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  max-width: 800px;
+  margin: auto;
 }
 
-@keyframes rotateSquare {
+.notification-card {
+  background-color: #1e1e2f;
+  color: #fff;
+  border-left: 4px solid transparent;
+  transition: background-color 0.3s ease;
+}
 
-    0%,
-    100% {
-        transform: rotate(0deg) scale(1);
-    }
+.notification-card.unread {
+  border-left: 4px solid #2196f3;
+  background-color: #2c2c3a;
+}
 
-    25% {
-        transform: rotate(90deg) scale(1.1);
-    }
+.mat-card-title, .mat-card-subtitle {
+  color: #90caf9;
+}
 
-    50% {
-        transform: rotate(180deg) scale(1);
-    }
+.timestamp {
+  font-size: 0.8rem;
+  color: #ccc;
+  margin-right: 12px;
+}
 
-    75% {
-        transform: rotate(270deg) scale(1.1);
-    }
+.status {
+  font-size: 0.8rem;
+  color: #ff5252;
+}
+
+.avatar-icon {
+  background-color: #2196f3;
+  color: white;
+  border-radius: 50%;
+  padding: 8px;
 }

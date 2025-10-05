@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { User, Post, Comment, Report, DashboardStats } from '../app/home/home.model';
+import { User, Post, Comment, Report, DashboardStats, Notification } from '../app/home/home.model';
 export interface CreatePostRequest {
   description: string;
   mediaFile?: File;
@@ -116,6 +116,11 @@ export class Auth {
 
   banUser(id: string): Observable<any>{
     return this.http.post(`${this.apiUrl}/admin/banUser`, {userId: id})
+  }
+
+  getNotifications(): Observable<Notification[]>{
+    return this.http.get<Notification[]>(`${this.apiUrl}/notification`,)
+
   }
 
 }

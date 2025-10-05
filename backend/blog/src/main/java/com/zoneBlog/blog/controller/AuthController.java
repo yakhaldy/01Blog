@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 
 import com.zoneBlog.blog.service.Login;
+import com.zoneBlog.blog.service.NotificationService;
 import com.zoneBlog.blog.service.Register;
 import com.zoneBlog.blog.service.Profile;
 import com.zoneBlog.blog.service.Posts;
@@ -24,10 +25,12 @@ import com.zoneBlog.blog.service.Users;
 import com.zoneBlog.blog.service.Admin;
 import com.zoneBlog.blog.service.Helper;
 import com.zoneBlog.blog.repository.FollowRepository;
+import com.zoneBlog.blog.model.Notification;
 
 import java.util.List;
 
 import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api")
@@ -301,4 +304,18 @@ public class AuthController {
         }
     }
 
+    @Autowired
+    private NotificationService Notification;
+
+    @GetMapping("notification")
+    public ResponseEntity<?> getnotification(Authentication authentication) {
+        try {
+            List<Notification> notifications = Notification.getnotifications(authentication);
+            return ResponseEntity.ok(notifications);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Failed get notifications: " + e.getMessage()));
+        }
+    }
+    
 }

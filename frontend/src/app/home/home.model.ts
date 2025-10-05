@@ -78,3 +78,13 @@ export interface DashboardStats {
   bannedUsers: number;
   activeReports: number;
 }
+
+
+export interface Notification {
+  sender: User;
+  type: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  post: Post;
+}
