@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 
 import com.zoneBlog.blog.service.Login;
@@ -293,6 +294,7 @@ public class AuthController {
     }
 
     @PostMapping("admin/banUser")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> banUser(Authentication authentication, @RequestBody Map<String, Long> payload) {
         try {
             Long userId = payload.get("userId");

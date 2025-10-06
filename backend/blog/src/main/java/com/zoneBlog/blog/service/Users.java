@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -13,9 +12,11 @@ import org.springframework.stereotype.Service;
 import com.zoneBlog.blog.model.Follow;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.FollowRepository;
+import com.zoneBlog.blog.repository.NotificationRepository;
 import com.zoneBlog.blog.repository.PostRepository;
 import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
+import static com.zoneBlog.blog.model.Notification.NotificationType.FOLLOW;
 
 @Service
 public class Users {
@@ -28,11 +29,17 @@ public class Users {
     @Autowired
     private PostRepository postRepository;
 
-     @Autowired
+    @Autowired
     private ReportRepository reportRepository;
 
     @Autowired
     private Helper helper;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     public List<Map<String, Object>> getAllUsers(Authentication authentication) {
         User currentUser = helper.getCurrentUser(authentication);
@@ -53,7 +60,6 @@ public class Users {
             userResponse.put("followingCount", user.getFollowing());
             userResponse.put("postsCount", postRepository.countByUser_Id(user.getId()));
             userResponse.put("reportsCount", reportRepository.countByReportedUser_Id(user.getId()));
-
 
             boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(currentUser.getId(),
                     user.getId());
@@ -82,11 +88,14 @@ public class Users {
         if (isFollowing) {
             Follow follow = followRepository.findByFollower_IdAndFollowing_Id(currentUser.getId(), userId);
             followRepository.delete(follow);
+            notificationRepository.deleteByRecipientAndSenderAndType(userToFollow, currentUser, FOLLOW);
         } else {
             Follow follow = new Follow();
             follow.setFollower(currentUser);
             follow.setFollowing(userToFollow);
             followRepository.save(follow);
+            notificationService.addNotification(userToFollow, currentUser, FOLLOW, null, null,
+                    currentUser.getUsername() + " started following you.");
         }
 
         currentUser.setFollowing(followRepository.countByFollower_Id(currentUser.getId()));

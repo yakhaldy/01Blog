@@ -84,7 +84,7 @@ export interface Notification {
   sender: User;
   type: string;
   message: string;
-  isRead: boolean;
+  read: boolean;
   createdAt: string;
   post: Post;
 }

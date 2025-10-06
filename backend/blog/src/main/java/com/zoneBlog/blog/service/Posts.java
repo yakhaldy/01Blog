@@ -1,6 +1,5 @@
 package com.zoneBlog.blog.service;
 
-
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
@@ -23,7 +22,12 @@ import com.zoneBlog.blog.model.Comment;
 
 import com.zoneBlog.blog.repository.FollowRepository;
 import com.zoneBlog.blog.repository.LikeRepository;
+import com.zoneBlog.blog.repository.NotificationRepository;
 import com.zoneBlog.blog.repository.CommentRepository;
+import static com.zoneBlog.blog.model.Notification.NotificationType.POST;
+import static com.zoneBlog.blog.model.Notification.NotificationType.LIKE;
+import static com.zoneBlog.blog.model.Notification.NotificationType.COMMENT;
+
 
 
 import java.util.stream.Collectors;
@@ -42,15 +46,20 @@ public class Posts {
     @Autowired
     private UserRepository userRepository;
 
-     @Autowired
+    @Autowired
     private CommentRepository CommentRepository;
 
-    
-     @Autowired
+    @Autowired
     private FollowRepository followRepository;
 
     @Autowired
     private Helper helper;
+
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     public Post createPost(Authentication authentication, @RequestBody PostRequest request, MultipartFile mediaFile) {
         String description = request.getDescription();
@@ -63,7 +72,7 @@ public class Posts {
         if (title == null || title.trim().isEmpty()) {
             throw new RuntimeException("Post title cannot be empty");
         }
-         title = title.replaceAll("\r\n", "\n");
+        title = title.replaceAll("\r\n", "\n");
         if (title.length() > 280) {
             throw new RuntimeException("Post description cannot exceed 280 characters");
         }
@@ -85,45 +94,59 @@ public class Posts {
             String mediaPath = helper.handleFileUpload(mediaFile);
             post.setMediaUrl(mediaPath);
         }
+        postRepository.save(post);
 
-        return postRepository.save(post);
+
+        List<Follow> follows = followRepository.findByFollowing_Id(user.getId());
+        for (Follow follow : follows) {
+            Long followerId = follow.getFollower().getId();
+            notificationService.addNotification(
+                    userRepository.findById(followerId).orElse(null),
+                    user,
+                    POST,
+                    post,
+                    null,
+                    user.getUsername() + " created a new post.");
+        }
+
+        return post;
     }
 
-public List<Post> getAllPosts(Authentication authentication /* , int page, int size*/) {
-    User user = helper.getCurrentUser(authentication);
-    if (user == null) {
-        throw new RuntimeException("User not found");
+    public List<Post> getAllPosts(Authentication authentication /* , int page, int size */) {
+        User user = helper.getCurrentUser(authentication);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        if (user.getRole().equals("ROLE_ADMIN")) {
+            return postRepository.findAll();
+        }
+
+        List<Follow> followings = followRepository.findByFollower_Id(user.getId());
+
+        List<Long> followingIds = followings.stream()
+                .map(f -> f.getFollowing().getId())
+                .collect(Collectors.toList());
+
+        followingIds.add(user.getId());
+
+        List<Post> posts = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds);
+
+        // Pageable pageable = PageRequest.of(page, size);
+
+        // Page<Post> postsPage =
+        // postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
+
+        posts = posts.stream().map(p -> {
+            p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId()));
+            return p;
+        }).collect(Collectors.toList());
+
+        return posts;
     }
-    if (user.getRole().equals("ROLE_ADMIN")){
-        return postRepository.findAll();
-    }
-
-    List<Follow> followings = followRepository.findByFollower_Id(user.getId());
-
-    List<Long> followingIds = followings.stream()
-                                       .map(f -> f.getFollowing().getId())
-                                       .collect(Collectors.toList());
-
-    followingIds.add(user.getId());
-
-    List<Post> posts = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds);
-    
-    //     Pageable pageable = PageRequest.of(page, size);
-
-    // Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
-
-    posts = posts.stream().map(p -> {
-        p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId()));
-        return p;
-    }).collect(Collectors.toList());
-
-    return posts;
-}
-
 
     public void deletePost(Long id, Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
-         if (user == null) {
+        if (user == null) {
             throw new RuntimeException("User not found");
         }
         Post post = postRepository.findById(id).orElse(null);
@@ -138,12 +161,11 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         likeRepository.deleteByPost_Id(post.getId());
         CommentRepository.deleteByPost_Id(post.getId());
 
+        // notificationRepository.deleteByPost(post);
         postRepository.delete(post);
         helper.deleteOldMediaFile(post.getMediaUrl());
 
     }
-
-
 
     public Post updatePost(Long id, Authentication authentication, @RequestBody PostRequest request,
             MultipartFile mediaFile, String removeImage) {
@@ -151,7 +173,7 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-         Post post = postRepository.findById(id).orElse(null);
+        Post post = postRepository.findById(id).orElse(null);
         if (post == null) {
             throw new RuntimeException("Post not found");
         }
@@ -170,7 +192,7 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         }
         post.setDescription(description);
 
-         String title = request.getTitle();
+        String title = request.getTitle();
         if (title == null || title.trim().isEmpty()) {
             throw new RuntimeException("Post title cannot be empty");
         }
@@ -180,7 +202,8 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
             throw new RuntimeException("Post title cannot exceed 280 characters");
         }
 
-        post.setTitle(title);;
+        post.setTitle(title);
+        ;
 
         if (mediaFile != null && !mediaFile.isEmpty()) {
             helper.deleteOldMediaFile(post.getMediaUrl());
@@ -201,24 +224,30 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-         Post post = postRepository.findById(id).orElse(null);
+        Post post = postRepository.findById(id).orElse(null);
         if (post == null) {
             throw new RuntimeException("Post not found");
         }
-    
+
         if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId())) {
             Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId());
-            // likeRepository.deleteByUser_IdAndPost_Id(user.getId(), post.getId());
             likeRepository.delete(like);
+            if (!user.getId().equals(post.getUser().getId())){
+            notificationRepository.deleteByRecipientAndSenderAndPostAndType(post.getUser(), user, post, LIKE);
+            }
         } else {
             Like like = new Like();
             like.setPost(post);
             like.setUser(user);
             likeRepository.save(like);
+            if (!user.getId().equals(post.getUser().getId())){
+            notificationService.addNotification(post.getUser(), user, LIKE,post,null,user.getUsername() + " liked your post.");
+            }
         }
         post.setLikesCount(likeRepository.countByPost_Id(post.getId()));
 
         postRepository.save(post);
+
         return post;
     }
 
@@ -269,13 +298,13 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
                 .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 
-    public Comment createComment(Authentication authentication, String content, Long postId){
+    public Comment createComment(Authentication authentication, String content, Long postId) {
         User CurrentUser = helper.getCurrentUser(authentication);
         if (CurrentUser == null) {
             throw new RuntimeException("User not found");
         }
         Post post = postRepository.findById(postId).orElse(null);
-        if ( post == null ){
+        if (post == null) {
             throw new RuntimeException("post not found");
         }
 
@@ -295,15 +324,20 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         post.setCommentsCount(CommentRepository.countByPost_Id(post.getId()));
         postRepository.save(post);
 
+        if (!CurrentUser.getId().equals(post.getUser().getId())){
+            notificationService.addNotification(post.getUser(), CurrentUser, COMMENT,post,comment,CurrentUser.getUsername() + " comment in your post.");
+        }
+
         return comment;
     }
-    public List<Comment> getPostComments(Authentication authentication, Long postId){
-         User CurrentUser = helper.getCurrentUser(authentication);
+
+    public List<Comment> getPostComments(Authentication authentication, Long postId) {
+        User CurrentUser = helper.getCurrentUser(authentication);
         if (CurrentUser == null) {
             throw new RuntimeException("User not found");
         }
         Post post = postRepository.findById(postId).orElse(null);
-        if ( post == null ){
+        if (post == null) {
             throw new RuntimeException("post not found");
         }
 
@@ -311,18 +345,18 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         return comments;
     }
 
-       public Comment updateComment(Authentication authentication, Long commentId, CommentRequest request){
-         User CurrentUser = helper.getCurrentUser(authentication);
+    public Comment updateComment(Authentication authentication, Long commentId, CommentRequest request) {
+        User CurrentUser = helper.getCurrentUser(authentication);
         if (CurrentUser == null) {
             throw new RuntimeException("User not found");
         }
-        
+
         Comment comment = CommentRepository.findById(commentId).orElse(null);
         if (comment == null) {
             throw new RuntimeException("comment not found");
         }
 
-           if (!comment.getUser().getId().equals(CurrentUser.getId())) {
+        if (!comment.getUser().getId().equals(CurrentUser.getId())) {
             throw new RuntimeException("You can only update your own comments");
         }
         String content = request.getContent();
@@ -338,6 +372,5 @@ public List<Post> getAllPosts(Authentication authentication /* , int page, int s
         CommentRepository.save(comment);
         return comment;
     }
-
 
 }

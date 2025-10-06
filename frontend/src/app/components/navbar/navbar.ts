@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Auth } from '../../auth';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
+import { Notifications } from '../../notifications';
+
 
 import { User } from '../../home/home.model'
 
@@ -13,27 +15,34 @@ import { User } from '../../home/home.model'
   styleUrl: './navbar.css'
 })
 export class Navbar implements OnInit {
-  notificationCount = 3;
+  notificationCount = 0;
   currentUser: User | null = null;
   isDropdownOpen = false;
   isAdmin = false;
   currentRoute: string = '';
-  
 
-  constructor(private router: Router, private auth: Auth) { }
+
+  constructor(private router: Router, private auth: Auth, private cdr: ChangeDetectorRef,private notifications: Notifications){}
 
   ngOnInit(): void {
     this.currentRoute = this.router.url;
-    
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
     });
 
-     this.auth.getCurrentUser().subscribe(user => {      
+    this.auth.getCurrentUser().subscribe(user => {
       this.currentUser = user;
-      this.isAdmin = user.role.includes("ADMIN") ; 
+      this.isAdmin = user.role.includes("ADMIN");
+      this.cdr.markForCheck();
+    });
+
+     this.notifications.getNotificationCountStream().subscribe(count => {
+      console.log("1 ======>",count);
+      this.notificationCount = count;
+      this.cdr.markForCheck(); 
     });
   }
 

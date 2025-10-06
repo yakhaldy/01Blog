@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Navbar } from '../components/navbar/navbar';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,6 +24,7 @@ export class Notifications implements OnInit {
   constructor(
     private auth: Auth,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) { }
   ngOnInit(): void {
     this.loadNotifications();
@@ -33,8 +34,11 @@ export class Notifications implements OnInit {
     this.loading = true;
     this.auth.getNotifications().subscribe({
       next: (notifications) => {
+        
         this.notifications = notifications;
         this.loading = false;
+        console.log("*******************************\n", notifications);
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error loading notifications:', error);

@@ -14,7 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.util.AntPathMatcher;
 
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +26,6 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
 
     // Define public endpoints that should skip JWT validation
     private final List<String> publicEndpoints = Arrays.asList(
@@ -59,8 +57,17 @@ public class JwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         System.out.println("🔑 Authorization header: " + (authHeader != null ? "Present" : "Missing"));
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        if (authHeader != null && authHeader.startsWith("Bearer ") || requestPath.contains("/api/notifications/stream") ) {
+            String token = null;
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+                System.out.println("📦 JWT extracted from Authorization header.");
+            } else {
+                token = request.getParameter("token"); 
+                System.out.println("📦 JWT extracted from URL parameter: " + (token != null ? "Present" : "Missing"));
+            }
+
+            // String token = authHeader.substring(7);
             System.out.println("📝 Processing JWT token...");
 
             try {

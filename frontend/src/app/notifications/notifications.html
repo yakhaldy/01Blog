@@ -10,7 +10,7 @@
 
     <div class="notifications-wrapper">
       <mat-card *ngFor="let notification of notifications" class="notification-card"
-        [ngClass]="{'unread': !notification.isRead}">
+        [ngClass]="{'unread': !notification.read}">
         <mat-card-header>
            <img [src]="getImage( notification.sender.avatar) || 'assets/img/default-avatar.png'"
                 [alt]="notification.sender.username + ' profile picture'" class="avatar-img" loading="lazy">
@@ -39,7 +39,7 @@
 
         <mat-card-actions>
           <span class="timestamp">{{ notification.createdAt | date:'short' }}</span>
-          <span class="status" *ngIf="!notification.isRead">• Unread</span>
+          <span class="status" *ngIf="!notification.read">• Unread</span>
         </mat-card-actions>
       </mat-card>
     </div>
