@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 
 import com.zoneBlog.blog.service.Login;
@@ -25,7 +24,6 @@ import com.zoneBlog.blog.service.Posts;
 import com.zoneBlog.blog.service.Users;
 import com.zoneBlog.blog.service.Admin;
 import com.zoneBlog.blog.service.Helper;
-import com.zoneBlog.blog.repository.FollowRepository;
 import com.zoneBlog.blog.model.Notification;
 
 import java.util.List;
@@ -189,6 +187,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
         }
     }
+    @DeleteMapping("/posts/comment/{commentId}")
+    public ResponseEntity<?> deleteComment(Authentication authentication, @PathVariable Long commentId) {
+        try {
+            Posts.deleteComment(authentication, commentId);
+            return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
+        }
+    }
+    
 
     @Autowired
     private Users user;

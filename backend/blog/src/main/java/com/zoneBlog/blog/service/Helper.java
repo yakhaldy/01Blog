@@ -16,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.UserRepository;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Component
 public class Helper {
 

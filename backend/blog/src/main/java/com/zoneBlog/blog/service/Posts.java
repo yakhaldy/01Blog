@@ -373,4 +373,21 @@ public class Posts {
         return comment;
     }
 
+    public void deleteComment(Authentication authentication, Long commentId){
+        User CurrentUser = helper.getCurrentUser(authentication);
+        if (CurrentUser == null) {
+            throw new RuntimeException("User not found");
+        }
+        Comment comment = CommentRepository.findById(commentId).orElse(null);
+        if (comment == null) {
+            throw new RuntimeException("comment not found");
+        }
+         if (!comment.getUser().getId().equals(CurrentUser.getId()) && !CurrentUser.getRole().equals("ROLE_ADMIN")) {
+            throw new RuntimeException("You can only delete your own comment");
+        }
+
+        CommentRepository.delete(comment);
+
+    }
+
 }

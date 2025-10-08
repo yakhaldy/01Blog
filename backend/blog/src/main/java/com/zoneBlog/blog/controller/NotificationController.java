@@ -2,6 +2,7 @@ package com.zoneBlog.blog.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -25,25 +26,48 @@ public class NotificationController {
 
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    @GetMapping(value = "/stream", produces = "text/event-stream")
-    public SseEmitter streamNotifications(Authentication authentication, @RequestParam("token") String token) {
-        User user = helper.getCurrentUser(authentication);
-        Long userId = user.getId();
+@GetMapping(value = "/stream", produces = "text/event-stream")
+public SseEmitter streamNotifications(Authentication authentication, @RequestParam("token") String token) {
 
-        System.out.println("✅ SSE connection received for: " + user.getUsername());
+    User user = helper.getCurrentUser(authentication); 
+    Long userId = user.getId();
+    Long initialCount = notificationRepository.countByRecipient_Id(userId);
 
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        emitters.put(userId, emitter);
+    System.out.println("✅ SSE connection request for user: " + user.getUsername() + " (ID: " + userId + ")");
 
-        emitter.onCompletion(() -> emitters.remove(userId));
-        emitter.onTimeout(() -> emitters.remove(userId));
-        emitter.onError((e) -> emitters.remove(userId));
-
-        // Optional: send initial unread count
-        sendNotificationCount(userId, notificationRepository.countByRecipient_Id(userId));
-
-        return emitter;
+    SseEmitter existingEmitter = emitters.get(userId);
+    if (existingEmitter != null) {
+        try {
+            existingEmitter.complete();
+        } catch (Exception e) {
+            System.err.println("Error closing existing emitter: " + e.getMessage());
+        }
+        emitters.remove(userId);
     }
+
+    SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+    emitters.put(userId, emitter);
+
+    emitter.onCompletion(() -> emitters.remove(userId));
+    emitter.onTimeout(() -> emitters.remove(userId));
+    emitter.onError(e -> {
+        System.err.println("❌ SSE error for user: " + userId + " - " + e.getMessage());
+        emitters.remove(userId);
+    });
+
+    try {
+        emitter.send(SseEmitter.event()
+            .name("unreadCount")
+            .data(initialCount));
+        System.out.println("📤 Sent initial count (" + initialCount + ") to user: " + userId);
+    } catch (IOException e) {
+        System.err.println("Failed to send initial count to user " + userId + ": " + e.getMessage());
+        emitters.remove(userId);
+    }
+
+    return emitter;
+}
+
 
     public void sendNotificationCount(Long userId, Long count) {
         SseEmitter emitter = emitters.get(userId);
@@ -52,9 +76,22 @@ public class NotificationController {
                 emitter.send(SseEmitter.event()
                         .name("unreadCount")
                         .data(count));
+                System.out.println("📤 Sent notification count (" + count + ") to user: " + userId);
             } catch (IOException e) {
+                System.err.println("Failed to send notification to user " + userId + ": " + e.getMessage());
                 emitters.remove(userId);
             }
+        } else {
+            System.out.println("⚠️ No active SSE connection for user: " + userId);
         }
+    }
+
+    // get active connections count (for debugging)
+    @GetMapping("/active-connections")
+    public Map<String, Object> getActiveConnections() {
+        return Map.of(
+            "activeConnections", emitters.size(),
+            "userIds", emitters.keySet()
+        );
     }
 }
