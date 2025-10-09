@@ -101,6 +101,10 @@ export class Auth {
     return this.http.patch<Comment>(`${this.apiUrl}/posts/comment/${id}`, data)
   }
 
+  deleteComment(id: number): Observable<any>{
+    return this.http.delete(`${this.apiUrl}/posts/comment/${id}`)
+  }
+
   getAllReports(): Observable<Report[]> {
     return this.http.get<Report[]>(`${this.apiUrl}/admin/getReports`,)
   }

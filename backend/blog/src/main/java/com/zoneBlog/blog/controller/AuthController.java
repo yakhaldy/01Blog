@@ -320,7 +320,7 @@ public class AuthController {
     @GetMapping("notification")
     public ResponseEntity<?> getnotification(Authentication authentication) {
         try {
-            List<Notification> notifications = Notification.getnotifications(authentication);
+            List<Notification> notifications = Notification.getNotifications(authentication);
             return ResponseEntity.ok(notifications);
         } catch (Exception e) {
             return ResponseEntity.badRequest()

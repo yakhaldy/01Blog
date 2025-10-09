@@ -404,7 +404,7 @@ export class Home implements OnInit {
   }
 
   get isCharacterLimitExceeded(): boolean {
-    return this.postCharacterCount > 1000;
+    return this.postCharacterCount > 5000;
   }
 
 
@@ -412,7 +412,7 @@ export class Home implements OnInit {
     return this.newPost.title.length;
   }
   get isCharacterTitleLimitExceeded(): boolean {
-    return this.postTitelCharacterCount > 1000;
+    return this.postTitelCharacterCount > 280;
   }
 
 

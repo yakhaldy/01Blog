@@ -25,14 +25,23 @@ public class NotificationService {
     @Autowired
     private NotificationController notificationController;
 
-    public List<Notification> getnotifications(Authentication authentication) {
+    public List<Notification> getNotifications(Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
+
+        List<Notification> notifications = notificationRepository.findByRecipientOrderByCreatedAtDesc(user);
+        for (Notification notification : notifications) {
+            if (!notification.isRead()) {
+                notification.setRead(true);
+            }
+        }
+        notificationRepository.saveAll(notifications);
+
         
-        List<Notification> notification = notificationRepository.findByRecipientOrderByCreatedAtDesc(user);
-        return notification;
+
+        return notifications;
     }
 
     public void addNotification(User recipient, User sender, Notification.NotificationType type, Post post,
@@ -54,15 +63,15 @@ public class NotificationService {
         notificationRepository.save(notification);
 
         Long count = notificationRepository.countByRecipient_Id(recipient.getId());
-        
+
         System.out.println("📊 Unread notification count: " + count);
-        
-        notificationController.sendNotificationCount(recipient.getId() ,count);
+
+        notificationController.sendNotificationCount(recipient.getId(), count);
     }
 
     // public Long getCountNotification(Authentication authentication){
-    //     User user = helper.getCurrentUser(authentication);
+    // User user = helper.getCurrentUser(authentication);
 
-    //     return notificationRepository.countByRecipient_Id(user.getId());
+    // return notificationRepository.countByRecipient_Id(user.getId());
     // }
 }

@@ -28,8 +28,6 @@ import static com.zoneBlog.blog.model.Notification.NotificationType.POST;
 import static com.zoneBlog.blog.model.Notification.NotificationType.LIKE;
 import static com.zoneBlog.blog.model.Notification.NotificationType.COMMENT;
 
-
-
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -95,7 +93,6 @@ public class Posts {
             post.setMediaUrl(mediaPath);
         }
         postRepository.save(post);
-
 
         List<Follow> follows = followRepository.findByFollowing_Id(user.getId());
         for (Follow follow : follows) {
@@ -232,16 +229,17 @@ public class Posts {
         if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId())) {
             Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId());
             likeRepository.delete(like);
-            if (!user.getId().equals(post.getUser().getId())){
-            notificationRepository.deleteByRecipientAndSenderAndPostAndType(post.getUser(), user, post, LIKE);
+            if (!user.getId().equals(post.getUser().getId())) {
+                notificationRepository.deleteByRecipientAndSenderAndPostAndType(post.getUser(), user, post, LIKE);
             }
         } else {
             Like like = new Like();
             like.setPost(post);
             like.setUser(user);
             likeRepository.save(like);
-            if (!user.getId().equals(post.getUser().getId())){
-            notificationService.addNotification(post.getUser(), user, LIKE,post,null,user.getUsername() + " liked your post.");
+            if (!user.getId().equals(post.getUser().getId())) {
+                notificationService.addNotification(post.getUser(), user, LIKE, post, null,
+                        user.getUsername() + " liked your post.");
             }
         }
         post.setLikesCount(likeRepository.countByPost_Id(post.getId()));
@@ -294,8 +292,16 @@ public class Posts {
         if (CurrentUser == null) {
             throw new RuntimeException("User not found");
         }
-        return postRepository.findById(id)
+        Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (likeRepository.existsByUser_IdAndPost_Id(CurrentUser.getId(), post.getId())) {
+            post.setIsLiked(true);
+        } else {
+            post.setIsLiked(false);
+        }
+
+        return post;
     }
 
     public Comment createComment(Authentication authentication, String content, Long postId) {
@@ -324,8 +330,9 @@ public class Posts {
         post.setCommentsCount(CommentRepository.countByPost_Id(post.getId()));
         postRepository.save(post);
 
-        if (!CurrentUser.getId().equals(post.getUser().getId())){
-            notificationService.addNotification(post.getUser(), CurrentUser, COMMENT,post,comment,CurrentUser.getUsername() + " comment in your post.");
+        if (!CurrentUser.getId().equals(post.getUser().getId())) {
+            notificationService.addNotification(post.getUser(), CurrentUser, COMMENT, post, comment,
+                    CurrentUser.getUsername() + " comment in your post.");
         }
 
         return comment;
@@ -373,7 +380,7 @@ public class Posts {
         return comment;
     }
 
-    public void deleteComment(Authentication authentication, Long commentId){
+    public void deleteComment(Authentication authentication, Long commentId) {
         User CurrentUser = helper.getCurrentUser(authentication);
         if (CurrentUser == null) {
             throw new RuntimeException("User not found");
@@ -382,11 +389,19 @@ public class Posts {
         if (comment == null) {
             throw new RuntimeException("comment not found");
         }
-         if (!comment.getUser().getId().equals(CurrentUser.getId()) && !CurrentUser.getRole().equals("ROLE_ADMIN")) {
+        if (!comment.getUser().getId().equals(CurrentUser.getId()) && !CurrentUser.getRole().equals("ROLE_ADMIN")) {
             throw new RuntimeException("You can only delete your own comment");
         }
 
+        Post post = postRepository.findById(comment.getPost().getId()).orElse(null);
+        if (post == null) {
+            throw new RuntimeException("post not found");
+        }
+        
         CommentRepository.delete(comment);
+
+        post.setCommentsCount(CommentRepository.countByPost_Id(post.getId()));
+        postRepository.save(post);
 
     }
 

@@ -7,18 +7,18 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'; // Added MatSnackBarModule
-import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // Added MatDialogModule
-import { MatTooltipModule } from '@angular/material/tooltip'; // Added for tooltips used in HTML
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { isImage, isVideo } from '../home/home.helpers';
-import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog'; // *Imported missing component*
+import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 import { Navbar } from '../components/navbar/navbar';
 import { User, Post, Comment, UpdatePostResult } from '../home/home.model';
 import { Auth } from '../auth';
 
 @Component({
   selector: 'app-singal-post',
-  standalone: true, // Assuming this is a standalone component based on imports array
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -28,9 +28,9 @@ import { Auth } from '../auth';
     MatButtonModule,
     MatMenuModule,
     MatDividerModule,
-    MatSnackBarModule, // Added
-    MatDialogModule, // Added
-    MatTooltipModule // Added
+    MatSnackBarModule,
+    MatDialogModule,
+    MatTooltipModule
   ],
   templateUrl: './singal-post.html',
   styleUrls: ['./singal-post.css', '../home/home.css'],
@@ -53,14 +53,13 @@ export class SingalPost implements OnInit {
   editingCommentId: number | null = null;
   editedContent: string = '';
 
-  // @ViewChild and ElementRef were imported but not used, so they were removed from the imports.
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private auth: Auth,
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog, // Kept for updatePostDialog
-    private snackBar: MatSnackBar // Kept for messaging
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) { }
 
   ngOnInit(): void {
@@ -102,7 +101,6 @@ export class SingalPost implements OnInit {
   }
 
   editPost(): void {
-    // Only open dialog if post exists
     if (!this.post) return;
 
     const dialogRef = this.dialog.open(UpdatePostDialog, {
@@ -110,7 +108,7 @@ export class SingalPost implements OnInit {
       maxWidth: '90vw',
       data: {
         content: this.post.description,
-        title: this.post.title, // Assuming UpdatePostDialog also handles title
+        title: this.post.title,
         imgUrl: this.post.mediaUrl,
         postId: this.post.id
       },
@@ -147,21 +145,24 @@ export class SingalPost implements OnInit {
       }
     });
   }
-
+  PostToDelete?: Post | null;
   deletePost(): void {
-    if (this.post && confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-      this.auth.deletePost(this.post.id).subscribe({
-        next: () => {
-          this.showSuccessMessage('Post deleted successfully!');
-          this.router.navigate([`/`]);
-        },
-        error: (error) => {
-          console.error('Failed to delete Post:', error);
-          this.showErrorMessage('Failed to delete post.');
-          this.cdr.markForCheck();
-        }
-      });
-    }
+    this.PostToDelete = this.post;
+    this.open(); // Show door modal
+
+    // if (this.post) {
+    //   this.auth.deletePost(this.post.id).subscribe({
+    //     next: () => {
+    //       this.showSuccessMessage('Post deleted successfully!');
+    //       this.router.navigate([`/`]);
+    //     },
+    //     error: (error) => {
+    //       console.error('Failed to delete Post:', error);
+    //       this.showErrorMessage('Failed to delete post.');
+    //       this.cdr.markForCheck();
+    //     }
+    //   });
+    // }
   }
 
   likePoste(): void {
@@ -290,15 +291,15 @@ export class SingalPost implements OnInit {
   }
 
 
- showModal = false;
+  showModal = false;
   isOpen = false;
 
- commentToDelete?: Comment; 
+  commentToDelete?: Comment;
 
-deleteComment(comment: Comment): void {
-  this.commentToDelete = comment;
-  this.open(); // Show door modal
-}
+  deleteComment(comment: Comment): void {
+    this.commentToDelete = comment;
+    this.open(); // Show door modal
+  }
 
   open() {
     this.showModal = true;
@@ -306,41 +307,55 @@ deleteComment(comment: Comment): void {
     setTimeout(() => {
       this.isOpen = true;
     }, 10);
-  
+
   }
 
- close() {
-  this.isOpen = false;
-
+  close() {
+    this.isOpen = false;
     this.showModal = false;
-    this.commentToDelete = undefined; 
+    this.commentToDelete = undefined;
+    this.PostToDelete = undefined;
 
-}
+  }
 
 
-confirm() {
-  if (!this.commentToDelete) return;
+  confirm() {
+    if (!this.commentToDelete && !this.PostToDelete) return;
 
-  // this.auth.deleteComment(this.commentToDelete.id).subscribe({
-  //   next: () => {
-  //     this.comments = this.comments.filter(c => c.id !== this.commentToDelete!.id);
-  //     if (this.post) {
-  //       this.post.commentsCount = (this.post.commentsCount || 0) - 1;
-  //     }
-  //     this.cdr.markForCheck();
-  //     this.commentToDelete = undefined; // Reset
-  //     this.close();
-  //   },
-  //   error: (error) => {
-  //     console.error('Failed to delete comment:', error);
-  //     this.showErrorMessage('Failed to delete comment. Please try again.');
-  //     this.commentToDelete = undefined; // Reset even on error
-  //     this.close();
-  //   }
-  // });
-      this.close();
+    if (this.commentToDelete) {
+      this.auth.deleteComment(this.commentToDelete.id).subscribe({
+        next: () => {
+          this.comments = this.comments.filter(c => c.id !== this.commentToDelete!.id);
+          if (this.post) {
+            this.post.commentsCount = (this.post.commentsCount || 0) - 1;
+          }
+          this.cdr.markForCheck();
+          this.commentToDelete = undefined; // Reset
+          this.close();
+        },
+        error: (error) => {
+          console.error('Failed to delete comment:', error);
+          this.showErrorMessage('Failed to delete comment. Please try again.');
+          this.commentToDelete = undefined; // Reset even on error
+          this.close();
+        }
+      });
+    } else if (this.PostToDelete){
+      this.auth.deletePost(this.PostToDelete.id).subscribe({
+        next: () => {
+          this.showSuccessMessage('Post deleted successfully!');
+          this.router.navigate([`/`]);
+        },
+        error: (error) => {
+          console.error('Failed to delete Post:', error);
+          this.showErrorMessage('Failed to delete post.');
+          this.cdr.markForCheck();
+        }
+      });
+    }
+    this.close();
 
-}
+  }
 
 
   // --- Helper Methods ---
