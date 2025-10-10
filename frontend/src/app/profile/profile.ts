@@ -36,6 +36,7 @@ export class Profile implements OnInit {
   postsCount: number = 0;
   isLoading: boolean = true;
   isLoadingPost: boolean = true;
+  PostToDelete?: Post; 
   posts: Post[] = [];
 
   showReportPopup = false;
@@ -221,7 +222,6 @@ export class Profile implements OnInit {
   showModal = false;
   isOpen = false;
 
-  PostToDelete?: Post; // add this at the top of your component
 
   deletePost(post: Post): void {
     this.PostToDelete = post;
@@ -232,8 +232,9 @@ export class Profile implements OnInit {
     this.showModal = true;
     this.isOpen = false;
 
-
-    this.isOpen = true;
+  setTimeout(() => {
+      this.isOpen = true;
+    }, 10);
 
   }
 

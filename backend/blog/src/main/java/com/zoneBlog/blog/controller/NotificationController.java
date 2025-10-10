@@ -31,8 +31,8 @@ public SseEmitter streamNotifications(Authentication authentication, @RequestPar
 
     User user = helper.getCurrentUser(authentication); 
     Long userId = user.getId();
-    Long initialCount = notificationRepository.countByRecipient_Id(userId);
-
+    Long initialCount = notificationRepository.countByRecipient_IdAndIsReadFalse(userId);
+ System.out.println("\n--------------------------------------------\n"+initialCount+"-------------------------------------------------\n");
     System.out.println("✅ SSE connection request for user: " + user.getUsername() + " (ID: " + userId + ")");
 
     SseEmitter existingEmitter = emitters.get(userId);

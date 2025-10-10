@@ -24,6 +24,18 @@ export class Navbar implements OnInit {
 
   constructor(private router: Router, private auth: Auth, private cdr: ChangeDetectorRef,private notifications: Notifications){}
 
+   isMobileMenuOpen = false;
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    console.log("-----------------------");
+    
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
+  }
+
   ngOnInit(): void {
     this.currentRoute = this.router.url;
 

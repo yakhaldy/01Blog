@@ -171,16 +171,6 @@
 
             <!-- Post Footer -->
             <footer class="post-footer">
-              <!-- <div class="post-stats">
-                <span class="stat-item">
-                  <mat-icon>favorite_border</mat-icon>
-                  <span class="stat-count">{{ post.likesCount || 0 }}</span>
-                </span>
-                <span class="stat-item">
-                  <mat-icon>comment</mat-icon>
-                  <span class="stat-count">{{ post.commentsCount || 0 }}</span>
-                </span>
-              </div> -->
 
               <div class="post-interactions">
                 <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
@@ -267,9 +257,56 @@
         </button>
       </section>
     </aside>
+
+
+    <!--  -->
+    <aside class="sidebar-search">
+      <section class="users-card" role="region" aria-label="Search users">
+
+        <!-- Search Input -->
+        <div class="search-container">
+          <mat-form-field class="search-field" appearance="outline">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" placeholder="Search users..."
+              aria-label="Search users" style="color: aliceblue;">
+          </mat-form-field>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div *ngIf="isLoadingUsers" class="loading-container">
+          <mat-spinner diameter="20" aria-label="Loading users"></mat-spinner>
+          <p class="loading-text">Loading...</p>
+        </div>
+
+        <!-- Search Results -->
+        <div class="users-list" *ngIf="searchTerm.trim().length > 0">
+          <div *ngIf="filteredUsers.length === 0">
+            <p>No users found.</p>
+          </div>
+
+          <div *ngFor="let user of filteredUsers" class="user-item" role="article"
+            [attr.aria-label]="'User: ' + user.username">
+            <div class="user-info" (click)="goToProfile(user.username)">
+              <div class="user-avatar">
+                <img [src]="getImage(user.avatar)" (error)="onImageError($event)"
+                  [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
+              </div>
+              <div class="user-details">
+                <h4 class="username">{{ user.username }}</h4>
+              </div>
+            </div>
+
+            <button mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
+              [attr.aria-label]="(user.isfollowing ? 'Unfollow ' : 'Follow ') + user.username">
+              <mat-icon>{{ user.isfollowing ? 'person_remove' : 'person_add' }}</mat-icon>
+              {{ user.isfollowing ? 'UnFollow' : 'Follow' }}
+            </button>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+
+
   </div>
-
-
-
-
 </div>

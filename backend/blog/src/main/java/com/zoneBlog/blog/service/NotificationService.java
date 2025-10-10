@@ -32,14 +32,21 @@ public class NotificationService {
         }
 
         List<Notification> notifications = notificationRepository.findByRecipientOrderByCreatedAtDesc(user);
+
+        boolean anyUpdated = false;
         for (Notification notification : notifications) {
             if (!notification.isRead()) {
                 notification.setRead(true);
+                anyUpdated = true;
             }
         }
-        notificationRepository.saveAll(notifications);
 
-        
+        if (anyUpdated) {
+            notificationRepository.saveAll(notifications);
+        }
+
+        Long unreadCount = notificationRepository.countByRecipient_IdAndIsReadFalse(user.getId());
+        notificationController.sendNotificationCount(user.getId(), unreadCount);
 
         return notifications;
     }
@@ -62,16 +69,8 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        Long count = notificationRepository.countByRecipient_Id(recipient.getId());
-
-        System.out.println("📊 Unread notification count: " + count);
-
-        notificationController.sendNotificationCount(recipient.getId(), count);
+        Long unreadCount = notificationRepository.countByRecipient_IdAndIsReadFalse(recipient.getId());
+        notificationController.sendNotificationCount(recipient.getId(), unreadCount);
     }
 
-    // public Long getCountNotification(Authentication authentication){
-    // User user = helper.getCurrentUser(authentication);
-
-    // return notificationRepository.countByRecipient_Id(user.getId());
-    // }
 }

@@ -67,6 +67,7 @@ export class Home implements OnInit {
   currentUser: User | null = null;
   posts: Post[] = [];
   users: User[] = [];
+  filteredUsers: User[] = [];
   searchTerm = '';
   isLoading = true;
   isLoadingPost = true;
@@ -175,7 +176,7 @@ export class Home implements OnInit {
   open() {
     this.showModal = true;
     setTimeout(() => {
-    this.isOpen = true;
+      this.isOpen = true;
     }, 10);
 
   }
@@ -423,4 +424,22 @@ export class Home implements OnInit {
   getImage(path: string | undefined): string | undefined {
     return this.homeService.getImage(path)
   }
+
+  onSearch(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (term === '') {
+      this.filteredUsers = [];
+      return;
+    }
+
+    this.filteredUsers = this.users.filter(user =>
+      user.username.toLowerCase().includes(term)
+    );
+  }
+  onImageError(event: Event): void {
+  (event.target as HTMLImageElement).src = 'assets/img/default-avatar.png';
+}
+
+
 }

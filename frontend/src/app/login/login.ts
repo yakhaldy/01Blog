@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../auth';
 import { ChangeDetectorRef } from '@angular/core';
+import { Token } from '@angular/compiler';
 
 @Component({
   standalone: true,
@@ -13,13 +14,19 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrls: ['./login.css']
 })
 
-export class Login {
+export class Login implements OnInit  {
   user = { email: '', password: '' };
   errorMessage: string | null = null;
   constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) {}
 
+  ngOnInit(): void {
+    const token =    localStorage.getItem('token');
+    if (token){
+    this.router.navigate(["/"]);
+    }
+  }
+
   login() {
-  
     this.auth.login(this.user).subscribe({
       next: (res) => {
         console.log('Login successful===========>', res);

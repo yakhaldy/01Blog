@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +13,7 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrls: ['./register.css']
 })
 
-export class Register {
+export class Register implements OnInit{
   user = { 
     username: '', 
     email: '', 
@@ -25,6 +25,12 @@ export class Register {
 
   constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) {}
 
+  ngOnInit(): void {
+    const token =    localStorage.getItem('token');
+    if (token){
+    this.router.navigate(["/"]);
+    }
+  }
   register() {
     this.errorMessage = null;
     this.successMessage = null;
