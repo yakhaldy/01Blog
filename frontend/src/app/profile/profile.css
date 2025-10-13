@@ -756,3 +756,29 @@
     content: "⚠️";
     font-size: 16px;
 }
+
+
+
+/**************/
+
+
+::ng-deep .mat-menu-panel {
+  background: #222 !important;
+  color: white !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  width: 120px;
+}
+
+::ng-deep .mat-menu-item {
+  padding: 8px 12px !important;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+::ng-deep .mat-menu-item:hover {
+  background: #333 !important;
+}

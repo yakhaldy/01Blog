@@ -399,6 +399,7 @@
 .users-card {
     display: flex;
     flex-direction: column;
+    /* height: 79vh; */
 }
 
 .card-header {
@@ -424,7 +425,7 @@
 .users-list {
     display: flex;
     flex-direction: column;
-    max-height: 60vh;
+    /* max-height: 60vh; */
     /* Reduced from 70vh */
     overflow: auto;
 }

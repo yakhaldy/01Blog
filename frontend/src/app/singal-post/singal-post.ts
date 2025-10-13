@@ -15,7 +15,7 @@ import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 import { Navbar } from '../components/navbar/navbar';
 import { User, Post, Comment, UpdatePostResult } from '../home/home.model';
 import { Auth } from '../auth';
-
+import { ToastService } from '../toast-service';
 @Component({
   selector: 'app-singal-post',
   standalone: true,
@@ -59,7 +59,8 @@ export class SingalPost implements OnInit {
     private auth: Auth,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private toastService : ToastService
   ) { }
 
   ngOnInit(): void {
@@ -92,8 +93,8 @@ export class SingalPost implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Error loading post:', error);
         this.error = 'Post not found or you do not have permission to view it.';
+        this.showErrorMessage('Post not found or you do not have permission to view it.'); 
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -138,7 +139,6 @@ export class SingalPost implements OnInit {
           },
           error: (error) => {
             this.showErrorMessage('Failed to update post.');
-            console.error('Failed to update post:', error);
             this.cdr.markForCheck();
           }
         });
@@ -148,21 +148,7 @@ export class SingalPost implements OnInit {
   PostToDelete?: Post | null;
   deletePost(): void {
     this.PostToDelete = this.post;
-    this.open(); // Show door modal
-
-    // if (this.post) {
-    //   this.auth.deletePost(this.post.id).subscribe({
-    //     next: () => {
-    //       this.showSuccessMessage('Post deleted successfully!');
-    //       this.router.navigate([`/`]);
-    //     },
-    //     error: (error) => {
-    //       console.error('Failed to delete Post:', error);
-    //       this.showErrorMessage('Failed to delete post.');
-    //       this.cdr.markForCheck();
-    //     }
-    //   });
-    // }
+    this.open();
   }
 
   likePoste(): void {
@@ -215,7 +201,7 @@ export class SingalPost implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Error loading comments:', error);
+        this.showErrorMessage('Error loading comments:');
         this.isLoadingComments = false;
         this.cdr.markForCheck();
       }
@@ -247,13 +233,13 @@ export class SingalPost implements OnInit {
         if (this.post) {
           this.post.commentsCount = (this.post.commentsCount || 0) + 1;
         }
-        this.showSuccessMessage('Comment posted successfully!'); // *Uncommented and implemented*
+        this.showSuccessMessage('Comment posted successfully!'); 
         this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error posting comment:', error);
         this.isSubmittingComment = false;
-        this.showErrorMessage('Failed to post comment. Please try again.'); // *Uncommented and implemented*
+        this.showErrorMessage('Failed to post comment. Please try again.'); 
         this.cdr.markForCheck();
       }
     });
@@ -274,10 +260,10 @@ export class SingalPost implements OnInit {
       next: (updatedComment) => {
         comment.content = this.editedContent;
         this.cancelEdit();
+        this.showSuccessMessage('Comment update successfully!'); 
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Failed to update comment:', error);
         this.showErrorMessage('Failed to update comment. Please try again.');
       }
     });
@@ -329,14 +315,15 @@ export class SingalPost implements OnInit {
           if (this.post) {
             this.post.commentsCount = (this.post.commentsCount || 0) - 1;
           }
+          this.showSuccessMessage('Comment deleted successfully!'); 
           this.cdr.markForCheck();
-          this.commentToDelete = undefined; // Reset
+          this.commentToDelete = undefined;
           this.close();
         },
         error: (error) => {
           console.error('Failed to delete comment:', error);
           this.showErrorMessage('Failed to delete comment. Please try again.');
-          this.commentToDelete = undefined; // Reset even on error
+          this.commentToDelete = undefined; 
           this.close();
         }
       });
@@ -345,20 +332,18 @@ export class SingalPost implements OnInit {
         next: () => {
           this.showSuccessMessage('Post deleted successfully!');
           this.router.navigate([`/`]);
+           this.close();
         },
         error: (error) => {
-          console.error('Failed to delete Post:', error);
           this.showErrorMessage('Failed to delete post.');
           this.cdr.markForCheck();
+          this.close();
         }
       });
     }
-    this.close();
-
+  
   }
 
-
-  // --- Helper Methods ---
 
   loadCurrentUser(): void {
     this.auth.getCurrentUser().subscribe({
@@ -368,19 +353,20 @@ export class SingalPost implements OnInit {
       },
       error: () => {
         // console.log('User not logged in'); // Log is fine, no action needed for non-logged user
+          this.showErrorMessage('User not logged in.');
         this.currentUser = null;
         this.cdr.markForCheck();
       }
     });
   }
+  // --- Helper Methods ---
+
 
   isMyPost(): boolean {
     return this.post?.user.username === this.currentUser?.username;
   }
 
   isMyComment(comment: Comment): boolean {
-    console.log("isMyComment");
-
     return comment.user?.username === this.currentUser?.username;
   }
 
@@ -397,17 +383,11 @@ export class SingalPost implements OnInit {
   // --- Message Utilities ---
 
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      panelClass: ['snackbar-success']
-    });
+    this.toastService.show(message, "success")
   }
 
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Close', {
-      duration: 5000,
-      panelClass: ['snackbar-error']
-    });
+    this.toastService.show(message, "error")
   }
 
   // Exported functions

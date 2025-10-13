@@ -27,9 +27,7 @@ export class Navbar implements OnInit {
    isMobileMenuOpen = false;
 
   toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
-    console.log("-----------------------");
-    
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;    
   }
 
   closeMobileMenu(): void {

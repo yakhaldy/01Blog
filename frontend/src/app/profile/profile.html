@@ -158,8 +158,8 @@
             <!-- Menu that shows when the button is clicked -->
             <mat-menu #optionsMenu="matMenu" class="optionsMenu">
               <button mat-menu-item (click)="updatePost(post)">
-                <mat-icon>edit</mat-icon>
-                <span>Update</span>
+                <mat-icon>edit_document</mat-icon>
+                <span>Edit</span>
               </button>
               <button mat-menu-item (click)="deletePost(post)">
                 <mat-icon>delete</mat-icon>
@@ -201,7 +201,7 @@
               </div> -->
 
           <div class="post-interactions">
-            <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
+            <button mat-icon-button class="interaction-btn" matTooltip="Like" (click)="likePoste(post.id!)">
               <mat-icon [ngClass]="{ 'liked': post.isLiked }">
                 {{ post.isLiked ? 'favorite' : 'favorite_border' }}
               </mat-icon>
@@ -217,19 +217,19 @@
       </article>
     </div>
 
-     <div class="door-backdrop" *ngIf="showModal" (click)="close()">
-        <div class="door" (click)="$event.stopPropagation()">
-            <div class="door-panel" [class.open]="isOpen">
-                <div class="door-message">
-                    <mat-icon class="warning-icon">warning</mat-icon>
-                    <h3>Are you sure you want to delete this post?</h3>
-                </div>
-                <div class="door-buttons">
-                    <button class="confirm-btn" (click)="confirm()">Confirm</button>
-                    <button class="cancel-btn" (click)="close()">Cancel</button>
-                </div>
-            </div>
+    <div class="door-backdrop" *ngIf="showModal" (click)="close()">
+      <div class="door" (click)="$event.stopPropagation()">
+        <div class="door-panel" [class.open]="isOpen">
+          <div class="door-message">
+            <mat-icon class="warning-icon">warning</mat-icon>
+            <h3>Are you sure you want to delete this post?</h3>
+          </div>
+          <div class="door-buttons">
+            <button class="confirm-btn" (click)="confirm()">Confirm</button>
+            <button class="cancel-btn" (click)="close()">Cancel</button>
+          </div>
         </div>
+      </div>
     </div>
 
   </section>

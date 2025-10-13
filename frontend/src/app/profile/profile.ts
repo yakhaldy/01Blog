@@ -25,7 +25,7 @@ import { Auth } from '../auth'
     MatFormFieldModule,
     MatInputModule,],
   templateUrl: './profile.html',
-  styleUrls: ['./profile.css', '..//home/home.css'],
+  styleUrls: ['./profile.css', '../home/home.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Profile implements OnInit {

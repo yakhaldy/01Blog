@@ -114,7 +114,7 @@
 
             <!-- Post Header -->
             <header class="post-header">
-              <div class="post-author-info" (click)="goToProfile(post.user.username || '')">
+              <div class="post-author-info"  matTooltip="go to profile" (click)="goToProfile(post.user.username || '')">
                 <div class="author-avatar">
                   <!-- <mat-icon class="avatar-icon">account_circle</mat-icon> -->
                   <img [src]="getImage(post.user.avatar) || 'assets/img/default-avatar.png'"
@@ -140,8 +140,8 @@
                 <!-- Menu that shows when the button is clicked -->
                 <mat-menu #optionsMenu="matMenu" class="optionsMenu">
                   <button mat-menu-item (click)="updatePost(post)">
-                    <mat-icon>edit</mat-icon>
-                    <span>Update</span>
+                    <mat-icon>edit_document</mat-icon>
+                    <span>Edit</span>
                   </button>
                   <button mat-menu-item (click)="deletePost(post)">
                     <mat-icon>delete</mat-icon>
@@ -152,7 +152,7 @@
             </header>
 
             <!-- Post Content -->
-            <div class="post-content" (click)="goToPost(post.id!)">
+            <div class="post-content"  matTooltip="GoToPost" (click)="goToPost(post.id!)">
               <p class="post-description">{{ post.title }}</p>
 
               <!-- Media Content -->
@@ -228,7 +228,7 @@
         <div class="users-list">
           <div *ngFor="let user of users | filter:searchTerm; " class="user-item" role="article"
             [attr.aria-label]="'User: ' + user.username">
-            <div class="user-info" (click)="goToProfile(user.username)">
+            <div class="user-info"  matTooltip="go to profile" (click)="goToProfile(user.username)">
               <div class="user-avatar">
                 <!-- <mat-icon class="avatar-icon">account_circle</mat-icon> -->
                 <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'"
@@ -252,9 +252,9 @@
           </div>
 
         </div>
-        <button class="show-more-btn" type="button">
+        <!-- <button class="show-more-btn" type="button">
           <span class="show-more-text">Show more</span>
-        </button>
+        </button> -->
       </section>
     </aside>
 
@@ -286,7 +286,7 @@
 
           <div *ngFor="let user of filteredUsers" class="user-item" role="article"
             [attr.aria-label]="'User: ' + user.username">
-            <div class="user-info" (click)="goToProfile(user.username)">
+            <div class="user-info"  matTooltip="go to profile" (click)="goToProfile(user.username)">
               <div class="user-avatar">
                 <img [src]="getImage(user.avatar)" (error)="onImageError($event)"
                   [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">

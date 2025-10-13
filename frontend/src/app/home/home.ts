@@ -35,8 +35,7 @@ import { User, UpdatePostResult, NewPost, Post } from './home.model';
 import { HomeService } from './home.service';
 
 import { Auth } from '../auth'
-import { title } from 'process';
-
+import { ToastService } from '../toast-service';
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -86,7 +85,8 @@ export class Home implements OnInit {
     private homeService: HomeService,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-    private auth: Auth
+    private auth: Auth,
+    private toastService: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -134,11 +134,8 @@ export class Home implements OnInit {
     });
   }
 
+
   private handleAuthError(error: any): void {
-    // if (error.status === 401 || error.status === 403) {
-    //   localStorage.removeItem('token');
-    //   this.router.navigate(['/login']);
-    // }
     console.log(error);
   }
 
@@ -196,13 +193,12 @@ export class Home implements OnInit {
 
     this.homeService.deletePost(this.PostToDelete.id).subscribe({
       next: () => {
-
         this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
+        this.toastService.show("Post deleted successfully", "success")
         this.cdr.markForCheck();
       },
       error: (error) => {
-
-        console.error('Failed to delete Post:', error);
+        this.toastService.show("Failed to delete Post", "error")
         this.cdr.markForCheck();
       }
     });
@@ -244,10 +240,13 @@ export class Home implements OnInit {
             if (index !== -1) {
               this.posts[index] = updatedPost;
             }
+
+            this.toastService.show("Post deleted successfully", "success")
             this.cdr.markForCheck();
           },
           error: (error) => {
-            this.handleUpdatePostError(error);
+            const errorMessage = this.handleUpdatePostError(error);
+            this.toastService.show(errorMessage, "error")
             this.cdr.markForCheck();
           }
         });
@@ -255,7 +254,7 @@ export class Home implements OnInit {
     });
   }
 
-  private handleUpdatePostError(error: any): void {
+  private handleUpdatePostError(error: any): string {
     let errorMessage = 'Failed to update post';
     if (error.status === 401 || error.status === 403) {
       errorMessage = 'Unauthorized to update this post';
@@ -269,7 +268,7 @@ export class Home implements OnInit {
     } else if (error.status === 415) {
       errorMessage = 'Unsupported file type';
     }
-    console.error(errorMessage);
+    return errorMessage;
   }
 
   onFileSelected(event: any): void {
@@ -316,12 +315,14 @@ export class Home implements OnInit {
         this.posts = [newPost, ...this.posts];
         this.isSubmittingPost = false;
         this.resetPostForm();
+        this.toastService.show("Post create successfully", "success")
         this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Failed to create post:', error);
         this.isSubmittingPost = false;
         this.handleAuthError(error);
+        this.toastService.show(error.error, "error")
         this.cdr.markForCheck();
       }
     });
@@ -438,8 +439,8 @@ export class Home implements OnInit {
     );
   }
   onImageError(event: Event): void {
-  (event.target as HTMLImageElement).src = 'assets/img/default-avatar.png';
-}
+    (event.target as HTMLImageElement).src = 'assets/img/default-avatar.png';
+  }
 
 
 }

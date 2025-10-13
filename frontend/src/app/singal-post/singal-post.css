@@ -157,24 +157,29 @@
 /* Author Section */
 .author-section {
     margin-bottom: 32px;
+     width: -webkit-fill-available;
 }
 
-.author-info {
+.post-header {
     display: flex;
     align-items: center;
     gap: 16px;
-    cursor: pointer;
     transition: all 0.3s ease;
     padding: 16px;
     border-radius: 16px;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
 }
 
-.author-info:hover {
-    background: rgba(0, 0, 0, 0.4);
-    border-color: rgba(99, 102, 241, 0.3);
+.post-header:hover {
+    /* background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(99, 102, 241, 0.3); */
     transform: translateY(-2px);
+}
+
+.author-info{
+    cursor: pointer;
 }
 
 .author-avatar {
@@ -197,6 +202,7 @@
 
 .author-details {
     flex: 1;
+    align-items: center;
 }
 
 .author-name {

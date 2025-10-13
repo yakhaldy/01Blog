@@ -17,8 +17,22 @@
     <article *ngIf="post && !isLoading" class="post-article" role="article">
         <!-- Post Header -->
         <header class="post-header">
+                        <!-- Author Info -->
+            <div class="author-section">
+                <div class="author-info"  matTooltip="go to profile" (click)="goToProfile(post.user.username)">
+                    <div class="author-avatar">
+                        <img [src]="getImage(post.user.avatar) || 'assets/img/default-avatar.png'"
+                            [alt]="post.user.username + ' profile picture'" class="avatar-image" loading="lazy">
+                    </div>
+                    <div class="author-details">
+                        <h3 class="author-name">{{ post.user.username }}</h3>
+                        <div class="post-metadata">
+                            <p> {{ post.user.bio }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="post-meta">
-
                 <div class="post-actions" *ngIf="isMyPost()">
                     <button mat-icon-button [matMenuTriggerFor]="postOptionsMenu" class="options-btn"
                         matTooltip="Options">
@@ -37,25 +51,6 @@
                     </mat-menu>
                 </div>
             </div>
-
-            <!-- Author Info -->
-            <div class="author-section">
-                <div class="author-info" (click)="goToProfile(post.user.username)">
-                    <div class="author-avatar">
-                        <img [src]="getImage(post.user.avatar) || 'assets/img/default-avatar.png'"
-                            [alt]="post.user.username + ' profile picture'" class="avatar-image" loading="lazy">
-                    </div>
-                    <div class="author-details">
-                        <h3 class="author-name">{{ post.user.username }}</h3>
-                        <div class="post-metadata">
-                            <p> {{ post.user.bio }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Post Title -->
-
         </header>
 
         <div class="post-content">
@@ -167,8 +162,8 @@
                             <!-- Menu that shows when the button is clicked -->
                             <mat-menu #optionsMenu="matMenu" class="optionsMenu">
                                 <button mat-menu-item (click)="editComment(comment)">
-                                    <mat-icon>edit</mat-icon>
-                                    <span>Update</span>
+                                    <mat-icon>edit_document</mat-icon>
+                                    <span>Edit</span>
                                 </button>
                                 <button mat-menu-item (click)="deleteComment(comment)">
                                     <mat-icon>delete</mat-icon>

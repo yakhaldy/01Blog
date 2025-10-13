@@ -102,6 +102,8 @@ export class Auth {
   }
 
   deleteComment(id: number): Observable<any>{
+    console.log("service=>", id);
+    
     return this.http.delete(`${this.apiUrl}/posts/comment/${id}`)
   }
 
