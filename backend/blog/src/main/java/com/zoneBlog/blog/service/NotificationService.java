@@ -122,7 +122,6 @@ public class NotificationService {
 
         if (anyUpdated) {
             notificationRepository.saveAll(notifications);
-            // Flush to ensure the database is updated before counting
             notificationRepository.flush();
         }
 
@@ -172,75 +171,5 @@ public class NotificationService {
         new Thread(() -> {
             notificationController.sendNotificationCount(recipient.getId(), unreadCount);
         }).start();
-    }
-
-    /**
-     * Mark a specific notification as read
-     */
-    @Transactional
-    public void markAsRead(Long notificationId, Authentication authentication) {
-        User user = helper.getCurrentUser(authentication);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        Notification notification = notificationRepository.findById(notificationId)
-            .orElseThrow(() -> new RuntimeException("Notification not found"));
-
-        // Verify the notification belongs to the current user
-        if (!notification.getRecipient().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized access to notification");
-        }
-
-        if (!notification.isRead()) {
-            notification.setRead(true);
-            notificationRepository.save(notification);
-            notificationRepository.flush();
-
-            Long unreadCount = notificationRepository.countByRecipient_IdAndIsReadFalse(user.getId());
-            System.out.println("📊 Marked notification as read. Updated count: " + unreadCount);
-            
-            new Thread(() -> {
-                notificationController.sendNotificationCount(user.getId(), unreadCount);
-            }).start();
-        }
-    }
-
-    /**
-     * Mark all notifications as read for the current user
-     */
-    @Transactional
-    public void markAllAsRead(Authentication authentication) {
-        User user = helper.getCurrentUser(authentication);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        List<Notification> unreadNotifications = notificationRepository
-            .findByRecipient_IdAndIsReadFalse(user.getId());
-
-        if (!unreadNotifications.isEmpty()) {
-            unreadNotifications.forEach(n -> n.setRead(true));
-            notificationRepository.saveAll(unreadNotifications);
-            notificationRepository.flush();
-
-            System.out.println("📊 Marked all notifications as read for user: " + user.getId());
-            
-            new Thread(() -> {
-                notificationController.sendNotificationCount(user.getId(), 0L);
-            }).start();
-        }
-    }
-
-    /**
-     * Get unread notification count for current user
-     */
-    @Transactional(readOnly = true)
-    public Long getUnreadCount(Authentication authentication) {
-        User user = helper.getCurrentUser(authentication);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-        return notificationRepository.countByRecipient_IdAndIsReadFalse(user.getId());
     }
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User, Post, Comment, Report, DashboardStats, Notification } from '../app/home/home.model';
+import { Notifications } from './notifications';
 export interface CreatePostRequest {
   description: string;
   mediaFile?: File;
@@ -15,7 +16,7 @@ export class Auth {
   private apiUrl = 'http://localhost:8080/api';
   private urlImage = 'http://localhost:8080/uploads'
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient,private notifications: Notifications) { }
 
   register(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, user);
@@ -26,6 +27,7 @@ export class Auth {
   }
   logout() {
     localStorage.removeItem('token');
+    this.notifications.closeConnection();
   }
 
   getCurrentUser(): Observable<any> {

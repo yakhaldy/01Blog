@@ -35,34 +35,34 @@ public class NotificationController {
                 + "-------------------------------------------------\n");
         System.out.println("✅ SSE connection request for user: " + user.getUsername() + " (ID: " + userId + ")");
 
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         SseEmitter existingEmitter = emitters.get(userId);
-        if (existingEmitter != null) {
+        if (existingEmitter == null) {
             // try {
-            //     existingEmitter.complete();
+            // existingEmitter.complete();
             // } catch (Exception e) {
-            //     System.err.println("Error closing existing emitter: " + e.getMessage());
+            // System.err.println("Error closing existing emitter: " + e.getMessage());
             // }
             // emitters.remove(userId);
+            emitters.put(userId, emitter);
+            // Setup cleanup callbacks
+            emitter.onCompletion(() -> {
+                System.out.println("✅ SSE completed for user: " + userId);
+                emitters.remove(userId);
+            });
+
+            emitter.onTimeout(() -> {
+                System.out.println("⏱️ SSE timeout for user: " + userId);
+                emitters.remove(userId);
+            });
+
+            emitter.onError(e -> {
+                System.err.println("❌ SSE error for user: " + userId + " - " + e.getMessage());
+                emitters.remove(userId);
+            });
+        } else {
+            emitter = existingEmitter;
         }
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        emitters.put(userId, emitter);
-
-
-        // Setup cleanup callbacks
-        emitter.onCompletion(() -> {
-            System.out.println("✅ SSE completed for user: " + userId);
-            emitters.remove(userId);
-        });
-
-        emitter.onTimeout(() -> {
-            System.out.println("⏱️ SSE timeout for user: " + userId);
-            emitters.remove(userId);
-        });
-
-        emitter.onError(e -> {
-            System.err.println("❌ SSE error for user: " + userId + " - " + e.getMessage());
-            emitters.remove(userId);
-        });
 
         try {
             emitter.send(SseEmitter.event()
@@ -90,6 +90,7 @@ public class NotificationController {
                 emitters.remove(userId);
             }
         } else {
+
             System.out.println("⚠️ No active SSE connection for user: " + userId);
         }
     }
