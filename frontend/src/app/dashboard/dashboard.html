@@ -82,9 +82,10 @@
       <!-- Users Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>people</mat-icon>
-          <span>Users</span>
+          <mat-icon class="custom-tab-icon">people</mat-icon>
+          <span class="custom-tab-label">Users</span>
         </ng-template>
+
 
         <div class="tab-content">
           <div *ngIf="isLoadingUsers" class="loading-container">
@@ -147,8 +148,8 @@
       <!-- Posts Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>article</mat-icon>
-          <span>Posts</span>
+          <mat-icon class="custom-tab-icon" >article</mat-icon>
+          <span  class="custom-tab-label">Posts</span>
         </ng-template>
 
         <div class="tab-content">
@@ -209,8 +210,8 @@
       <!-- Reports Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>report</mat-icon>
-          <span>Reports</span>
+          <mat-icon class="custom-tab-icon">report</mat-icon>
+          <span  class="custom-tab-label">Reports</span>
         </ng-template>
 
         <div class="tab-content">
@@ -405,7 +406,8 @@
           Ban User
         </button> -->
 
-        <button mat-raised-button *ngIf="selectedReportedUser" class="modal-action-btn ban-btn" (click)="openBanUserModal(selectedReportedUser)">
+        <button mat-raised-button *ngIf="selectedReportedUser" class="modal-action-btn ban-btn"
+          (click)="openBanUserModal(selectedReportedUser)">
           <mat-icon>block</mat-icon>
           <span>{{ selectedReportedUser.isBanned ? 'Unban' : 'Ban' }} User</span>
         </button>
@@ -415,7 +417,8 @@
           Delete User
         </button> -->
 
-        <button mat-raised-button *ngIf="selectedReportedUser"  class="modal-action-btn delete-btn" (click)="openDeleteUserModal(selectedReportedUser)">
+        <button mat-raised-button *ngIf="selectedReportedUser" class="modal-action-btn delete-btn"
+          (click)="openDeleteUserModal(selectedReportedUser)">
           <mat-icon>delete</mat-icon>
           <span>Delete User</span>
         </button>

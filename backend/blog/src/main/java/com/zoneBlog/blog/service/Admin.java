@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.zoneBlog.blog.model.Report;
 import com.zoneBlog.blog.model.User;
+import com.zoneBlog.blog.repository.CommentRepository;
 import com.zoneBlog.blog.repository.PostRepository;
 import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
@@ -24,6 +25,9 @@ public class Admin {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
     public List<Report> getReports(Authentication authentication) {
         return reportRepository.findAll();
@@ -52,10 +56,11 @@ public class Admin {
          if (user == null) {
             throw new RuntimeException("User not found");
         }
+        // commentRepository.deleteByUser_Id(user.getId());
         userRepository.delete(user);
     }
 
-    public void banUser(Authentication authentication, Long id){
+    public User banUser(Authentication authentication, Long id){
          User user = userRepository.findById(id).orElse(null);
         if (user == null) {
             throw new RuntimeException("User not found");
@@ -68,5 +73,6 @@ public class Admin {
         }
 
         userRepository.save(user);
+        return user;
     }
 }

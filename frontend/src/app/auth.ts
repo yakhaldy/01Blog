@@ -122,12 +122,17 @@ export class Auth {
     return this.http.delete(`${this.apiUrl}/admin/deleteUser/${id}`)
   }
 
-  banUser(id: string): Observable<any>{
-    return this.http.post(`${this.apiUrl}/admin/banUser`, {userId: id})
+  banUser(id: string): Observable<User>{
+    return this.http.post<User>(`${this.apiUrl}/admin/banUser`, {userId: id})
   }
 
   getNotifications(): Observable<Notification[]>{
     return this.http.get<Notification[]>(`${this.apiUrl}/notification`,)
+
+  }
+
+  deleteReports(id: string): Observable<any>{
+    return this.http.delete(`${this.apiUrl}/admin/report/${id}`)
 
   }
 

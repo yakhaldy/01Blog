@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 import { Navbar } from '../components/navbar/navbar';
 import { Auth } from '../auth';
 import { User, Post, Report, DashboardStats } from '../home/home.model';
+import { error } from 'node:console';
 
 
 interface Comment {
@@ -202,10 +203,15 @@ export class Dashboard implements OnInit {
     if (!this.selectedUser) return;
 
     this.auth.banUser(this.selectedUser.id).subscribe({
-      next: () => {
+      next: (userBand) => {
         const user = this.users.find(u => u.id === this.selectedUser!.id);
         if (user) {
-          user.isBanned = true;
+          console.log(userBand);
+          
+          user.isBanned = userBand.isBanned;
+          if (this.selectedReportedUser){
+            this.selectedReportedUser.isBanned = userBand.isBanned;
+          }
         }
         this.closeModal();
         this.cdr.markForCheck();
@@ -256,6 +262,7 @@ export class Dashboard implements OnInit {
     this.selectedReportedUser = report.reportedUser;
     this.userPosts = this.posts.filter(p => p.user.username == report.reportedUser.username);
     this.userComments = [];
+    this.selectedReport = report;
     this.openUserDetailsModal();
   }
 
@@ -266,21 +273,25 @@ export class Dashboard implements OnInit {
 
   dismissCurrentReport() {
     console.log("dismiss Current Report");
-    this.closeUserDetailsModal()
+    if (!this.selectedReport) return;
+    
+    this.auth.deleteReports(this.selectedReport?.id).subscribe({
+      next: ()=>{
 
+      },
+      error: (error)=>{
+        console.error('Failed to resolve report:', error);
+      }
+    })
+    // if (this.selectedReport){
+    //   const index = this.reports.findIndex(r => r.id === this.selectedReport?.id);
+    //    if (index !== -1) {
+    //      this.reports[index].status = 'resolved';
+    //    }
+    // }
+    this.closeUserDetailsModal()
   }
-  // this.auth.updateReportStatus(report.id, 'resolved').subscribe({
-  //   next: () => {
-  //     const index = this.reports.findIndex(r => r.id === report.id);
-  //     if (index !== -1) {
-  //       this.reports[index].status = 'resolved';
-  //     }
-  //     this.cdr.markForCheck();
-  //   },
-  //   error: (error) => {
-  //     console.error('Failed to resolve report:', error);
-  //   },
-  // });
+
 
   viewReportedUser(userId: string): void {
     const user = this.users.find(u => u.id === userId);
@@ -307,6 +318,7 @@ export class Dashboard implements OnInit {
     this.showDeleteModal = false;
     this.selectedUser = undefined;
     this.selectedPost = undefined;
+    this.selectedReport = undefined;
   }
 
   confirmAction(): void {
@@ -322,6 +334,7 @@ export class Dashboard implements OnInit {
   closeUserDetailsModal(): void {
     this.isUserDetailsModalOpen = false;
     this.showUserDetailsModal = false;
+    this.selectedReport = undefined;
   }
 
   // Utility

@@ -8,6 +8,7 @@ import com.zoneBlog.blog.dataTransferObj.ReportRequest;
 import com.zoneBlog.blog.model.Comment;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.Report;
+import com.zoneBlog.blog.model.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -306,8 +307,8 @@ public class AuthController {
     public ResponseEntity<?> banUser(Authentication authentication, @RequestBody Map<String, Long> payload) {
         try {
             Long userId = payload.get("userId");
-            Admin.banUser(authentication, userId);
-            return ResponseEntity.ok(Map.of("message", "ban User successfully"));
+            User user = Admin.banUser(authentication, userId);
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "Failed to ban User: " + e.getMessage()));

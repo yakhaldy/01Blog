@@ -398,7 +398,7 @@ export class Home implements OnInit {
   }
 
   get isPostFormValid(): boolean {
-    return this.newPost.description.trim().length > 0 && !this.isCharacterLimitExceeded && !this.isCharacterTitleLimitExceeded;
+    return this.newPost.description.trim().length > 0 &&  this.newPost.title.trim().length > 0 && !this.isCharacterLimitExceeded && !this.isCharacterTitleLimitExceeded;
   }
 
   get postCharacterCount(): number {
