@@ -274,21 +274,17 @@ export class Dashboard implements OnInit {
   dismissCurrentReport() {
     console.log("dismiss Current Report");
     if (!this.selectedReport) return;
-    
-    this.auth.deleteReports(this.selectedReport?.id).subscribe({
-      next: ()=>{
 
-      },
-      error: (error)=>{
-        console.error('Failed to resolve report:', error);
-      }
-    })
-    // if (this.selectedReport){
-    //   const index = this.reports.findIndex(r => r.id === this.selectedReport?.id);
-    //    if (index !== -1) {
-    //      this.reports[index].status = 'resolved';
-    //    }
-    // }
+    // this.auth.deleteReports(this.selectedReport?.id).subscribe({
+    //   next: ()=>{
+    //     if (this.selectedReport){
+    //      this.reports = this.reports.filter(r=> r.id !== this.selectedReport?.id)
+    //     }
+    //   },
+    //   error: (error)=>{
+    //     console.error('Failed to resolve report:', error);
+    //   }
+    // })
     this.closeUserDetailsModal()
   }
 
