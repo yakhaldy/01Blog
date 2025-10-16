@@ -314,6 +314,16 @@ public class AuthController {
                     .body(Map.of("error", "Failed to ban User: " + e.getMessage()));
         }
     }
+    @DeleteMapping("/admin/report/{id}")
+    public ResponseEntity<?> deleteReport(Authentication authentication, @PathVariable Long id){
+         try {
+            Admin.deleteReport(authentication, id);
+            return ResponseEntity.ok(Map.of("message", "report deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Failed to deleted Report: " + e.getMessage()));
+        }
+    }
 
     @Autowired
     private NotificationService Notification;

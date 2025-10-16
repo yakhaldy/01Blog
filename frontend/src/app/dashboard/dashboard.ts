@@ -182,7 +182,7 @@ export class Dashboard implements OnInit {
     this.actionType = 'ban';
     this.openModal();
   }
- 
+
   confirmDeleteUser(): void {
     if (!this.selectedUser) return;
 
@@ -190,6 +190,9 @@ export class Dashboard implements OnInit {
       next: () => {
         this.users = this.users.filter(u => u.id !== this.selectedUser!.id);
         this.closeModal();
+        if (this.selectedReport) {
+          this.deletReport(this.selectedReport?.id);
+        }
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -206,10 +209,12 @@ export class Dashboard implements OnInit {
       next: (userBand) => {
         const user = this.users.find(u => u.id === this.selectedUser!.id);
         if (user) {
-          console.log(userBand);
-          
+          if (this.selectedReport) {
+            this.deletReport(this.selectedReport?.id);
+          }
+
           user.isBanned = userBand.isBanned;
-          if (this.selectedReportedUser){
+          if (this.selectedReportedUser) {
             this.selectedReportedUser.isBanned = userBand.isBanned;
           }
         }
@@ -266,7 +271,7 @@ export class Dashboard implements OnInit {
     this.openUserDetailsModal();
   }
 
-  openUserDetailsModal(): void {    
+  openUserDetailsModal(): void {
     this.showUserDetailsModal = true;
     this.isUserDetailsModalOpen = true;
   }
@@ -274,20 +279,23 @@ export class Dashboard implements OnInit {
   dismissCurrentReport() {
     console.log("dismiss Current Report");
     if (!this.selectedReport) return;
-
-    // this.auth.deleteReports(this.selectedReport?.id).subscribe({
-    //   next: ()=>{
-    //     if (this.selectedReport){
-    //      this.reports = this.reports.filter(r=> r.id !== this.selectedReport?.id)
-    //     }
-    //   },
-    //   error: (error)=>{
-    //     console.error('Failed to resolve report:', error);
-    //   }
-    // })
-    this.closeUserDetailsModal()
+    this.deletReport(this.selectedReport?.id);
+  
   }
-
+  deletReport(id: string) {
+    this.auth.deleteReports(id).subscribe({
+      next: () => {
+        if (this.selectedReport) {
+          this.reports = this.reports.filter(r => r.id !== this.selectedReport?.id)
+        }
+        this.closeUserDetailsModal()
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Failed to resolve report:', error);
+      }
+    })
+  }
 
   viewReportedUser(userId: string): void {
     const user = this.users.find(u => u.id === userId);
@@ -298,10 +306,10 @@ export class Dashboard implements OnInit {
 
   // Modal Controls
   openModal(): void {
-    if (this.showUserDetailsModal){
-        this.showDeleteModal = true;
-        this.isModalOpen = true;
-    }else {
+    if (this.showUserDetailsModal) {
+      this.showDeleteModal = true;
+      this.isModalOpen = true;
+    } else {
       this.showDeleteModal = true;
       setTimeout(() => {
         this.isModalOpen = true;
@@ -315,6 +323,7 @@ export class Dashboard implements OnInit {
     this.selectedUser = undefined;
     this.selectedPost = undefined;
     this.selectedReport = undefined;
+    this.showUserDetailsModal = false;
   }
 
   confirmAction(): void {

@@ -29,6 +29,8 @@ public class Admin {
     @Autowired
     private CommentRepository commentRepository;
 
+ 
+
     public List<Report> getReports(Authentication authentication) {
         return reportRepository.findAll();
     }
@@ -74,5 +76,14 @@ public class Admin {
 
         userRepository.save(user);
         return user;
+    }
+
+    public void deleteReport(Authentication authentication, Long id){
+        Report report = reportRepository.findById(id).orElse(null);
+        if (report == null){
+            throw new RuntimeException("report not found");
+
+        }
+        reportRepository.delete(report);
     }
 }
