@@ -113,8 +113,8 @@
         </div>
 
         <!-- Posts List -->
-        <div *ngIf="!isLoadingPost && posts.length > 0" class="posts-list">
-          <article *ngFor="let post of posts" class="post-card" role="article"
+        <div *ngIf=" posts.length > 0" class="posts-list">
+          <article *ngFor="let post of posts; trackBy: trackByPostId " class="post-card" role="article"
             [attr.aria-label]="'Post by ' + post.user.username">
 
             <!-- Post Header -->

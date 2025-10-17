@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Auth } from '../auth';
+import { Auth } from '../service/auth';
 import { ChangeDetectorRef } from '@angular/core';
 import { Token } from '@angular/compiler';
 

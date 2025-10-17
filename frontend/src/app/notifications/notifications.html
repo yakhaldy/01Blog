@@ -14,7 +14,7 @@
         <mat-card-header>
            <img [src]="getImage( notification.sender.avatar) || 'assets/img/default-avatar.png'"
                 [alt]="notification.sender.username + ' profile picture'" class="avatar-img" loading="lazy">
-          <mat-card-title>{{ notification.sender?.username }}</mat-card-title>
+          <mat-card-title>{{ notification.sender.username }}</mat-card-title>
           <mat-card-subtitle>{{ formatNotificationType(notification.type) }}</mat-card-subtitle>
         </mat-card-header>
 
@@ -23,16 +23,16 @@
 
           <ng-container [ngSwitch]="notification.type">
             <div *ngSwitchCase="'LIKE'">
-              <p>Liked your <a [routerLink]="['/post', notification.post?.id]">post</a>.</p>
+              <p>Liked your <a [routerLink]="['/post', notification.post.id]">post</a>.</p>
             </div>
             <div *ngSwitchCase="'COMMENT'">
-              <p>Commented on your <a [routerLink]="['/post', notification.post?.id]">post</a>.</p>
+              <p>Commented on your <a [routerLink]="['/post', notification.post.id]">post</a>.</p>
             </div>
             <div *ngSwitchCase="'FOLLOW'">
               <p>Started following you.</p>
             </div>
             <div *ngSwitchCase="'POST'">
-              <p>Published a <a [routerLink]="['/post', notification.post?.id]">new post</a>.</p>
+              <p>Published a <a [routerLink]="['/post', notification.post.id]">new post</a>.</p>
             </div>
           </ng-container>
         </mat-card-content>

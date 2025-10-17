@@ -121,7 +121,10 @@
 
 
   <!-- Posts Feed -->
-  <section class="posts-container" role="region" aria-label="Posts feed">
+  <!-- <section class="posts-container" role="region" aria-label="Posts feed"> -->
+    <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
+    [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
+    
     <div *ngIf="isLoadingPost" class="loading-container">
       <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
       <p class="loading-text">Loading...</p>
@@ -130,8 +133,8 @@
     <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
       <p class="empty-message">No posts yet. Be the first to share something!</p>
     </div>
-    <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
-      <article *ngFor="let post of posts; " class="post-card" role="article"
+    <div class="posts-list" *ngIf="posts.length > 0">
+      <article *ngFor="let post of posts; trackBy: trackByPostId " class="post-card" role="article"
         [attr.aria-label]="'Post by ' + post.user.username">
 
         <!-- Post Header -->

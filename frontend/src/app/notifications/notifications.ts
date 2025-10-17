@@ -5,8 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; 
-import { Notification } from '../home/home.model'
-import { Auth } from '../auth'
+import { Notification } from '../model/model'
+import { Auth } from '../service/auth'
 import { Router } from '@angular/router';
 
 @Component({

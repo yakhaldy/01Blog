@@ -14,7 +14,7 @@ Coche les cases `[x]` quand une tâche est terminée ✅
 
 ## 🏠 Page d’Accueil (Home)
 ### 🕓 À faire
-- [ ] ♾️ Ajouter le défilement infini (Infinite Scroll) pour le chargement progressif des publications.
+- [x] ♾️ Ajouter le défilement infini (Infinite Scroll) pour le chargement progressif des publications.
 - [ ] 🔍 Implémenter la recherche d’utilisateurs depuis le backend (API avec filtre par username).
 - [ ] 👥 Limiter le chargement à 10 utilisateurs à la fois au lieu de récupérer la liste complète.
 
@@ -68,6 +68,8 @@ Coche les cases `[x]` quand une tâche est terminée ✅
 ### 🕓 À faire
 - [ ] 🔄 Mettre à jour les informations de l’utilisateur en temps réel dès qu’une modification est effectuée.
 - [ ] ✅ Afficher un message de succès ou d’erreur après la mise à jour des données du profil.
+- [x] ♾️ Ajouter le défilement infini (Infinite Scroll) pour le chargement progressif des publications.
+
 
 ### 🐞 Bugs
 - [ ]
@@ -97,6 +99,7 @@ Coche les cases `[x]` quand une tâche est terminée ✅
 - [ ] 📢 Afficher les informations sur le nombre de signalements reçus pour chaque utilisateur
 - [ ] 🗑️ Ajouter la possibilité de supprimer une publication appartenant à l’utilisateur directement depuis le tableau de bord
 - [ ] 🔍 Corriger et améliorer la fonction de recherche afin d’obtenir des résultats plus précis et rapides
+- [ ] ♾️ Ajouter le défilement infini (Infinite Scroll) pour le chargement progressif des publications.
 
 ### 🐞 Bugs
 - [ ]

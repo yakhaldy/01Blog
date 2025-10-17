@@ -10,12 +10,12 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { isImage, isVideo } from '../home/home.helpers';
+import { isImage, isVideo } from '../helper/postHleper';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 import { Navbar } from '../components/navbar/navbar';
-import { User, Post, Comment, UpdatePostResult } from '../home/home.model';
-import { Auth } from '../auth';
-import { ToastService } from '../toast-service';
+import { User, Post, Comment, UpdatePostResult } from '../model/model';
+import { Auth } from '../service/auth';
+import { ToastService } from '../service/toast-service';
 @Component({
   selector: 'app-singal-post',
   standalone: true,

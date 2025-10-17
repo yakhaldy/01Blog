@@ -101,7 +101,6 @@ public class AuthController {
     @GetMapping("/posts")
     public ResponseEntity<?> getPosts(Authentication authentication, @RequestParam("page") int page,
             @RequestParam("size") int size) {
-                System.out.println("Fetching posts for page: " + page + " size: " + size);
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
             Page<Post> posts = Posts.getPosts(authentication,pageable);
@@ -110,15 +109,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get  posts: " + e.getMessage()));
         }
     }
-    // public ResponseEntity<?> getAllPosts(Authentication authentication) {
-    // try {
-    // List<Post> posts = Posts.getAllPosts(authentication);
-    // return ResponseEntity.ok(posts);
-    // } catch (Exception e) {
-    // return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all
-    // posts: " + e.getMessage()));
-    // }
-    // }
 
     @DeleteMapping("/posts/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
@@ -159,9 +149,12 @@ public class AuthController {
     }
 
     @GetMapping("/posts/CurrentUserPost")
-    public ResponseEntity<?> getMyPosts(Authentication authentication) {
+    public ResponseEntity<?> getMyPosts(Authentication authentication,@RequestParam("page") int page,
+            @RequestParam("size") int size) {
         try {
-            List<Post> posts = Posts.getMyPosts(authentication);
+            // List<Post> posts = Posts.getMyPosts(authentication);
+             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+            Page<Post> posts = Posts.getMyPosts(authentication,pageable);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
@@ -169,9 +162,13 @@ public class AuthController {
     }
 
     @GetMapping("/posts/{username}")
-    public ResponseEntity<?> getPostsUser(Authentication authentication, @PathVariable String username) {
+    public ResponseEntity<?> getPostsUser(Authentication authentication, @PathVariable String username,@RequestParam("page") int page,
+            @RequestParam("size") int size) {
         try {
-            List<Post> posts = Posts.getPostsUser(authentication, username);
+            // List<Post> posts = Posts.getPostsUser(authentication, username);
+
+              Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+            Page<Post> posts = Posts.getPostsUser(authentication,username,pageable);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));

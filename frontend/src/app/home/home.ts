@@ -21,7 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { isValidMediaType, isValidMediaSize } from '../helper/postHleper';
+import { isValidMediaType, isValidMediaSize,isImage, isVideo } from '../helper/postHleper';
 
 // App Modules
 import { CommonModule } from '@angular/common';
@@ -30,14 +30,13 @@ import { Navbar } from '../components/navbar/navbar';
 import { FilterPipe } from '../pipes/filter-pipe';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 
-import { isImage, isVideo } from './home.helpers';
-import { User, UpdatePostResult, NewPost, Post } from './home.model';
+import { User, UpdatePostResult, NewPost, Post } from '../model/model';
 import { HomeService } from './home.service';
 
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
-import { Auth } from '../auth'
-import { ToastService } from '../toast-service';
+import { Auth } from '../service/auth'
+import { ToastService } from '../service/toast-service';
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -151,28 +150,25 @@ export class Home implements OnInit {
 
 
   loadPosts(): void {
-    console.log("Posts =============>1");
     if (this.isLoadingPost || !this.hasMorePosts) return;
-
+    
     this.isLoadingPost = true;
     this.homeService.getPosts(this.currentPage, this.pageSize).subscribe({
       next: (response) => {
-        const postsPage = response; // assuming response matches Page<Post> interface
+        const postsPage = response; 
 
         if (postsPage && postsPage.content.length > 0) {
-          this.posts = [...this.posts, ...postsPage.content]; // append new posts
-          this.currentPage++; // next page to load
-
-          // Check if this was the last page
+          this.posts.push(...postsPage.content);
+          this.currentPage++;
           if (this.currentPage >= postsPage.totalPages) {
             this.hasMorePosts = false;
           }
         } else {
-          this.hasMorePosts = false;  // no more posts to load
+          this.hasMorePosts = false; 
         }
 
         this.isLoadingPost = false;
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Failed to load posts:', error);
@@ -182,11 +178,13 @@ export class Home implements OnInit {
     });
   }
 
-
+trackByPostId(index: number, post: any): number {
+  return post.id;
+}
 
 
   onScroll(): void {
-    console.log(".............................YHY.......................");
+    console.log(".............................onScroll.......................");
     this.loadPosts();
   }
 

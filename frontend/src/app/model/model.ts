@@ -96,5 +96,5 @@ export interface Page<T> {
   totalPages: number;
   number: number;        // current page index
   size: number;          // page size
-  // other fields as needed
+  //...
 }

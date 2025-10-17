@@ -113,35 +113,7 @@ public class Posts {
         return post;
     }
 
-    // public List<Post> getPosts(Authentication authentication , Pageable pageable)
-    // {
-    // User user = helper.getCurrentUser(authentication);
-    // if (user == null) {
-    // throw new RuntimeException("User not found");
-    // }
-    // if (user.getRole().equals("ROLE_ADMIN")) {
-    // return postRepository.findAll();
-    // }
 
-    // List<Follow> followings = followRepository.findByFollower_Id(user.getId());
-
-    // List<Long> followingIds = followings.stream()
-    // .map(f -> f.getFollowing().getId())
-    // .collect(Collectors.toList());
-
-    // followingIds.add(user.getId());
-
-    // List<Post> posts =
-    // postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds);
-
-    // posts = posts.stream().map(p -> {
-    // p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(),
-    // p.getId()));
-    // return p;
-    // }).collect(Collectors.toList());
-
-    // return posts;
-    // }
     public Page<Post> getPosts(Authentication authentication, Pageable pageable) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
@@ -174,7 +146,7 @@ public class Posts {
             return post;
         }).collect(Collectors.toList());
 
-        return new PageImpl<>(updatedPosts, postsPage.getPageable(), postsPage.getTotalElements());
+        return new PageImpl<>(updatedPosts, postsPage.getPageable(), postsPage.getTotalElements()); /// ????
     }
 
     /************* */
@@ -287,24 +259,26 @@ public class Posts {
         return post;
     }
 
-    public List<Post> getMyPosts(Authentication authentication) {
+    public Page<Post> getMyPosts(Authentication authentication, Pageable pageable) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-        List<Post> posts = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId());
-        posts = posts.stream().map(p -> {
-            if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId())) {
-                p.setIsLiked(true);
-            } else {
-                p.setIsLiked(false);
-            }
-            return p;
-        }).collect(Collectors.toList());
-        return posts;
+        Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+
+        // posts = posts.stream().map(p -> {
+        //     if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId())) {
+        //         p.setIsLiked(true);
+        //     } else {
+        //         p.setIsLiked(false);
+        //     }
+        //     return p;
+        // }).collect(Collectors.toList());
+        
+        return addLikeStatus(postsPage, user.getId());
     }
 
-    public List<Post> getPostsUser(Authentication authentication, String username) {
+    public Page<Post> getPostsUser(Authentication authentication, String username, Pageable pageable) {
         User CurrentUser = helper.getCurrentUser(authentication);
         if (CurrentUser == null) {
             throw new RuntimeException("User not found");
@@ -313,16 +287,16 @@ public class Posts {
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-        List<Post> posts = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId());
-        posts = posts.stream().map(p -> {
-            if (likeRepository.existsByUser_IdAndPost_Id(CurrentUser.getId(), p.getId())) {
-                p.setIsLiked(true);
-            } else {
-                p.setIsLiked(false);
-            }
-            return p;
-        }).collect(Collectors.toList());
-        return posts;
+         Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+        // posts = posts.stream().map(p -> {
+        //     if (likeRepository.existsByUser_IdAndPost_Id(CurrentUser.getId(), p.getId())) {
+        //         p.setIsLiked(true);
+        //     } else {
+        //         p.setIsLiked(false);
+        //     }
+        //     return p;
+        // }).collect(Collectors.toList());
+        return addLikeStatus(postsPage, user.getId());
     }
 
     public Post getPost(Authentication authentication, Long id) {

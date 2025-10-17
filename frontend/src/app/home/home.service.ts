@@ -1,18 +1,16 @@
 // home.service.ts
 
-import { Injectable,  Inject, PLATFORM_ID } from '@angular/core';
-import { Auth, CreatePostRequest } from '../auth';
+import { Injectable, } from '@angular/core';
+import { Auth, CreatePostRequest } from '../service/auth';
 import { Observable } from 'rxjs';
-import { User ,Post , Page} from './home.model';
+import { User, Post, Page } from '../model/model';
 
 @Injectable({ providedIn: 'root' })
 export class HomeService {
 
-  constructor(private auth: Auth,
-        @Inject(PLATFORM_ID) platformId: Object
+  constructor(private auth: Auth
   ) {
   }
-
 
 
   getCurrentUser(): Observable<User> {
@@ -34,16 +32,16 @@ export class HomeService {
   updatePost(postId: number, data: FormData): Observable<Post> {
     return this.auth.updatePost(postId, data);
   }
-  likePost(postId: number) : Observable<Post> {
+  likePost(postId: number): Observable<Post> {
     return this.auth.likePost(postId);
   }
-  getAllUsers(): Observable<User[]>{
-    return  this.auth.getAllUsers();
+  getAllUsers(): Observable<User[]> {
+    return this.auth.getAllUsers();
   }
-  follow(userID: string): Observable<any>{
+  follow(userID: string): Observable<any> {
     return this.auth.follow(userID);
   }
   getImage(path: string | undefined): string | undefined {
-  return this.auth.getImage(path)
- }
+    return this.auth.getImage(path)
+  }
 }

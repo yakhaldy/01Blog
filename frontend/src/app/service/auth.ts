@@ -1,8 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID  } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { User, Post, Comment, Report, DashboardStats, Notification,Page } from '../app/home/home.model';
+import { Observable, EMPTY } from 'rxjs';
+import { User, Post, Comment, Report, DashboardStats, Notification,Page } from '../model/model';
 import { Notifications } from './notifications';
+import { isPlatformBrowser } from '@angular/common';
+
 export interface CreatePostRequest {
   description: string;
   mediaFile?: File;
@@ -17,14 +19,19 @@ export interface CreatePostRequest {
 export class Auth {
   private apiUrl = 'http://localhost:8080/api';
   private urlImage = 'http://localhost:8080/uploads'
+  private isBrowser: boolean;
 
-  constructor(private http: HttpClient, private notifications: Notifications) { }
+  constructor(private http: HttpClient, private notifications: Notifications,     @Inject(PLATFORM_ID) private platformId: Object) {
+     this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   register(user: any): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post(`${this.apiUrl}/register`, user);
   }
 
   login(credentials: any): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post(`${this.apiUrl}/login`, credentials);
   }
   logout() {
@@ -33,50 +40,60 @@ export class Auth {
   }
 
   getCurrentUser(): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get(`${this.apiUrl}/profile`);
   }
   getInfoUser(username: string): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get(`${this.apiUrl}/profile/${username}`);
   }
 
 
 
   createPost(postData: FormData): Observable<Post> {
-
-
+    if (!this.isBrowser) return EMPTY;
     return this.http.post<Post>(`${this.apiUrl}/posts`, postData);
   }
 
 
 
   getAllPosts(page: number, size: number): Observable<Page<Post>> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get<Page<Post>>(`${this.apiUrl}/posts?page=${page}&size=${size}`);
   }
 
   deletePost(id: number): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.delete(`${this.apiUrl}/posts/${id}`)
   }
   updatePost(id: number, data: FormData): Observable<Post> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.patch<Post>(`${this.apiUrl}/posts/${id}`, data)
   }
   likePost(id: number): Observable<Post> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post<Post>(`${this.apiUrl}/posts/like`, { postId: id })
   }
   getAllUsers(): Observable<User[]> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get<User[]>(`${this.apiUrl}/users`)
 
   }
   follow(userId: string): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post<Post>(`${this.apiUrl}/users/follow`, { userId: userId })
   }
 
-  getMyPosts(): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.apiUrl}/posts/CurrentUserPost`)
+  getMyPosts(page: number, size: number): Observable<Page<Post>> {
+    if (!this.isBrowser) return EMPTY;
+    return this.http.get<Page<Post>>(`${this.apiUrl}/posts/CurrentUserPost?page=${page}&size=${size}`)
   }
-  getPostsUser(username: string): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.apiUrl}/posts/${username}`);
+  getPostsUser(username: string,page: number, size: number): Observable<Page<Post>> {
+    if (!this.isBrowser) return EMPTY;
+    return this.http.get<Page<Post>>(`${this.apiUrl}/posts/${username}?page=${page}&size=${size}`);
   }
   updateProfile(data: FormData): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post(`${this.apiUrl}/profile`, data)
   }
 
@@ -87,55 +104,65 @@ export class Auth {
     return undefined;
   }
   getPost(id: number): Observable<Post> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get<Post>(`${this.apiUrl}/post/${id}`)
   }
 
   Report(data: any) {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post(`${this.apiUrl}/profile/report`, data)
   }
 
   createComment(data: object): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post(`${this.apiUrl}/posts/comment`, data)
   }
 
   getPostComments(postId: number): Observable<Comment[]> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get<Comment[]>(`${this.apiUrl}/posts/getComment${postId}`,)
   }
 
 
   updateComment(id: number, data: object): Observable<Comment> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.patch<Comment>(`${this.apiUrl}/posts/comment/${id}`, data)
   }
 
   deleteComment(id: number): Observable<any> {
-    console.log("service=>", id);
-
+    if (!this.isBrowser) return EMPTY;
     return this.http.delete(`${this.apiUrl}/posts/comment/${id}`)
   }
 
   getAllReports(): Observable<Report[]> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get<Report[]>(`${this.apiUrl}/admin/getReports`,)
   }
 
   getDashboardStats(): Observable<DashboardStats> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get<DashboardStats>(`${this.apiUrl}/admin/dashboardStats`,)
 
   }
 
   deleteUser(id: string): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.delete(`${this.apiUrl}/admin/deleteUser/${id}`)
   }
 
   banUser(id: string): Observable<User> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.post<User>(`${this.apiUrl}/admin/banUser`, { userId: id })
   }
 
   getNotifications(): Observable<Notification[]> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.get<Notification[]>(`${this.apiUrl}/notification`,)
 
   }
 
   deleteReports(id: string): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
     return this.http.delete(`${this.apiUrl}/admin/report/${id}`)
 
   }

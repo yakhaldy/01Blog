@@ -1,12 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { Auth } from '../../auth';
+import { Auth } from '../../service/auth';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
-import { Notifications } from '../../notifications';
+import { Notifications } from '../../service/notifications';
 
 
-import { User } from '../../home/home.model'
+import { User } from '../../model/model'
 
 @Component({
   selector: 'app-navbar',

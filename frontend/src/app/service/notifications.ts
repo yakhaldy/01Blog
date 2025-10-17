@@ -39,8 +39,12 @@ export class Notifications implements OnDestroy {
   }
 
   private connect(): void {
+    if (!this.isBrowser) {
+      console.warn('SSE connections not supported on server side');
+      return;
+    }
     const jwt = this.getToken();
-    
+
     if (!jwt) {
       console.error('❌ No authentication token available');
       this.notificationSubject.error('No authentication token');
@@ -51,7 +55,7 @@ export class Notifications implements OnDestroy {
     // this.disconnect();
 
     console.log('🔌 Creating new SSE connection...');
-    
+
     this.eventSource = new EventSource(
       `http://localhost:8080/api/notifications/stream?token=${jwt}`,
       { withCredentials: true }
@@ -73,12 +77,12 @@ export class Notifications implements OnDestroy {
     this.eventSource.onerror = (error) => {
       console.error('❌ SSE error', error);
       this.isConnected = false;
-      
+
       // Check if it's a fatal error
       if (this.eventSource?.readyState === EventSource.CLOSED) {
         console.log('🔴 SSE connection closed by server');
         this.notificationSubject.error(error);
-        
+
         // Attempt to reconnect after 5 seconds
         setTimeout(() => {
           console.log('🔄 Attempting to reconnect...');

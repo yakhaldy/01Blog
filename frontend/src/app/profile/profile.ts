@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
-import { isImage, isVideo } from '../home/home.helpers'
+import { isImage, isVideo } from '../helper/postHleper'
 import { MatDialog } from '@angular/material/dialog';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 import { MatMenuModule } from '@angular/material/menu';
@@ -14,8 +14,9 @@ import { MatInputModule } from '@angular/material/input';
 
 import { EditProfile } from '../components/edit-profile/edit-profile'
 import { Navbar } from '../components/navbar/navbar';
-import { User, Post, UpdatePostResult, UpdateProfileResult } from '../home/home.model'
-import { Auth } from '../auth'
+import { User, Post, UpdatePostResult, UpdateProfileResult } from '../model/model'
+import { Auth } from '../service/auth'
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 
 @Component({
@@ -23,7 +24,7 @@ import { Auth } from '../auth'
   standalone: true,
   imports: [CommonModule, Navbar, MatIconModule, MatProgressSpinnerModule, MatButtonModule, MatMenuModule, FormsModule,
     MatFormFieldModule,
-    MatInputModule,],
+    MatInputModule, InfiniteScrollModule],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css', '../home/home.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,13 +37,18 @@ export class Profile implements OnInit {
   postsCount: number = 0;
   isLoading: boolean = true;
   isLoadingPost: boolean = true;
-  PostToDelete?: Post; 
+  PostToDelete?: Post;
   posts: Post[] = [];
 
   showReportPopup = false;
   reportReason = '';
   errorReport = '';
   isErrorReport = false;
+
+  hasMorePosts = true;
+  currentPage = 0;
+  pageSize = 10;
+  scrollDistance = 2;
 
 
   constructor(
@@ -64,7 +70,7 @@ export class Profile implements OnInit {
 
             if (paramUsername === currentUser.username) {
               this.isOwnProfile = true;
-             this.loadCurrentUserProfile();
+              this.loadCurrentUserProfile();
               this.loadCurrentUserPosts();
             } else {
               // Viewing someone else's profile
@@ -107,9 +113,21 @@ export class Profile implements OnInit {
     this.cdr.markForCheck();
   }
   loadUserPosts(username: string) {
-    this.auth.getPostsUser(username).subscribe({
-      next: (posts) => {
-        this.posts = posts
+    if (!this.hasMorePosts) return;
+
+    this.auth.getPostsUser(username, this.currentPage, this.pageSize).subscribe({
+      next: (postsPage) => {
+        // this.posts = posts
+        
+          if (postsPage && postsPage.content.length > 0) {
+          this.posts.push(...postsPage.content);
+          this.currentPage++;
+          if (this.currentPage >= postsPage.totalPages) {
+            this.hasMorePosts = false;
+          }
+        } else {
+          this.hasMorePosts = false;
+        }
         this.isLoadingPost = false;
         this.cdr.markForCheck();
       },
@@ -138,9 +156,22 @@ export class Profile implements OnInit {
     });
   }
   loadCurrentUserPosts() {
-    this.auth.getMyPosts().subscribe({
-      next: (posts) => {
-        this.posts = posts
+    if (!this.hasMorePosts) return;
+
+    this.auth.getMyPosts(this.currentPage, this.pageSize).subscribe({
+      next: (postsPage) => {
+        // this.posts = posts
+                console.log("<=====>",postsPage);
+
+        if (postsPage && postsPage.content.length > 0) {
+          this.posts.push(...postsPage.content);
+          this.currentPage++;
+          if (this.currentPage >= postsPage.totalPages) {
+            this.hasMorePosts = false;
+          }
+        } else {
+          this.hasMorePosts = false;
+        }
         this.isLoadingPost = false;
         this.cdr.markForCheck();
       },
@@ -151,6 +182,21 @@ export class Profile implements OnInit {
       },
     });
     this.cdr.markForCheck();
+  }
+
+  trackByPostId(index: number, post: any): number {
+    return post.id;
+  }
+
+
+  onScroll(): void {
+    console.log(".............................onScroll.......................");
+    if (this.isOwnProfile){
+      this.loadCurrentUserPosts();
+    }else {
+      if (this.profileUser)
+      this.loadUserPosts(this.profileUser.username)
+    }
   }
 
   followUser() {
@@ -232,7 +278,7 @@ export class Profile implements OnInit {
     this.showModal = true;
     this.isOpen = false;
 
-  setTimeout(() => {
+    setTimeout(() => {
       this.isOpen = true;
     }, 10);
 

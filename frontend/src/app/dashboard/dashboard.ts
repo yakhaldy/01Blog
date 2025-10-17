@@ -13,8 +13,8 @@ import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 
 import { Navbar } from '../components/navbar/navbar';
-import { Auth } from '../auth';
-import { User, Post, Report, DashboardStats } from '../home/home.model';
+import { Auth } from '../service/auth';
+import { User, Post, Report, DashboardStats } from '../model/model';
 import { error } from 'node:console';
 
 
