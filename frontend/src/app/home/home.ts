@@ -34,6 +34,8 @@ import { isImage, isVideo } from './home.helpers';
 import { User, UpdatePostResult, NewPost, Post } from './home.model';
 import { HomeService } from './home.service';
 
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+
 import { Auth } from '../auth'
 import { ToastService } from '../toast-service';
 @Component({
@@ -59,7 +61,8 @@ import { ToastService } from '../toast-service';
     MatTooltipModule,
     MatToolbarModule,
     Navbar,
-    FilterPipe
+    FilterPipe,
+    InfiniteScrollModule
   ]
 })
 export class Home implements OnInit {
@@ -69,7 +72,7 @@ export class Home implements OnInit {
   filteredUsers: User[] = [];
   searchTerm = '';
   isLoading = true;
-  isLoadingPost = true;
+  isLoadingPost = false;
   isLoadingUsers = true;
   showMediaUpload = false;
   selectedFileName = '';
@@ -139,12 +142,35 @@ export class Home implements OnInit {
     console.log(error);
   }
 
-  private loadPosts(): void {
-    this.homeService.getAllPosts().subscribe({
-      next: (posts) => {
-        console.log("all posts==>", posts);
+  /**************************** */
+  hasMorePosts = true;
+  currentPage = 0;
+  pageSize = 10;
+  scrollDistance = 2;
+  /******************************* */
 
-        this.posts = posts;
+
+  loadPosts(): void {
+    console.log("Posts =============>1");
+    if (this.isLoadingPost || !this.hasMorePosts) return;
+
+    this.isLoadingPost = true;
+    this.homeService.getPosts(this.currentPage, this.pageSize).subscribe({
+      next: (response) => {
+        const postsPage = response; // assuming response matches Page<Post> interface
+
+        if (postsPage && postsPage.content.length > 0) {
+          this.posts = [...this.posts, ...postsPage.content]; // append new posts
+          this.currentPage++; // next page to load
+
+          // Check if this was the last page
+          if (this.currentPage >= postsPage.totalPages) {
+            this.hasMorePosts = false;
+          }
+        } else {
+          this.hasMorePosts = false;  // no more posts to load
+        }
+
         this.isLoadingPost = false;
         this.cdr.markForCheck();
       },
@@ -154,6 +180,14 @@ export class Home implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+
+
+
+  onScroll(): void {
+    console.log(".............................YHY.......................");
+    this.loadPosts();
   }
 
   isMyPost(post: Post): boolean {
@@ -398,7 +432,7 @@ export class Home implements OnInit {
   }
 
   get isPostFormValid(): boolean {
-    return this.newPost.description.trim().length > 0 &&  this.newPost.title.trim().length > 0 && !this.isCharacterLimitExceeded && !this.isCharacterTitleLimitExceeded;
+    return this.newPost.description.trim().length > 0 && this.newPost.title.trim().length > 0 && !this.isCharacterLimitExceeded && !this.isCharacterTitleLimitExceeded;
   }
 
   get postCharacterCount(): number {

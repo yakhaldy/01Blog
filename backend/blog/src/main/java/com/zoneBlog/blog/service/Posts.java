@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.data.domain.PageImpl;
 import org.springframework.security.core.Authentication;
 
 import com.zoneBlog.blog.dataTransferObj.CommentRequest;
@@ -27,9 +29,11 @@ import com.zoneBlog.blog.repository.CommentRepository;
 import static com.zoneBlog.blog.model.Notification.NotificationType.POST;
 import static com.zoneBlog.blog.model.Notification.NotificationType.LIKE;
 import static com.zoneBlog.blog.model.Notification.NotificationType.COMMENT;
-
 import java.util.stream.Collectors;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional
@@ -109,37 +113,71 @@ public class Posts {
         return post;
     }
 
-    public List<Post> getAllPosts(Authentication authentication /* , int page, int size */) {
+    // public List<Post> getPosts(Authentication authentication , Pageable pageable)
+    // {
+    // User user = helper.getCurrentUser(authentication);
+    // if (user == null) {
+    // throw new RuntimeException("User not found");
+    // }
+    // if (user.getRole().equals("ROLE_ADMIN")) {
+    // return postRepository.findAll();
+    // }
+
+    // List<Follow> followings = followRepository.findByFollower_Id(user.getId());
+
+    // List<Long> followingIds = followings.stream()
+    // .map(f -> f.getFollowing().getId())
+    // .collect(Collectors.toList());
+
+    // followingIds.add(user.getId());
+
+    // List<Post> posts =
+    // postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds);
+
+    // posts = posts.stream().map(p -> {
+    // p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(),
+    // p.getId()));
+    // return p;
+    // }).collect(Collectors.toList());
+
+    // return posts;
+    // }
+    public Page<Post> getPosts(Authentication authentication, Pageable pageable) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
+
+        // Admin gets all posts (paginated)
         if (user.getRole().equals("ROLE_ADMIN")) {
-            return postRepository.findAll();
+            Page<Post> allPosts = postRepository.findAll(pageable);
+            return addLikeStatus(allPosts, user.getId());
         }
 
+        // Get IDs of followed users + current user
         List<Follow> followings = followRepository.findByFollower_Id(user.getId());
-
         List<Long> followingIds = followings.stream()
                 .map(f -> f.getFollowing().getId())
                 .collect(Collectors.toList());
 
         followingIds.add(user.getId());
 
-        List<Post> posts = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds);
+        // Fetch paged posts from those users
+        Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
 
-        // Pageable pageable = PageRequest.of(page, size);
+        return addLikeStatus(postsPage, user.getId());
+    }
 
-        // Page<Post> postsPage =
-        // postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
-
-        posts = posts.stream().map(p -> {
-            p.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(user.getId(), p.getId()));
-            return p;
+    private Page<Post> addLikeStatus(Page<Post> postsPage, Long userId) {
+        List<Post> updatedPosts = postsPage.getContent().stream().map(post -> {
+            post.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(userId, post.getId()));
+            return post;
         }).collect(Collectors.toList());
 
-        return posts;
+        return new PageImpl<>(updatedPosts, postsPage.getPageable(), postsPage.getTotalElements());
     }
+
+    /************* */
 
     public void deletePost(Long id, Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
@@ -397,7 +435,7 @@ public class Posts {
         if (post == null) {
             throw new RuntimeException("post not found");
         }
-        
+
         CommentRepository.delete(comment);
 
         post.setCommentsCount(CommentRepository.countByPost_Id(post.getId()));

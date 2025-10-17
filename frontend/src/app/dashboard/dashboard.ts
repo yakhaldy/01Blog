@@ -122,18 +122,18 @@ export class Dashboard implements OnInit {
   loadPosts(): void {
     this.isLoadingPosts = true;
     // Replace with actual API call
-    this.auth.getAllPosts().subscribe({
-      next: (posts) => {
-        this.posts = posts;
-        this.isLoadingPosts = false;
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.error('Failed to load posts:', error);
-        this.isLoadingPosts = false;
-        this.cdr.markForCheck();
-      },
-    });
+    // this.auth.getAllPosts().subscribe({
+    //   next: (posts) => {
+    //     this.posts = posts;
+    //     this.isLoadingPosts = false;
+    //     this.cdr.markForCheck();
+    //   },
+    //   error: (error) => {
+    //     console.error('Failed to load posts:', error);
+    //     this.isLoadingPosts = false;
+    //     this.cdr.markForCheck();
+    //   },
+    // });
   }
 
   loadReports(): void {

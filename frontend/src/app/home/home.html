@@ -99,84 +99,55 @@
       </section>
 
       <!-- Posts Feed -->
-      <section class="posts-container" role="region" aria-label="Posts feed">
+      <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
+        [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
+
         <div *ngIf="isLoadingPost" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
           <p class="loading-text">Loading...</p>
         </div>
-        <!-- Posts will be dynamically added here -->
+
+        <!-- No posts message -->
         <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
           <p class="empty-message">No posts yet. Be the first to share something!</p>
         </div>
-        <div class="posts-list" *ngIf="!isLoadingPost && posts.length > 0">
-          <article *ngFor="let post of posts; " class="post-card" role="article"
+
+        <!-- Posts List -->
+        <div *ngIf="!isLoadingPost && posts.length > 0" class="posts-list">
+          <article *ngFor="let post of posts" class="post-card" role="article"
             [attr.aria-label]="'Post by ' + post.user.username">
 
             <!-- Post Header -->
             <header class="post-header">
-              <div class="post-author-info"  matTooltip="go to profile" (click)="goToProfile(post.user.username || '')">
+              <div class="post-author-info" matTooltip="go to profile" (click)="goToProfile(post.user.username || '')">
                 <div class="author-avatar">
-                  <!-- <mat-icon class="avatar-icon">account_circle</mat-icon> -->
                   <img [src]="getImage(post.user.avatar) || 'assets/img/default-avatar.png'"
                     [alt]="post.user.username + ' profile picture'" class="avatar-icon" loading="lazy">
                 </div>
                 <div class="author-details">
                   <h4 class="author-name">{{ post.user.username }}</h4>
-                  <time class="post-time" [attr.datetime]="post.createdAt">
-                    {{ post.createdAt | date:'medium' }}
-                  </time>
+                  <time class="post-time" [attr.datetime]="post.createdAt">{{ post.createdAt | date:'medium' }}</time>
                 </div>
-              </div>
-
-              <!-- Post Actions Menu -->
-              <div class="post-actions" *ngIf="isMyPost(post)">
-                <!-- <button mat-icon-button (click)="showOption(post)" matTooltip="option" class="delete-btn">
-                  <mat-icon>more_vert</mat-icon>
-                </button> -->
-                <button mat-icon-button [matMenuTriggerFor]="optionsMenu" class="Options" matTooltip="Options">
-                  <mat-icon>more_vert</mat-icon>
-                </button>
-
-                <!-- Menu that shows when the button is clicked -->
-                <mat-menu #optionsMenu="matMenu" class="optionsMenu">
-                  <button mat-menu-item (click)="updatePost(post)">
-                    <mat-icon>edit_document</mat-icon>
-                    <span>Edit</span>
-                  </button>
-                  <button mat-menu-item (click)="deletePost(post)">
-                    <mat-icon>delete</mat-icon>
-                    <span>Delete</span>
-                  </button>
-                </mat-menu>
               </div>
             </header>
 
             <!-- Post Content -->
-            <div class="post-content"  matTooltip="GoToPost" (click)="goToPost(post.id!)">
+            <div class="post-content" matTooltip="GoToPost" (click)="goToPost(post.id!)">
               <p class="post-description">{{ post.title }}</p>
-
-              <!-- Media Content -->
               <div class="post-media" *ngIf="post.mediaUrl">
-                <!-- IMAGE -->
                 <img *ngIf="isImage(post.mediaUrl)" [src]="getImage(post.mediaUrl)"
                   [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
-
-                <!-- VIDEO -->
                 <video *ngIf="isVideo(post.mediaUrl)" [src]="getImage(post.mediaUrl)" controls class="post-video"
-                  preload="metadata">
-                  Your browser does not support the video tag.
-                </video>
+                  preload="metadata">Your browser does not support the video tag.</video>
               </div>
             </div>
 
             <!-- Post Footer -->
             <footer class="post-footer">
-
               <div class="post-interactions">
                 <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste(post.id!)">
-                  <mat-icon [ngClass]="{ 'liked': post.isLiked }">
-                    {{ post.isLiked ? 'favorite' : 'favorite_border' }}
-                  </mat-icon>
+                  <mat-icon [ngClass]="{ 'liked': post.isLiked }">{{ post.isLiked ? 'favorite' : 'favorite_border'
+                    }}</mat-icon>
                 </button>
                 <span class="stat-count">{{ post.likesCount || 0 }}</span>
 
@@ -189,6 +160,7 @@
           </article>
         </div>
 
+        <!-- Modal for delete confirmation -->
         <div class="door-backdrop" *ngIf="showModal" (click)="close()">
           <div class="door" (click)="$event.stopPropagation()">
             <div class="door-panel" [class.open]="isOpen">
@@ -205,6 +177,7 @@
         </div>
 
       </section>
+
     </main>
 
     <!-- Right Sidebar - Suggestions -->
@@ -228,7 +201,7 @@
         <div class="users-list">
           <div *ngFor="let user of users | filter:searchTerm; " class="user-item" role="article"
             [attr.aria-label]="'User: ' + user.username">
-            <div class="user-info"  matTooltip="go to profile" (click)="goToProfile(user.username)">
+            <div class="user-info" matTooltip="go to profile" (click)="goToProfile(user.username)">
               <div class="user-avatar">
                 <!-- <mat-icon class="avatar-icon">account_circle</mat-icon> -->
                 <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'"
@@ -286,7 +259,7 @@
 
           <div *ngFor="let user of filteredUsers" class="user-item" role="article"
             [attr.aria-label]="'User: ' + user.username">
-            <div class="user-info"  matTooltip="go to profile" (click)="goToProfile(user.username)">
+            <div class="user-info" matTooltip="go to profile" (click)="goToProfile(user.username)">
               <div class="user-avatar">
                 <img [src]="getImage(user.avatar)" (error)="onImageError($event)"
                   [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">

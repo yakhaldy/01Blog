@@ -27,10 +27,18 @@ import com.zoneBlog.blog.service.Admin;
 import com.zoneBlog.blog.service.Helper;
 import com.zoneBlog.blog.model.Notification;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+
+
+
 import java.util.List;
 
 import java.util.Map;
-
 
 @RestController
 @RequestMapping("/api")
@@ -54,7 +62,7 @@ public class AuthController {
     private ResponseEntity<?> login(@RequestBody LoginRequest request) {
         // return l.login(request);
         try {
-            Map<String, Object> response =  l.login(request);
+            Map<String, Object> response = l.login(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -91,14 +99,26 @@ public class AuthController {
     }
 
     @GetMapping("/posts")
-    public ResponseEntity<?> getAllPosts(Authentication authentication) {
+    public ResponseEntity<?> getPosts(Authentication authentication, @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+                System.out.println("Fetching posts for page: " + page + " size: " + size);
         try {
-            List<Post> posts = Posts.getAllPosts(authentication);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+            Page<Post> posts = Posts.getPosts(authentication,pageable);
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get  posts: " + e.getMessage()));
         }
     }
+    // public ResponseEntity<?> getAllPosts(Authentication authentication) {
+    // try {
+    // List<Post> posts = Posts.getAllPosts(authentication);
+    // return ResponseEntity.ok(posts);
+    // } catch (Exception e) {
+    // return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all
+    // posts: " + e.getMessage()));
+    // }
+    // }
 
     @DeleteMapping("/posts/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
@@ -188,6 +208,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
         }
     }
+
     @DeleteMapping("/posts/comment/{commentId}")
     public ResponseEntity<?> deleteComment(Authentication authentication, @PathVariable Long commentId) {
         try {
@@ -197,7 +218,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
         }
     }
-    
 
     @Autowired
     private Users user;
@@ -205,7 +225,7 @@ public class AuthController {
     @GetMapping("users")
     public ResponseEntity<?> getAllUsers(Authentication authentication) {
         try {
-           List<Map<String, Object>> response = user.getAllUsers(authentication);
+            List<Map<String, Object>> response = user.getAllUsers(authentication);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -314,9 +334,10 @@ public class AuthController {
                     .body(Map.of("error", "Failed to ban User: " + e.getMessage()));
         }
     }
+
     @DeleteMapping("/admin/report/{id}")
-    public ResponseEntity<?> deleteReport(Authentication authentication, @PathVariable Long id){
-         try {
+    public ResponseEntity<?> deleteReport(Authentication authentication, @PathVariable Long id) {
+        try {
             Admin.deleteReport(authentication, id);
             return ResponseEntity.ok(Map.of("message", "report deleted successfully"));
         } catch (Exception e) {
@@ -338,5 +359,5 @@ public class AuthController {
                     .body(Map.of("error", "Failed get notifications: " + e.getMessage()));
         }
     }
-    
+
 }

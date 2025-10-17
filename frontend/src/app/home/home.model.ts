@@ -88,3 +88,13 @@ export interface Notification {
   createdAt: string;
   post: Post;
 }
+
+
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;        // current page index
+  size: number;          // page size
+  // other fields as needed
+}

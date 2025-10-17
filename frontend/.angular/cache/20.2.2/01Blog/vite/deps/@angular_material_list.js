@@ -2,13 +2,6 @@ import {
   SelectionModel
 } from "./chunk-KG7ZSOCA.js";
 import {
-  MatDivider,
-  MatDividerModule
-} from "./chunk-2KIAV6BP.js";
-import {
-  NG_VALUE_ACCESSOR
-} from "./chunk-3KVG4MU5.js";
-import {
   MatRippleModule
 } from "./chunk-BYNCWOM5.js";
 import {
@@ -16,11 +9,18 @@ import {
   RippleRenderer,
   _StructuralStylesLoader
 } from "./chunk-MZOERIE6.js";
+import {
+  MatDivider,
+  MatDividerModule
+} from "./chunk-2KIAV6BP.js";
 import "./chunk-H6DNB4WT.js";
 import "./chunk-VENV3F3G.js";
 import {
   coerceBooleanProperty
 } from "./chunk-46HAYV32.js";
+import {
+  NG_VALUE_ACCESSOR
+} from "./chunk-3KVG4MU5.js";
 import "./chunk-3SPEYJ2S.js";
 import "./chunk-7UJZXIJQ.js";
 import {

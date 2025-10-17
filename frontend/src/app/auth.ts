@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { User, Post, Comment, Report, DashboardStats, Notification } from '../app/home/home.model';
+import { User, Post, Comment, Report, DashboardStats, Notification,Page } from '../app/home/home.model';
 import { Notifications } from './notifications';
 export interface CreatePostRequest {
   description: string;
   mediaFile?: File;
   mediaUrl?: string;
 }
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +18,7 @@ export class Auth {
   private apiUrl = 'http://localhost:8080/api';
   private urlImage = 'http://localhost:8080/uploads'
 
-  constructor(private http: HttpClient,private notifications: Notifications) { }
+  constructor(private http: HttpClient, private notifications: Notifications) { }
 
   register(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, user);
@@ -46,9 +48,11 @@ export class Auth {
   }
 
 
-  getAllPosts(): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.apiUrl}/posts`)
+
+  getAllPosts(page: number, size: number): Observable<Page<Post>> {
+    return this.http.get<Page<Post>>(`${this.apiUrl}/posts?page=${page}&size=${size}`);
   }
+
   deletePost(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/posts/${id}`)
   }
@@ -103,9 +107,9 @@ export class Auth {
     return this.http.patch<Comment>(`${this.apiUrl}/posts/comment/${id}`, data)
   }
 
-  deleteComment(id: number): Observable<any>{
+  deleteComment(id: number): Observable<any> {
     console.log("service=>", id);
-    
+
     return this.http.delete(`${this.apiUrl}/posts/comment/${id}`)
   }
 
@@ -113,25 +117,25 @@ export class Auth {
     return this.http.get<Report[]>(`${this.apiUrl}/admin/getReports`,)
   }
 
-  getDashboardStats(): Observable<DashboardStats>{
+  getDashboardStats(): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(`${this.apiUrl}/admin/dashboardStats`,)
 
   }
 
-  deleteUser(id: string): Observable<any>{
+  deleteUser(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/deleteUser/${id}`)
   }
 
-  banUser(id: string): Observable<User>{
-    return this.http.post<User>(`${this.apiUrl}/admin/banUser`, {userId: id})
+  banUser(id: string): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/admin/banUser`, { userId: id })
   }
 
-  getNotifications(): Observable<Notification[]>{
+  getNotifications(): Observable<Notification[]> {
     return this.http.get<Notification[]>(`${this.apiUrl}/notification`,)
 
   }
 
-  deleteReports(id: string): Observable<any>{
+  deleteReports(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/report/${id}`)
 
   }

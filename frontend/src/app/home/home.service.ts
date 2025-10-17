@@ -3,7 +3,7 @@
 import { Injectable,  Inject, PLATFORM_ID } from '@angular/core';
 import { Auth, CreatePostRequest } from '../auth';
 import { Observable } from 'rxjs';
-import { User ,Post} from './home.model';
+import { User ,Post , Page} from './home.model';
 
 @Injectable({ providedIn: 'root' })
 export class HomeService {
@@ -19,8 +19,8 @@ export class HomeService {
     return this.auth.getCurrentUser();
   }
 
-  getAllPosts(): Observable<Post[]> {
-    return this.auth.getAllPosts();
+  getPosts(page: number, size: number): Observable<Page<Post>> {
+    return this.auth.getAllPosts(page, size);
   }
 
   deletePost(id: number): Observable<any> {
