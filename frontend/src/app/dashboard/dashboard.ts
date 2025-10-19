@@ -15,7 +15,8 @@ import { Router } from '@angular/router';
 import { Navbar } from '../components/navbar/navbar';
 import { Auth } from '../service/auth';
 import { User, Post, Report, DashboardStats } from '../model/model';
-import { error } from 'node:console';
+import { ToastService } from '../service/toast-service';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 
 interface Comment {
@@ -43,6 +44,7 @@ interface Comment {
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
+    InfiniteScrollModule
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -63,7 +65,7 @@ export class Dashboard implements OnInit {
 
   // Loading states
   isLoadingUsers = true;
-  isLoadingPosts = true;
+  isLoadingPosts = false;
   isLoadingReports = true;
   isLoadingStats = true;
 
@@ -88,7 +90,8 @@ export class Dashboard implements OnInit {
   constructor(
     private auth: Auth,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -119,21 +122,44 @@ export class Dashboard implements OnInit {
     });
   }
 
+  hasMorePosts = true;
+  currentPage = 0;
+  pageSize = 10;
+  scrollDistance = 2;
+
   loadPosts(): void {
-    this.isLoadingPosts = true;
-    // Replace with actual API call
-    // this.auth.getAllPosts().subscribe({
-    //   next: (posts) => {
-    //     this.posts = posts;
-    //     this.isLoadingPosts = false;
-    //     this.cdr.markForCheck();
-    //   },
-    //   error: (error) => {
-    //     console.error('Failed to load posts:', error);
-    //     this.isLoadingPosts = false;
-    //     this.cdr.markForCheck();
-    //   },
-    // });
+    if (!this.hasMorePosts) return;
+
+
+    this.auth.getAllPosts(this.currentPage, this.pageSize).subscribe({
+      next: (postsPage) => {
+        // this.posts = posts;
+        if (postsPage && postsPage.content.length > 0) {
+          this.posts.push(...postsPage.content);
+          this.currentPage++;
+          if (this.currentPage >= postsPage.totalPages) {
+            this.hasMorePosts = false;
+          }
+        } else {
+          this.hasMorePosts = false;
+        }
+        console.log("ana hna", postsPage.size);
+
+        this.isLoadingPosts = false;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Failed to load posts:', error);
+        this.isLoadingPosts = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+  onScroll(): void {
+    this.loadPosts();
+  }
+  trackByPostId(index: number, post: any): number {
+    return post.id;
   }
 
   loadReports(): void {
@@ -193,10 +219,11 @@ export class Dashboard implements OnInit {
         if (this.selectedReport) {
           this.deletReport(this.selectedReport?.id);
         }
+        this.toastService.show("delete user successfully", "success")
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Failed to delete user:', error);
+        this.toastService.show("Failed to delete user", "error");
         this.cdr.markForCheck();
       },
     });
@@ -219,10 +246,12 @@ export class Dashboard implements OnInit {
           }
         }
         this.closeModal();
+        this.toastService.show("ban user successfully", "success")
+
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Failed to ban user:', error);
+        this.toastService.show("Failed to ban user", "error");
         this.cdr.markForCheck();
       },
     });
@@ -242,25 +271,16 @@ export class Dashboard implements OnInit {
       next: () => {
         this.posts = this.posts.filter(p => p.id !== this.selectedPost!.id);
         this.closeModal();
+        this.toastService.show("delete post successfully", "success")
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Failed to delete post:', error);
+        this.toastService.show("Failed to delete post", "error");
         this.cdr.markForCheck();
       },
     });
   }
 
-  /*
-
-   openModal(): void {
-    this.showDeleteModal = true;
-    setTimeout(() => {
-      this.isModalOpen = true;
-    }, 10);
-  }
-
-  */
 
   // Report Actions
   openResolveReport(report: Report): void {
@@ -280,7 +300,7 @@ export class Dashboard implements OnInit {
     console.log("dismiss Current Report");
     if (!this.selectedReport) return;
     this.deletReport(this.selectedReport?.id);
-  
+
   }
   deletReport(id: string) {
     this.auth.deleteReports(id).subscribe({
@@ -356,14 +376,15 @@ export class Dashboard implements OnInit {
     );
   }
 
-  getFilteredPosts(): Post[] {
-    if (!this.searchTerm) return this.posts;
-    const term = this.searchTerm.toLowerCase();
-    return this.posts.filter(
-      p => p.title.toLowerCase().includes(term) ||
-        p.user.username.toLowerCase().includes(term)
-    );
-  }
+  // getFilteredPosts(): Post[] {
+  //   if (!this.searchTerm) return this.posts;
+  //   const term = this.searchTerm.toLowerCase();
+  //   const posts = this.posts.filter(
+  //     p => p.title.toLowerCase().includes(term) ||
+  //       p.user.username.toLowerCase().includes(term)
+  //   );
+  //   return posts;
+  // }
 
   getFilteredReports(): Report[] {
     if (!this.searchTerm) return this.reports;
@@ -371,5 +392,72 @@ export class Dashboard implements OnInit {
     return this.reports.filter(
       r => r.reportedUser?.username.toLowerCase().includes(term)
     );
+  }
+
+  private isLoadingMoreForFilter = false;
+  private minFilteredResults = 10;
+
+  getFilteredPosts(): Post[] {
+    if (!this.searchTerm) return this.posts;
+
+    const term = this.searchTerm.toLowerCase();
+    const filteredPosts = this.posts.filter(
+      p => 
+        p.user.username.toLowerCase().includes(term)
+    );
+
+    if (filteredPosts.length < this.minFilteredResults &&
+      this.hasMorePosts &&
+      !this.isLoadingPosts &&
+      !this.isLoadingMoreForFilter) {
+      this.isLoadingMoreForFilter = true;
+      this.loadMorePostsForFilter();
+    }
+
+    return filteredPosts;
+  }
+
+  private loadMorePostsForFilter(): void {
+    this.auth.getAllPosts(this.currentPage, this.pageSize).subscribe({
+      next: (postsPage) => {
+        if (postsPage && postsPage.content.length > 0) {
+          this.posts.push(...postsPage.content);
+          this.currentPage++;
+
+          if (this.currentPage >= postsPage.totalPages) {
+            this.hasMorePosts = false;
+          }
+
+          this.isLoadingMoreForFilter = false;
+          this.cdr.markForCheck();
+
+          // Check again if we need more posts
+          const filteredCount = this.getFilteredPostsCount();
+          if (filteredCount < this.minFilteredResults && this.hasMorePosts) {
+            this.loadMorePostsForFilter();
+          }
+        } else {
+          this.hasMorePosts = false;
+          this.isLoadingMoreForFilter = false;
+          this.cdr.markForCheck();
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load posts for filter:', error);
+        this.isLoadingMoreForFilter = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  // Helper method to count filtered posts without triggering another load
+  private getFilteredPostsCount(): number {
+    if (!this.searchTerm) return this.posts.length;
+
+    const term = this.searchTerm.toLowerCase();
+    return this.posts.filter(
+      p =>
+        p.user.username.toLowerCase().includes(term)
+    ).length;
   }
 }

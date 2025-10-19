@@ -21,10 +21,10 @@ export interface UpdatePostResult {
 }
 
 export interface UpdateProfileResult {
-  username: string;
-  bio: string
-  avatarFile?: File;
-  removeCurrentImage?: boolean;
+  user: User,
+  avatarFile: File;
+  removeCurrentImage: boolean;
+  error?: string
 }
 
 export interface NewPost {

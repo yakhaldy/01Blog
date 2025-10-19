@@ -66,8 +66,8 @@ Coche les cases `[x]` quand une tâche est terminée ✅
 
 ## 👤 Page Profil
 ### 🕓 À faire
-- [ ] 🔄 Mettre à jour les informations de l’utilisateur en temps réel dès qu’une modification est effectuée.
-- [ ] ✅ Afficher un message de succès ou d’erreur après la mise à jour des données du profil.
+- [x] 🔄 Mettre à jour les informations de l’utilisateur en temps réel dès qu’une modification est effectuée.
+- [x] ✅ Afficher un message de succès ou d’erreur après la mise à jour des données du profil.
 - [x] ♾️ Ajouter le défilement infini (Infinite Scroll) pour le chargement progressif des publications.
 
 
@@ -95,11 +95,11 @@ Coche les cases `[x]` quand une tâche est terminée ✅
 
 ## 📊 Tableau de Bord (Dashboard)
 ### 🕓 À faire
-- [ ] 🎨 Corriger le CSS pour assurer une mise en page harmonisée sur toutes les tailles d’écran (responsive design)
+- [x] 🎨 Corriger le CSS pour assurer une mise en page harmonisée sur toutes les tailles d’écran (responsive design)
 - [ ] 📢 Afficher les informations sur le nombre de signalements reçus pour chaque utilisateur
 - [ ] 🗑️ Ajouter la possibilité de supprimer une publication appartenant à l’utilisateur directement depuis le tableau de bord
-- [ ] 🔍 Corriger et améliorer la fonction de recherche afin d’obtenir des résultats plus précis et rapides
-- [ ] ♾️ Ajouter le défilement infini (Infinite Scroll) pour le chargement progressif des publications.
+- [x] 🔍 Corriger et améliorer la fonction de recherche afin d’obtenir des résultats plus précis et rapides
+- [x] ♾️ Ajouter le défilement infini (Infinite Scroll) pour le chargement progressif des publications.
 
 ### 🐞 Bugs
 - [ ]

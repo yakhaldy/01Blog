@@ -78,7 +78,7 @@ public class Profile {
         return ResponseEntity.ok(response);
     }
 
-    public void updateProfile(Authentication authentication, String username, String bio, String removeImage,
+    public User updateProfile(Authentication authentication, String username, String bio, String removeImage,
             MultipartFile avatarFile) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
@@ -109,6 +109,7 @@ public class Profile {
             user.setAvatar(null);
         }
         userRepository.save(user);
+        return user;
     }
 
     public void report(Authentication authentication, @RequestBody ReportRequest request) {

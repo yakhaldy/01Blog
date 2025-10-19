@@ -248,8 +248,8 @@ public class AuthController {
             @RequestPart(value = "bio", required = false) String bio,
             @RequestPart(value = "removeImage", required = false) String removeImage) {
         try {
-            profile.updateProfile(authentication, username, bio, removeImage, avatarFile);
-            return ResponseEntity.ok(Map.of("message", "update Profile successfully"));
+            User user = profile.updateProfile(authentication, username, bio, removeImage, avatarFile);
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

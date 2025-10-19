@@ -152,7 +152,7 @@
           <span  class="custom-tab-label">Posts</span>
         </ng-template>
 
-        <div class="tab-content">
+        <div class="tab-content" infiniteScroll [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
           <div *ngIf="isLoadingPosts" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
             <p class="loading-text">Loading posts...</p>
@@ -163,8 +163,8 @@
             <p>No posts found</p>
           </div>
 
-          <div class="data-grid" *ngIf="!isLoadingPosts && getFilteredPosts().length > 0">
-            <div class="data-card post-card" *ngFor="let post of getFilteredPosts()">
+          <div class="data-grid" *ngIf="getFilteredPosts().length > 0">
+            <div class="data-card post-card" *ngFor="let post of getFilteredPosts(); trackBy: trackByPostId">
               <div class="card-header">
                 <div class="user-info">
                   <img [src]="getImage(post.user.avatar) || 'assets/img/default-avatar.png'" [alt]="post.user.username"

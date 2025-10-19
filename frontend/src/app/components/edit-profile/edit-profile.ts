@@ -1,4 +1,4 @@
-import { Component, Inject,ChangeDetectionStrategy, ChangeDetectorRef  } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -46,7 +46,7 @@ export class EditProfile {
     avatarFile: undefined
   };
   isError: boolean = false;
-  errorback: string = ""; 
+  errorback: string = "";
   selectedFileName: string = '';
   currentAvatarUrl: string = '';
 
@@ -66,39 +66,45 @@ export class EditProfile {
     if (!this.isProfileValid) {
       return;
     }
-    
+
     const result = {
-      username: this.profileUpdate.username.trim(),
-      bio: this.profileUpdate.bio,
+      user: null,
       avatarFile: this.profileUpdate.avatarFile,
       removeCurrentImage: this.shouldRemoveCurrentAvatar()
     };
 
-     const updateData = new FormData();
-        updateData.append('username', result.username);
-        updateData.append('bio', result.bio);
+    const updateData = new FormData();
+    updateData.append('username', this.profileUpdate.username.trim());
+    updateData.append('bio', this.profileUpdate.bio);
 
-        if (result.avatarFile) {
-          updateData.append('avatarFile', result.avatarFile);
+    if (result.avatarFile) {
+      updateData.append('avatarFile', result.avatarFile);
+    }
+
+    if (result.removeCurrentImage) {
+      updateData.append('removeImage', 'true');
+    }
+
+    this.auth.updateProfile(updateData).subscribe({
+      next: (updateProfile) => {
+        result.user = updateProfile;
+        console.log("updateProfile :", updateProfile);
+        console.log("result :", result);
+
+        this.dialogRef.close(result);
+      },
+      error: (error) => {
+        console.log("==>", error.error);
+        this.isError = true;
+        this.errorback = error.error;
+        const  resultError = {
+          error: error
         }
+        this.dialogRef.close(resultError);
+        this.cdr.markForCheck();
+      }
+    });
 
-        if (result.removeCurrentImage) {
-          updateData.append('removeImage', 'true');
-        }
-
-        this.auth.updateProfile(updateData).subscribe({
-          next: (updateProfile) => {
-            console.log("updatePost :", updateProfile);
-            this.dialogRef.close(result);
-          },
-          error: (error) => {
-            console.log("==>",error.error);
-            this.isError = true;
-            this.errorback = error.error;
-            this.cdr.markForCheck();
-          }
-        });
-    
   }
 
   cancel() {
@@ -106,9 +112,9 @@ export class EditProfile {
   }
 
   get isProfileValid(): boolean {
-    return this.profileUpdate.username.trim().length > 0 && 
-           this.profileUpdate.username.length <= 30 &&
-           this.profileUpdate.bio.length <= 200;
+    return this.profileUpdate.username.trim().length > 0 &&
+      this.profileUpdate.username.length <= 30 &&
+      this.profileUpdate.bio.length <= 200;
   }
 
   get isUsernameLimitExceeded(): boolean {
@@ -128,11 +134,21 @@ export class EditProfile {
     if (file) {
       // Validate file type
       if (!isValidMediaType(file)) {
-        alert('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).');
+        this.isError = true;
+        this.errorback = 'Invalid file type. Please select an image (JPEG, PNG, GIF)'
+        setTimeout(()=>{
+           this.isError = false;
+           this.cdr.markForCheck();
+        },1000)
+        
         return;
       }
       if (!isValidMediaSize(file)) {
-        alert('File size exceeds 10MB limit.');
+        this.isError = true;
+        this.errorback = 'File size exceeds 10MB limit.'
+        setTimeout(()=>{
+           this.isError = false;
+        },100)
         return;
       }
 
@@ -144,7 +160,7 @@ export class EditProfile {
   removeAvatarFile(): void {
     this.profileUpdate.avatarFile = undefined;
     this.selectedFileName = '';
-    
+
     // Clear the file input
     const fileInput = document.getElementById('avatarInput') as HTMLInputElement;
     if (fileInput) {
@@ -164,4 +180,8 @@ export class EditProfile {
   hasNewFile(): boolean {
     return !!this.selectedFileName && this.selectedFileName.length > 0;
   }
+  getImage(path: string | undefined): string | undefined {
+    return this.auth.getImage(path)
+  }
 }
+

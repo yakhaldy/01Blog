@@ -17,6 +17,7 @@ import { Navbar } from '../components/navbar/navbar';
 import { User, Post, UpdatePostResult, UpdateProfileResult } from '../model/model'
 import { Auth } from '../service/auth'
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { ToastService } from '../service/toast-service';
 
 
 @Component({
@@ -57,6 +58,7 @@ export class Profile implements OnInit {
     private auth: Auth,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
+    private toastService: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -118,8 +120,8 @@ export class Profile implements OnInit {
     this.auth.getPostsUser(username, this.currentPage, this.pageSize).subscribe({
       next: (postsPage) => {
         // this.posts = posts
-        
-          if (postsPage && postsPage.content.length > 0) {
+
+        if (postsPage && postsPage.content.length > 0) {
           this.posts.push(...postsPage.content);
           this.currentPage++;
           if (this.currentPage >= postsPage.totalPages) {
@@ -161,7 +163,7 @@ export class Profile implements OnInit {
     this.auth.getMyPosts(this.currentPage, this.pageSize).subscribe({
       next: (postsPage) => {
         // this.posts = posts
-                console.log("<=====>",postsPage);
+        console.log("<=====>", postsPage);
 
         if (postsPage && postsPage.content.length > 0) {
           this.posts.push(...postsPage.content);
@@ -191,11 +193,11 @@ export class Profile implements OnInit {
 
   onScroll(): void {
     console.log(".............................onScroll.......................");
-    if (this.isOwnProfile){
+    if (this.isOwnProfile) {
       this.loadCurrentUserPosts();
-    }else {
+    } else {
       if (this.profileUser)
-      this.loadUserPosts(this.profileUser.username)
+        this.loadUserPosts(this.profileUser.username)
     }
   }
 
@@ -226,9 +228,22 @@ export class Profile implements OnInit {
       autoFocus: true
     });
 
-    // dialogRef.afterClosed().subscribe((result: UpdateProfileResult) => {
+    dialogRef.afterClosed().subscribe((result: UpdateProfileResult) => {
+      console.log("***", result);
+      if (result?.error) {
+        this.toastService.show("Failed to edit profile", "error");
+        this.cdr.markForCheck();
+        return;
+      }
+      if (this.profileUser) {
+        this.profileUser.avatar = result.user.avatar;
+        this.profileUser.bio = result.user.bio;
+        this.profileUser.username = result.user.username
+        this.cdr.markForCheck();
+      }
+      this.toastService.show("edit profile successfully", "success")
 
-    // });
+    });
   }
 
   commentPoste(id: number): void {
@@ -302,11 +317,11 @@ export class Profile implements OnInit {
       next: () => {
 
         this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
+        this.toastService.show("Post deleted successfully", "success")
         this.cdr.markForCheck();
       },
       error: (error) => {
-
-        console.error('Failed to delete Post:', error);
+        this.toastService.show("Failed to delete Post", "error")
         this.cdr.markForCheck();
       }
     });
@@ -348,10 +363,11 @@ export class Profile implements OnInit {
             if (index !== -1) {
               this.posts[index] = updatedPost;
             }
+            this.toastService.show("Post update successfully", "success")
             this.cdr.markForCheck();
           },
           error: (error) => {
-
+            this.toastService.show("Failed to update Post", "error")
           }
         });
       }
@@ -365,7 +381,6 @@ export class Profile implements OnInit {
     return this.auth.getImage(path)
   }
   goToPost(id: number): void {
-    console.log('go to post', id);
     this.router.navigate([`post/${id}`]);
   }
 
@@ -390,6 +405,7 @@ export class Profile implements OnInit {
 
         this.showReportPopup = false;
         this.reportReason = '';
+        this.toastService.show("Report submitted successfully", "success")
         this.cdr.markForCheck();
 
       },
@@ -397,6 +413,7 @@ export class Profile implements OnInit {
         console.error('Report failed:', error);
         this.errorReport = error.error.error;
         this.isErrorReport = true;
+        this.toastService.show("Failed to Report Profile", "error")
         this.cdr.markForCheck();
       }
     });
