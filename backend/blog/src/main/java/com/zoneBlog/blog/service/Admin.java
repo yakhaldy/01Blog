@@ -3,9 +3,11 @@ package com.zoneBlog.blog.service;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.zoneBlog.blog.model.Report;
 import com.zoneBlog.blog.model.User;
@@ -15,75 +17,168 @@ import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
 
 @Service
+@Transactional
 public class Admin {
 
-    @Autowired
-    private ReportRepository reportRepository;
+    private static final String ADMIN_ROLE = "ROLE_ADMIN";
+    private static final String PENDING_STATUS = "pending";
 
-    @Autowired
-    private PostRepository postRepository;
+    private final ReportRepository reportRepository;
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
+    private final Helper helper;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CommentRepository commentRepository;
-
- 
-
-    public List<Report> getReports(Authentication authentication) {
-        return reportRepository.findAll();
+    public Admin(ReportRepository reportRepository, PostRepository postRepository,
+            UserRepository userRepository, CommentRepository commentRepository, Helper helper) {
+        this.reportRepository = reportRepository;
+        this.postRepository = postRepository;
+        this.userRepository = userRepository;
+        this.commentRepository = commentRepository;
+        this.helper = helper;
     }
 
-    public Map<String, Long> getDashboardStats(Authentication authentication) {
-        Map<String, Long> dashboardStats = new HashMap<String, Long>();
-
-        Long totalUsers = userRepository.count();
-        dashboardStats.put("totalUsers", totalUsers);
-        Long totalPosts = postRepository.count();
-        dashboardStats.put("totalPosts", totalPosts);
-        Long totalReports = reportRepository.count();
-        dashboardStats.put("totalReports", totalReports);
-        Long bannedUsers = userRepository.countByIsBanned(true);
-        dashboardStats.put("bannedUsers", bannedUsers);
-        Long activeReports = reportRepository.countByStatus("pending");
-        dashboardStats.put("activeReports", activeReports);
-
-        return dashboardStats;
-    }
-
-
-    public void deleteUser(Authentication authentication, Long id){
-        User user = userRepository.findById(id).orElse(null);
-         if (user == null) {
-            throw new RuntimeException("User not found");
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getReports(Authentication authentication) {
+        try {
+            validateAdminAccess(authentication);
+            List<Report> reports = reportRepository.findAll();
+            return ResponseEntity.ok(reports);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
         }
-        // commentRepository.deleteByUser_Id(user.getId());
-        userRepository.delete(user);
     }
 
-    public User banUser(Authentication authentication, Long id){
-         User user = userRepository.findById(id).orElse(null);
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getDashboardStats(Authentication authentication) {
+        try {
+            validateAdminAccess(authentication);
+            Map<String, Long> dashboardStats = new HashMap<>();
+            dashboardStats.put("totalUsers", userRepository.count());
+            dashboardStats.put("totalPosts", postRepository.count());
+            dashboardStats.put("totalReports", reportRepository.count());
+            dashboardStats.put("bannedUsers", userRepository.countByIsBanned(true));
+            dashboardStats.put("activeReports", reportRepository.countByStatus(PENDING_STATUS));
+
+            return ResponseEntity.ok(dashboardStats);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
+    }
+
+    public ResponseEntity<?> deleteUser(Authentication authentication, Long id) {
+
+        try {
+            validateAdminAccess(authentication);
+
+            User user = getUserOrThrow(id);
+
+            if (ADMIN_ROLE.equals(user.getRole())) {
+                throw new IllegalStateException("Admin users cannot be deleted");
+            }
+
+            userRepository.delete(user);
+            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
+    }
+
+    public ResponseEntity<?> banUser(Authentication authentication, Long id) {
+        try {
+            validateAdminAccess(authentication);
+
+            User user = getUserOrThrow(id);
+
+            if (ADMIN_ROLE.equals(user.getRole())) {
+                throw new IllegalStateException("Admin users cannot be banned");
+            }
+
+            boolean currentBanStatus = Boolean.TRUE.equals(user.getIsBanned());
+            user.setIsBanned(!currentBanStatus);
+
+            if (!currentBanStatus) {
+                user.setBannedAt(LocalDateTime.now());
+            } else {
+                user.setBannedAt(null);
+            }
+
+            userRepository.save(user);
+            return ResponseEntity.ok(user);
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
+    }
+
+    public ResponseEntity<?> deleteReport(Authentication authentication, Long id) {
+        try {
+            validateAdminAccess(authentication);
+
+            Report report = reportRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Report not found"));
+
+            reportRepository.delete(report);
+            return ResponseEntity.ok(Map.of("message", "Report deleted successfully"));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
+    }
+
+    private void validateAdminAccess(Authentication authentication) {
+        User user = helper.getCurrentUser(authentication);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
-        if (user.getIsBanned()){
-            user.setIsBanned(false);
-        }else {
-            user.setIsBanned(true);
-            user.setBannedAt(LocalDateTime.now());
+        if (!ADMIN_ROLE.equals(user.getRole())) {
+            throw new SecurityException("Admin access required");
         }
-
-        userRepository.save(user);
-        return user;
     }
 
-    public void deleteReport(Authentication authentication, Long id){
-        Report report = reportRepository.findById(id).orElse(null);
-        if (report == null){
-            throw new RuntimeException("report not found");
-
-        }
-        reportRepository.delete(report);
+    private User getUserOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

@@ -376,15 +376,6 @@ export class Dashboard implements OnInit {
     );
   }
 
-  // getFilteredPosts(): Post[] {
-  //   if (!this.searchTerm) return this.posts;
-  //   const term = this.searchTerm.toLowerCase();
-  //   const posts = this.posts.filter(
-  //     p => p.title.toLowerCase().includes(term) ||
-  //       p.user.username.toLowerCase().includes(term)
-  //   );
-  //   return posts;
-  // }
 
   getFilteredReports(): Report[] {
     if (!this.searchTerm) return this.reports;

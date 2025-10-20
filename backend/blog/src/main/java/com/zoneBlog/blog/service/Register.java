@@ -2,72 +2,110 @@ package com.zoneBlog.blog.service;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.zoneBlog.blog.dataTransferObj.RegisterRequest;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.UserRepository;
 
-import org.springframework.stereotype.Service;
-
 @Service
-public class Register  {
+public class Register {
 
-  @Autowired
-    private UserRepository userRepository;
+    private static final String DEFAULT_USER_ROLE = "ROLE_USER";
+    private static final int MIN_PASSWORD_LENGTH = 6;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-    try {
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.status(400).body(Map.of("error", "Email is required"));
-        }
-        
-        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
-            return ResponseEntity.status(400).body(Map.of("error", "Username is required"));
-        }
-        
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            return ResponseEntity.status(400).body(Map.of("error", "Password is required"));
-        }
-        
-        if (request.getConfirmPassword() == null || request.getConfirmPassword().trim().isEmpty()) {
-            return ResponseEntity.status(400).body(Map.of("error", "Confirm password is required"));
-        }
-        
-        // Check for existing users
-        if (userRepository.findByEmail(request.getEmail().trim()).isPresent()) {
-            return ResponseEntity.status(400).body(Map.of("error", "Email already exists!"));
-        }
-        
-        if (userRepository.findByUsername(request.getUsername().trim()).isPresent()) {
-            return ResponseEntity.status(400).body(Map.of("error", "Username already exists!"));
-        }
-        
-        // Check password match
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return ResponseEntity.status(400).body(Map.of("error", "Passwords do not match"));
-        }
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-        // Create and save user
-        User user = new User();
-        user.setUsername(request.getUsername().trim());
-        user.setEmail(request.getEmail().trim());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole("ROLE_USER");
-
-        userRepository.save(user);
-
-        return ResponseEntity.ok(Map.of("message", "Register successful!"));
-        
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(500).body(Map.of("error", "Internal server error: " + e.getMessage()));
+    public Register(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
-}
+
+    @Transactional
+    public ResponseEntity<?> register(RegisterRequest request) {
+        try {
+            validateRegistrationRequest(request);
+
+            String email = request.getEmail().trim();
+            String username = request.getUsername().trim();
+
+            
+            checkExistingUser(email, username);
+
+            
+            validatePasswordMatch(request.getPassword(), request.getConfirmPassword());
+
+           
+            User user = createUser(username, email, request.getPassword());
+            userRepository.save(user);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Registration successful"));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
+    }
+
+
+    private void validateRegistrationRequest(RegisterRequest request) {
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new IllegalArgumentException("Username is required");
+        }
+
+        if (request.getPassword() == null || request.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password is required");
+        }
+
+        if (request.getPassword().length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("Password must be at least " + MIN_PASSWORD_LENGTH + " characters");
+        }
+
+        if (request.getConfirmPassword() == null || request.getConfirmPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password confirmation is required");
+        }
+    }
+
+    private void checkExistingUser(String email, String username) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+    }
+
+    private void validatePasswordMatch(String password, String confirmPassword) {
+        if (!password.equals(confirmPassword)) {
+            throw new RuntimeException("Passwords do not match");
+        }
+    }
+
+    private User createUser(String username, String email, String password) {
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole(DEFAULT_USER_ROLE);
+        user.setIsBanned(false);
+        return user;
+    }
 }

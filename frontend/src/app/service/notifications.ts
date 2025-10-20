@@ -84,10 +84,10 @@ export class Notifications implements OnDestroy {
         this.notificationSubject.error(error);
 
         // Attempt to reconnect after 5 seconds
-        setTimeout(() => {
-          console.log('🔄 Attempting to reconnect...');
-          this.connect();
-        }, 100);
+        // setTimeout(() => {
+        //   console.log('🔄 Attempting to reconnect...');
+        //   this.connect();
+        // }, 100);
       }
       // For network errors, EventSource will auto-reconnect
     };

@@ -120,7 +120,7 @@ export class Auth {
 
   getPostComments(postId: number): Observable<Comment[]> {
     if (!this.isBrowser) return EMPTY;
-    return this.http.get<Comment[]>(`${this.apiUrl}/posts/getComment${postId}`,)
+    return this.http.get<Comment[]>(`${this.apiUrl}/posts/getComment/${postId}`,)
   }
 
 

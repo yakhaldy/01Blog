@@ -1,85 +1,60 @@
 package com.zoneBlog.blog.controller;
 
-import com.zoneBlog.blog.dataTransferObj.CommentRequest;
-import com.zoneBlog.blog.dataTransferObj.LoginRequest;
-import com.zoneBlog.blog.dataTransferObj.PostRequest;
-import com.zoneBlog.blog.dataTransferObj.RegisterRequest;
-import com.zoneBlog.blog.dataTransferObj.ReportRequest;
-import com.zoneBlog.blog.model.Comment;
-import com.zoneBlog.blog.model.Post;
-import com.zoneBlog.blog.model.Report;
-import com.zoneBlog.blog.model.User;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.zoneBlog.blog.dataTransferObj.*;
+import com.zoneBlog.blog.model.*;
+import com.zoneBlog.blog.service.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.core.Authentication;
-
-import com.zoneBlog.blog.service.Login;
-import com.zoneBlog.blog.service.NotificationService;
-import com.zoneBlog.blog.service.Register;
-import com.zoneBlog.blog.service.Profile;
-import com.zoneBlog.blog.service.Posts;
-import com.zoneBlog.blog.service.Users;
-import com.zoneBlog.blog.service.Admin;
-import com.zoneBlog.blog.service.Helper;
-import com.zoneBlog.blog.model.Notification;
-
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-
-
-
 
 import java.util.List;
-
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
-    @Autowired
-    private Helper helper;
 
-    @Autowired
-    private Register r;
+    private final Login loginService;
+    private final Register registerService;
+    private final Profile profileService;
+    private final Posts postsService;
+    private final Users usersService;
+    private final Admin adminService;
+    private final NotificationService notificationService;
 
-    @PostMapping("/register")
-    private ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        return r.register(request);
+    public AuthController(Login loginService, Register registerService, Profile profileService,
+            Posts postsService, Users usersService, Admin adminService,
+            NotificationService notificationService) {
+        this.loginService = loginService;
+        this.registerService = registerService;
+        this.profileService = profileService;
+        this.postsService = postsService;
+        this.usersService = usersService;
+        this.adminService = adminService;
+        this.notificationService = notificationService;
     }
-
-    @Autowired
-    private Login l;
 
     @PostMapping("/login")
-    private ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        // return l.login(request);
-        try {
-            Map<String, Object> response = l.login(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        return loginService.login(request);
     }
 
-    @Autowired
-    private Profile profile;
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        return registerService.register(request);
+    }
 
     @GetMapping("/profile")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        return profile.getCurrentUser(authentication);
-
+        return profileService.getCurrentUser(authentication);
     }
-
-    @Autowired
-    private Posts Posts;
 
     @PostMapping(value = "/posts", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
@@ -91,37 +66,47 @@ public class AuthController {
             PostRequest request = new PostRequest();
             request.setDescription(description);
             request.setTitle(title);
-            Post post = Posts.createPost(authentication, request, mediaFile);
-            return ResponseEntity.ok(post);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to create post: " + e.getMessage()));
+            Post post = postsService.createPost(authentication, request, mediaFile);
+            return ResponseEntity.status(HttpStatus.CREATED).body(post);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/posts")
-    public ResponseEntity<?> getPosts(Authentication authentication, @RequestParam("page") int page,
-            @RequestParam("size") int size) {
+    public ResponseEntity<?> getPosts(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-            Page<Post> posts = Posts.getPosts(authentication,pageable);
+            Page<Post> posts = postsService.getPosts(authentication, pageable);
             return ResponseEntity.ok(posts);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get  posts: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/posts/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
         try {
-            Posts.deletePost(id, authentication);
+            postsService.deletePost(id, authentication);
             return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to delete post: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PatchMapping("/posts/{id}")
-    public ResponseEntity<?> updatePost(@PathVariable Long id, Authentication authentication,
+    public ResponseEntity<?> updatePost(
+            @PathVariable Long id,
+            Authentication authentication,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile,
             @RequestPart("description") String description,
             @RequestPart("title") String title,
@@ -130,231 +115,223 @@ public class AuthController {
             PostRequest request = new PostRequest();
             request.setDescription(description);
             request.setTitle(title);
-            Post post = Posts.updatePost(id, authentication, request, mediaFile, removeImage);
+            Post post = postsService.updatePost(id, authentication, request, mediaFile, removeImage);
             return ResponseEntity.ok(post);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to update post: " + e.getMessage()));
-
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PostMapping("/posts/like")
     public ResponseEntity<?> likePost(@RequestBody PostRequest request, Authentication authentication) {
         try {
-            Post post = Posts.likePost(request.getPostId(), authentication);
+            Post post = postsService.likePost(request.getPostId(), authentication);
             return ResponseEntity.ok(post);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to like post: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/posts/CurrentUserPost")
-    public ResponseEntity<?> getMyPosts(Authentication authentication,@RequestParam("page") int page,
-            @RequestParam("size") int size) {
+    public ResponseEntity<?> getMyPosts(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            // List<Post> posts = Posts.getMyPosts(authentication);
-             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-            Page<Post> posts = Posts.getMyPosts(authentication,pageable);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+            Page<Post> posts = postsService.getMyPosts(authentication, pageable);
             return ResponseEntity.ok(posts);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/posts/{username}")
-    public ResponseEntity<?> getPostsUser(Authentication authentication, @PathVariable String username,@RequestParam("page") int page,
-            @RequestParam("size") int size) {
+    public ResponseEntity<?> getPostsUser(
+            Authentication authentication,
+            @PathVariable String username,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            // List<Post> posts = Posts.getPostsUser(authentication, username);
-
-              Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-            Page<Post> posts = Posts.getPostsUser(authentication,username,pageable);
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+            Page<Post> posts = postsService.getPostsUser(authentication, username, pageable);
             return ResponseEntity.ok(posts);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get all posts: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PostMapping("/posts/comment")
     public ResponseEntity<?> createComment(Authentication authentication, @RequestBody CommentRequest request) {
         try {
-            Comment comment = Posts.createComment(authentication, request.getContent(), request.getPostId());
-            return ResponseEntity.ok(comment);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to Comment post: " + e.getMessage()));
+            Comment comment = postsService.createComment(authentication, request.getContent(), request.getPostId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @GetMapping("/posts/getComment{postId}")
+    @GetMapping("/posts/getComment/{postId}")
     public ResponseEntity<?> getPostComments(Authentication authentication, @PathVariable Long postId) {
         try {
-            List<Comment> comments = Posts.getPostComments(authentication, postId);
+            List<Comment> comments = postsService.getPostComments(authentication, postId);
             return ResponseEntity.ok(comments);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to Comment post: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PatchMapping("/posts/comment/{commentId}")
-    public ResponseEntity<?> updateComment(Authentication authentication, @PathVariable Long commentId,
+    public ResponseEntity<?> updateComment(
+            Authentication authentication,
+            @PathVariable Long commentId,
             @RequestBody CommentRequest request) {
         try {
-            Comment comment = Posts.updateComment(authentication, commentId, request);
+            Comment comment = postsService.updateComment(authentication, commentId, request);
             return ResponseEntity.ok(comment);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @DeleteMapping("/posts/comment/{commentId}")
     public ResponseEntity<?> deleteComment(Authentication authentication, @PathVariable Long commentId) {
         try {
-            Posts.deleteComment(authentication, commentId);
-            return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to  update Comment : " + e.getMessage()));
+            postsService.deleteComment(authentication, commentId);
+            return ResponseEntity.ok(Map.of("message", "Comment deleted successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @Autowired
-    private Users user;
-
-    @GetMapping("users")
+    @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(Authentication authentication) {
         try {
-            List<Map<String, Object>> response = user.getAllUsers(authentication);
-
+            List<Map<String, Object>> response = usersService.getAllUsers(authentication);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get users: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @PostMapping("users/follow")
+    @PostMapping("/users/follow")
     public ResponseEntity<?> follow(Authentication authentication, @RequestBody Map<String, Long> payload) {
         try {
             Long userId = payload.get("userId");
-            user.follow(authentication, userId);
-            return ResponseEntity.ok(Map.of("message", "follow user successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to follow user: " + e.getMessage()));
+            usersService.follow(authentication, userId);
+            return ResponseEntity.ok(Map.of("message", "User followed successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @PostMapping("profile")
-    public ResponseEntity<?> updateProfile(Authentication authentication,
+    @PostMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            Authentication authentication,
             @RequestPart(value = "avatarFile", required = false) MultipartFile avatarFile,
             @RequestPart("username") String username,
             @RequestPart(value = "bio", required = false) String bio,
             @RequestPart(value = "removeImage", required = false) String removeImage) {
         try {
-            User user = profile.updateProfile(authentication, username, bio, removeImage, avatarFile);
+            User user = profileService.updateProfile(authentication, username, bio, removeImage, avatarFile);
             return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @GetMapping("profile/{username}")
+    @GetMapping("/profile/{username}")
     public ResponseEntity<?> getInfoUser(Authentication authentication, @PathVariable String username) {
         try {
-            return profile.getInfoUser(authentication, username);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
+            return profileService.getInfoUser(authentication, username);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @PostMapping("profile/report")
+    @PostMapping("/profile/report")
     public ResponseEntity<?> report(Authentication authentication, @RequestBody ReportRequest request) {
         try {
-            profile.report(authentication, request);
-            return ResponseEntity.ok(Map.of("message", "report Profile successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get info  user: " + e.getMessage()));
+            profileService.report(authentication, request);
+            return ResponseEntity.ok(Map.of("message", "Profile reported successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @GetMapping("post/{id}")
+    @GetMapping("/post/{id}")
     public ResponseEntity<?> getPost(Authentication authentication, @PathVariable Long id) {
         try {
-            Post posts = Posts.getPost(authentication, id);
-            return ResponseEntity.ok(posts);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get post: " + e.getMessage()));
+            Post post = postsService.getPost(authentication, id);
+            return ResponseEntity.ok(post);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
-    @Autowired
-    private Admin Admin;
-
-    @GetMapping("admin/getReports")
+    @GetMapping("/admin/getReports")
     public ResponseEntity<?> getReports(Authentication authentication) {
-        try {
-            List<Report> reports = Admin.getReports(authentication);
-            return ResponseEntity.ok(reports);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Failed to get reports: " + e.getMessage()));
-        }
+        return adminService.getReports(authentication);
     }
 
-    @GetMapping("admin/dashboardStats")
+    @GetMapping("/admin/dashboardStats")
     public ResponseEntity<?> getDashboardStats(Authentication authentication) {
-        try {
-            Map<String, Long> dashboardStats = Admin.getDashboardStats(authentication);
-            return ResponseEntity.ok(dashboardStats);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Failed to get Dashboard Stats: " + e.getMessage()));
-        }
+        return adminService.getDashboardStats(authentication);
     }
 
-    @DeleteMapping("admin/deleteUser/{id}")
+    @DeleteMapping("/admin/deleteUser/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id, Authentication authentication) {
-        try {
-            Admin.deleteUser(authentication, id);
-            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Failed to deleted user: " + e.getMessage()));
-        }
+        return adminService.deleteUser(authentication, id);
     }
 
-    @PostMapping("admin/banUser")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/banUser")
     public ResponseEntity<?> banUser(Authentication authentication, @RequestBody Map<String, Long> payload) {
-        try {
-            Long userId = payload.get("userId");
-            User user = Admin.banUser(authentication, userId);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Failed to ban User: " + e.getMessage()));
-        }
+        Long userId = payload.get("userId");
+        return adminService.banUser(authentication, userId);
     }
 
     @DeleteMapping("/admin/report/{id}")
     public ResponseEntity<?> deleteReport(Authentication authentication, @PathVariable Long id) {
-        try {
-            Admin.deleteReport(authentication, id);
-            return ResponseEntity.ok(Map.of("message", "report deleted successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Failed to deleted Report: " + e.getMessage()));
-        }
+        return adminService.deleteReport(authentication, id);
     }
 
-    @Autowired
-    private NotificationService Notification;
-
-    @GetMapping("notification")
-    public ResponseEntity<?> getnotification(Authentication authentication) {
+    @GetMapping("/notification")
+    public ResponseEntity<?> getNotifications(Authentication authentication) {
         try {
-            List<Notification> notifications = Notification.getNotifications(authentication);
+            List<Notification> notifications = notificationService.getNotifications(authentication);
             return ResponseEntity.ok(notifications);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Failed get notifications: " + e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
-
 }

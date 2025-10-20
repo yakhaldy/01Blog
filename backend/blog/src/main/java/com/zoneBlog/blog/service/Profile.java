@@ -1,16 +1,12 @@
 package com.zoneBlog.blog.service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.zoneBlog.blog.dataTransferObj.ReportRequest;
@@ -19,49 +15,80 @@ import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.FollowRepository;
 import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
-import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class Profile {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private FollowRepository followRepository;
-    @Autowired
-    private ReportRepository reportRepository;
-    @Autowired
-    private Helper helper;
+    private static final int MAX_USERNAME_LENGTH = 30;
+    private static final int MAX_BIO_LENGTH = 200;
+    private static final String PENDING_STATUS = "pending";
 
+    private final UserRepository userRepository;
+    private final FollowRepository followRepository;
+    private final ReportRepository reportRepository;
+    private final Helper helper;
+
+    public Profile(UserRepository userRepository, FollowRepository followRepository,
+                  ReportRepository reportRepository, Helper helper) {
+        this.userRepository = userRepository;
+        this.followRepository = followRepository;
+        this.reportRepository = reportRepository;
+        this.helper = helper;
+    }
+
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        User user = helper.getCurrentUser(authentication);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("username", user.getUsername());
-        response.put("email", user.getEmail());
-        response.put("role", user.getRole());
-        response.put("bio", user.getBio());
-        response.put("avatar", user.getAvatar());
-        response.put("followingCount", user.getFollowing());
-        response.put("followersCount", user.getFollowers());
-
-        // return ResponseEntity.status(403).body(Map.of("error", "test error"));
-        return ResponseEntity.ok(response);
+        User user = getUserOrThrow(authentication);
+        return ResponseEntity.ok(buildUserResponse(user, null));
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getInfoUser(Authentication authentication, String username) {
-        User currentUser = helper.getCurrentUser(authentication);
-        if (currentUser == null) {
-            throw new RuntimeException("User not found");
-        }
-        User user = userRepository.findByUsername(username).orElse(null);
+        User currentUser = getUserOrThrow(authentication);
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
+            currentUser.getId(), user.getId()
+        );
+
+        return ResponseEntity.ok(buildUserResponse(user, isFollowing));
+    }
+
+    public User updateProfile(Authentication authentication, String username, String bio, 
+                            String removeImage, MultipartFile avatarFile) {
+        User user = getUserOrThrow(authentication);
+
+        validateAndUpdateUsername(user, username);
+        validateAndUpdateBio(user, bio);
+        handleAvatarUpdate(user, avatarFile, removeImage);
+
+        return userRepository.save(user);
+    }
+
+    public void report(Authentication authentication, ReportRequest request) {
+        User currentUser = getUserOrThrow(authentication);
+        User reportedUser = userRepository.findById(request.getReportedUserId())
+            .orElseThrow(() -> new RuntimeException("Reported user not found"));
+
+        validateReport(currentUser, reportedUser);
+
+        Report report = createReport(currentUser, reportedUser, request.getReportReason());
+        reportRepository.save(report);
+    }
+
+    // Private helper methods
+
+    private User getUserOrThrow(Authentication authentication) {
+        User user = helper.getCurrentUser(authentication);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
+        return user;
+    }
+
+    private Map<String, Object> buildUserResponse(User user, Boolean isFollowing) {
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
         response.put("username", user.getUsername());
@@ -71,72 +98,75 @@ public class Profile {
         response.put("avatar", user.getAvatar());
         response.put("followingCount", user.getFollowing());
         response.put("followersCount", user.getFollowers());
-        boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(currentUser.getId(),
-                user.getId());
-        response.put("isfollowing", isFollowing);
 
-        return ResponseEntity.ok(response);
+        if (isFollowing != null) {
+            response.put("isfollowing", isFollowing);
+        }
+
+        return response;
     }
 
-    public User updateProfile(Authentication authentication, String username, String bio, String removeImage,
-            MultipartFile avatarFile) {
-        User user = helper.getCurrentUser(authentication);
-        if (user == null) {
-            throw new RuntimeException("User not found");
+    private void validateAndUpdateUsername(User user, String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new RuntimeException("Username cannot be empty");
         }
-        if (userRepository.existsByUsername(username) && !username.equals(user.getUsername())) {
-            throw new RuntimeException("Username already exists!");
-        }
-        if (username.length() > 30) {
-            throw new RuntimeException("Username exceeds maximum character limit");
-        }
-        if (bio != null) {
-            bio = bio.replaceAll("\r\n", "\n");
-            if (bio.length() > 200) {
-                throw new RuntimeException("Bio exceeds maximum character limit");
-            }
-            user.setBio(bio);
-        }
-        user.setUsername(username);
 
+        String trimmedUsername = username.trim();
+
+        if (trimmedUsername.length() > MAX_USERNAME_LENGTH) {
+            throw new RuntimeException("Username cannot exceed " + MAX_USERNAME_LENGTH + " characters");
+        }
+
+        // Check if username exists and is not the current user's username
+        if (!trimmedUsername.equals(user.getUsername()) && 
+            userRepository.existsByUsername(trimmedUsername)) {
+            throw new RuntimeException("Username already exists");
+        }
+
+        user.setUsername(trimmedUsername);
+    }
+
+    private void validateAndUpdateBio(User user, String bio) {
+        // if (bio == null) {
+        //     return;
+        // }
+
+        String normalizedBio = bio.replaceAll("\r\n", "\n").trim();
+
+        if (normalizedBio.length() > MAX_BIO_LENGTH) {
+            throw new RuntimeException("Bio cannot exceed " + MAX_BIO_LENGTH + " characters");
+        }
+
+        user.setBio(normalizedBio);
+    }
+
+    private void handleAvatarUpdate(User user, MultipartFile avatarFile, String removeImage) {
         if (avatarFile != null && !avatarFile.isEmpty()) {
             helper.deleteOldMediaFile(user.getAvatar());
             String mediaPath = helper.handleFileUpload(avatarFile);
             user.setAvatar(mediaPath);
-        }
-        if (removeImage != null && removeImage.equals("true")) {
+        } else if ("true".equals(removeImage)) {
             helper.deleteOldMediaFile(user.getAvatar());
             user.setAvatar(null);
         }
-        userRepository.save(user);
-        return user;
     }
 
-    public void report(Authentication authentication, @RequestBody ReportRequest request) {
-        User currentUser = helper.getCurrentUser(authentication);
-        if (currentUser == null) {
-            throw new RuntimeException("User not found");
-        }
-        User reportedUser = userRepository.findById(request.getReportedUserId()).orElse(null);
-        if (reportedUser == null) {
-            throw new RuntimeException("reported User not found");
+    private void validateReport(User reporter, User reportedUser) {
+        if (reporter.getId().equals(reportedUser.getId())) {
+            throw new IllegalArgumentException("You cannot report yourself");
         }
 
-        if (currentUser.getId().equals(reportedUser.getId())) {
-            throw new IllegalArgumentException("You cannot report yourself.");
+        if (reportRepository.existsByReportedUserAndReportedBy(reportedUser, reporter)) {
+            throw new RuntimeException("You have already reported this user");
         }
-        if (reportRepository.existsByReportedUserAndReportedBy(reportedUser, currentUser)) {
-            throw new RuntimeException("You have already reported this user.");
-        }
+    }
 
+    private Report createReport(User reporter, User reportedUser, String reason) {
         Report report = new Report();
         report.setReportedUser(reportedUser);
-        report.setReportedBy(currentUser);
-        report.setReportReason(request.getReportReason());
-        report.setStatus("pending");
-
-        reportRepository.save(report);
-
+        report.setReportedBy(reporter);
+        report.setReportReason(reason);
+        report.setStatus(PENDING_STATUS);
+        return report;
     }
-    
 }

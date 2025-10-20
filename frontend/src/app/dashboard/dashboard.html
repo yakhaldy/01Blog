@@ -148,8 +148,8 @@
       <!-- Posts Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon class="custom-tab-icon" >article</mat-icon>
-          <span  class="custom-tab-label">Posts</span>
+          <mat-icon class="custom-tab-icon">article</mat-icon>
+          <span class="custom-tab-label">Posts</span>
         </ng-template>
 
         <div class="tab-content" infiniteScroll [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
@@ -211,7 +211,7 @@
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon class="custom-tab-icon">report</mat-icon>
-          <span  class="custom-tab-label">Reports</span>
+          <span class="custom-tab-label">Reports</span>
         </ng-template>
 
         <div class="tab-content">
@@ -331,6 +331,10 @@
                 <mat-icon>people</mat-icon>
                 <span>{{ selectedReportedUser.followersCount || 0 }} followers</span>
               </div>
+              <!-- <div class="modal-stat">
+                <mat-icon>report</mat-icon>
+                <span>{{ selectedReportedUser.reportCount || 0 }} report</span>
+              </div> -->
             </div>
           </div>
         </div>
