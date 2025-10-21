@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +34,9 @@ public class Users {
     private final NotificationService notificationService;
 
     public Users(UserRepository userRepository, FollowRepository followRepository,
-                PostRepository postRepository, ReportRepository reportRepository,
-                NotificationRepository notificationRepository, Helper helper,
-                NotificationService notificationService) {
+            PostRepository postRepository, ReportRepository reportRepository,
+            NotificationRepository notificationRepository, Helper helper,
+            NotificationService notificationService) {
         this.userRepository = userRepository;
         this.followRepository = followRepository;
         this.postRepository = postRepository;
@@ -45,40 +47,60 @@ public class Users {
     }
 
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> getAllUsers(Authentication authentication) {
-        User currentUser = getUserOrThrow(authentication);
-        
-        List<User> users = userRepository.findByUsernameNot(currentUser.getUsername());
-        List<Map<String, Object>> response = new ArrayList<>();
+    public ResponseEntity<?> getAllUsers(Authentication authentication) {
+        try {
+            User currentUser = getUserOrThrow(authentication);
 
-        for (User user : users) {
-            response.add(buildUserResponse(user, currentUser.getId()));
+            List<User> users = userRepository.findByUsernameNot(currentUser.getUsername());
+            List<Map<String, Object>> response = new ArrayList<>();
+
+            for (User user : users) {
+                response.add(buildUserResponse(user, currentUser.getId()));
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
         }
-        
-        return response;
     }
 
-    public void follow(Authentication authentication, Long userId) {
-        User currentUser = getUserOrThrow(authentication);
+    public ResponseEntity<?> follow(Authentication authentication, Long userId) {
+        try {
+            User currentUser = getUserOrThrow(authentication);
 
-        if (currentUser.getId().equals(userId)) {
-            throw new IllegalArgumentException("You cannot follow yourself");
+            if (currentUser.getId().equals(userId)) {
+                throw new IllegalArgumentException("You cannot follow yourself");
+            }
+
+            User userToFollow = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User to follow not found"));
+
+            boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
+                    currentUser.getId(), userId);
+
+            if (isFollowing) {
+                unfollowUser(currentUser, userToFollow);
+            } else {
+                followUser(currentUser, userToFollow);
+            }
+
+            updateFollowCounts(currentUser, userToFollow);
+            return ResponseEntity.ok(Map.of("message", "User followed successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
         }
-
-        User userToFollow = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User to follow not found"));
-
-        boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
-            currentUser.getId(), userId
-        );
-
-        if (isFollowing) {
-            unfollowUser(currentUser, userToFollow);
-        } else {
-            followUser(currentUser, userToFollow);
-        }
-
-        updateFollowCounts(currentUser, userToFollow);
     }
 
     // Private helper methods
@@ -104,8 +126,7 @@ public class Users {
         userResponse.put("reportsCount", reportRepository.countByReportedUser_Id(user.getId()));
 
         boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
-            currentUserId, user.getId()
-        );
+                currentUserId, user.getId());
         userResponse.put("isfollowing", isFollowing);
 
         return userResponse;
@@ -118,20 +139,18 @@ public class Users {
         followRepository.save(follow);
 
         notificationService.addNotification(
-            following, 
-            follower, 
-            FOLLOW, 
-            null, 
-            null,
-            follower.getUsername() + " started following you."
-        );
+                following,
+                follower,
+                FOLLOW,
+                null,
+                null,
+                follower.getUsername() + " started following you.");
     }
 
     private void unfollowUser(User follower, User following) {
         Follow follow = followRepository.findByFollower_IdAndFollowing_Id(
-            follower.getId(), following.getId()
-        );
-        
+                follower.getId(), following.getId());
+
         if (follow != null) {
             followRepository.delete(follow);
             notificationRepository.deleteByRecipientAndSenderAndType(following, follower, FOLLOW);
@@ -139,11 +158,10 @@ public class Users {
     }
 
     private void updateFollowCounts(User follower, User following) {
-      
+
         follower.setFollowing(followRepository.countByFollower_Id(follower.getId()));
         follower.setFollowers(followRepository.countByFollowing_Id(follower.getId()));
 
-        
         following.setFollowers(followRepository.countByFollowing_Id(following.getId()));
         following.setFollowing(followRepository.countByFollower_Id(following.getId()));
 

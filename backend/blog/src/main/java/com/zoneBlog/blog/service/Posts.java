@@ -8,6 +8,8 @@ import com.zoneBlog.blog.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.zoneBlog.blog.model.Notification.NotificationType.*;
@@ -22,7 +25,6 @@ import static com.zoneBlog.blog.model.Notification.NotificationType.*;
 @Service
 public class Posts {
 
-    
     private static final int MAX_TITLE_LENGTH = 280;
     private static final int MAX_DESCRIPTION_LENGTH = 5000;
     private static final int MAX_COMMENT_LENGTH = 500;
@@ -38,9 +40,9 @@ public class Posts {
     private final NotificationService notificationService;
 
     public Posts(PostRepository postRepository, LikeRepository likeRepository,
-                 UserRepository userRepository, CommentRepository commentRepository,
-                 FollowRepository followRepository, NotificationRepository notificationRepository,
-                 Helper helper, NotificationService notificationService) {
+            UserRepository userRepository, CommentRepository commentRepository,
+            FollowRepository followRepository, NotificationRepository notificationRepository,
+            Helper helper, NotificationService notificationService) {
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
@@ -52,112 +54,180 @@ public class Posts {
     }
 
     @Transactional
-    public Post createPost(Authentication authentication, PostRequest request, MultipartFile mediaFile) {
-        User user = getUserOrThrow(authentication);
-        
-        String title = validateAndNormalizeTitle(request.getTitle());
-        String description = validateAndNormalizeDescription(request.getDescription());
+    public ResponseEntity<?> createPost(Authentication authentication, PostRequest request, MultipartFile mediaFile) {
+        try {
+            User user = getUserOrThrow(authentication);
 
-        Post post = buildPost(user, title, description);
+            String title = validateAndNormalizeTitle(request.getTitle());
+            String description = validateAndNormalizeDescription(request.getDescription());
 
-        if (mediaFile != null && !mediaFile.isEmpty()) {
-            String mediaPath = helper.handleFileUpload(mediaFile);
-            post.setMediaUrl(mediaPath);
+            Post post = buildPost(user, title, description);
+
+            if (mediaFile != null && !mediaFile.isEmpty()) {
+                String mediaPath = helper.handleFileUpload(mediaFile);
+                post.setMediaUrl(mediaPath);
+            }
+
+            postRepository.save(post);
+
+            notifyFollowersAboutNewPost(user, post);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(post);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
         }
-        
-        postRepository.save(post);
-        
-        notifyFollowersAboutNewPost(user, post);
-        
-        return post;
     }
 
     @Transactional(readOnly = true)
-    public Page<Post> getPosts(Authentication authentication, Pageable pageable) {
-        User user = getUserOrThrow(authentication);
+    public ResponseEntity<?> getPosts(Authentication authentication, Pageable pageable) {
+        try {
+            User user = getUserOrThrow(authentication);
 
-        if (ADMIN_ROLE.equals(user.getRole())) {
-            Page<Post> allPosts = postRepository.findAll(pageable);
-            return addLikeStatus(allPosts, user.getId());
+            if (ADMIN_ROLE.equals(user.getRole())) {
+                Page<Post> allPosts = postRepository.findAll(pageable);
+                Page<Post> posts = addLikeStatus(allPosts, user.getId());
+                return ResponseEntity.ok(posts);
+            }
+
+            List<Long> followingIds = getFollowingIds(user.getId());
+            followingIds.add(user.getId());
+
+            Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
+            Page<Post> posts = addLikeStatus(postsPage, user.getId());
+            return ResponseEntity.ok(posts);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
         }
-
-        List<Long> followingIds = getFollowingIds(user.getId());
-        followingIds.add(user.getId());
-
-        Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
-        return addLikeStatus(postsPage, user.getId());
     }
 
     @Transactional
-    public void deletePost(Long id, Authentication authentication) {
-        User user = getUserOrThrow(authentication);
-        Post post = getPostOrThrow(id);
+    public ResponseEntity<?> deletePost(Long id, Authentication authentication) {
+        try {
+            User user = getUserOrThrow(authentication);
+            Post post = getPostOrThrow(id);
 
-        validatePostOwnership(post, user);
+            validatePostOwnership(post, user);
 
-        // Delete related data
-        likeRepository.deleteByPost_Id(post.getId());
-        commentRepository.deleteByPost_Id(post.getId());
-        postRepository.delete(post);
-        
-        helper.deleteOldMediaFile(post.getMediaUrl());
-    }
+            // Delete related data
+            likeRepository.deleteByPost_Id(post.getId());
+            commentRepository.deleteByPost_Id(post.getId());
+            postRepository.delete(post);
 
-    @Transactional
-    public Post updatePost(Long id, Authentication authentication, PostRequest request,
-                          MultipartFile mediaFile, String removeImage) {
-        User user = getUserOrThrow(authentication);
-        Post post = getPostOrThrow(id);
-
-        validatePostOwnershipStrict(post, user);
-
-        String title = validateAndNormalizeTitle(request.getTitle());
-        String description = validateAndNormalizeDescription(request.getDescription());
-
-        post.setTitle(title);
-        post.setDescription(description);
-
-        handleMediaUpdate(post, mediaFile, removeImage);
-
-        postRepository.save(post);
-        
-        return post;
-    }
-
-    @Transactional
-    public Post likePost(Long id, Authentication authentication) {
-        User user = getUserOrThrow(authentication);
-        Post post = getPostOrThrow(id);
-
-        boolean alreadyLiked = likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId());
-
-        if (alreadyLiked) {
-            unlikePost(user, post);
-        } else {
-            performLike(user, post);
+            helper.deleteOldMediaFile(post.getMediaUrl());
+            return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
         }
+    }
 
-        post.setLikesCount(likeRepository.countByPost_Id(post.getId()));
-        postRepository.save(post);
+    @Transactional
+    public ResponseEntity<?> updatePost(Long id, Authentication authentication, PostRequest request,
+            MultipartFile mediaFile, String removeImage) {
+        try {
+            User user = getUserOrThrow(authentication);
+            Post post = getPostOrThrow(id);
 
-        return post;
+            validatePostOwnershipStrict(post, user);
+
+            String title = validateAndNormalizeTitle(request.getTitle());
+            String description = validateAndNormalizeDescription(request.getDescription());
+
+            post.setTitle(title);
+            post.setDescription(description);
+
+            handleMediaUpdate(post, mediaFile, removeImage);
+
+            postRepository.save(post);
+
+            return ResponseEntity.ok(post);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<?> likePost(Long id, Authentication authentication) {
+        try {
+            User user = getUserOrThrow(authentication);
+            Post post = getPostOrThrow(id);
+
+            boolean alreadyLiked = likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId());
+
+            if (alreadyLiked) {
+                unlikePost(user, post);
+            } else {
+                performLike(user, post);
+            }
+
+            post.setLikesCount(likeRepository.countByPost_Id(post.getId()));
+            postRepository.save(post);
+
+            return ResponseEntity.ok(post);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     @Transactional(readOnly = true)
-    public Page<Post> getMyPosts(Authentication authentication, Pageable pageable) {
-        User user = getUserOrThrow(authentication);
-        Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
-        return addLikeStatus(postsPage, user.getId());
+    public ResponseEntity<?> getMyPosts(Authentication authentication, Pageable pageable) {
+        try {
+            User user = getUserOrThrow(authentication);
+            Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+            Page<Post> posts = addLikeStatus(postsPage, user.getId());
+            return ResponseEntity.ok(posts);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     @Transactional(readOnly = true)
-    public Page<Post> getPostsUser(Authentication authentication, String username, Pageable pageable) {
-        User currentUser = getUserOrThrow(authentication);
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<?> getPostsUser(Authentication authentication, String username, Pageable pageable) {
+        try {
+            User currentUser = getUserOrThrow(authentication);
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
-        return addLikeStatus(postsPage, currentUser.getId());
+            Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+            Page<Post> posts = addLikeStatus(postsPage, currentUser.getId());
+            return ResponseEntity.ok(posts);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     @Transactional(readOnly = true)
@@ -170,58 +240,98 @@ public class Posts {
     }
 
     @Transactional
-    public Comment createComment(Authentication authentication, String content, Long postId) {
-        User currentUser = getUserOrThrow(authentication);
-        Post post = getPostOrThrow(postId);
+    public ResponseEntity<?> createComment(Authentication authentication, String content, Long postId) {
+        try {
+            User currentUser = getUserOrThrow(authentication);
+            Post post = getPostOrThrow(postId);
 
-        String validatedContent = validateAndNormalizeComment(content);
+            String validatedContent = validateAndNormalizeComment(content);
 
-        Comment comment = buildComment(currentUser, post, validatedContent);
-        commentRepository.save(comment);
+            Comment comment = buildComment(currentUser, post, validatedContent);
+            commentRepository.save(comment);
 
-        updatePostCommentCount(post);
-        
-        if (!currentUser.getId().equals(post.getUser().getId())) {
-            notificationService.addNotification(
-                post.getUser(), currentUser, COMMENT, post, comment,
-                currentUser.getUsername() + " commented on your post.");
+            updatePostCommentCount(post);
+
+            if (!currentUser.getId().equals(post.getUser().getId())) {
+                notificationService.addNotification(
+                        post.getUser(), currentUser, COMMENT, post, comment,
+                        currentUser.getUsername() + " commented on your post.");
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
         }
-
-        return comment;
     }
 
     @Transactional(readOnly = true)
-    public List<Comment> getPostComments(Authentication authentication, Long postId) {
-        getUserOrThrow(authentication);
-        getPostOrThrow(postId);
-        return commentRepository.findBypost_Id(postId);
+    public ResponseEntity<?> getPostComments(Authentication authentication, Long postId) {
+        try {
+            getUserOrThrow(authentication);
+            getPostOrThrow(postId);
+            List<Comment> comments = commentRepository.findBypost_Id(postId);
+            return ResponseEntity.ok(comments);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     @Transactional
-    public Comment updateComment(Authentication authentication, Long commentId, CommentRequest request) {
-        User currentUser = getUserOrThrow(authentication);
-        Comment comment = getCommentOrThrow(commentId);
+    public ResponseEntity<?> updateComment(Authentication authentication, Long commentId, CommentRequest request) {
+        try {
+            User currentUser = getUserOrThrow(authentication);
+            Comment comment = getCommentOrThrow(commentId);
 
-        validateCommentOwnership(comment, currentUser);
+            validateCommentOwnership(comment, currentUser);
 
-        String validatedContent = validateAndNormalizeComment(request.getContent());
-        comment.setContent(validatedContent);
-        commentRepository.save(comment);
-        
-        return comment;
+            String validatedContent = validateAndNormalizeComment(request.getContent());
+            comment.setContent(validatedContent);
+            commentRepository.save(comment);
+
+            return ResponseEntity.ok(comment);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     @Transactional
-    public void deleteComment(Authentication authentication, Long commentId) {
-        User currentUser = getUserOrThrow(authentication);
-        Comment comment = getCommentOrThrow(commentId);
+    public ResponseEntity<?> deleteComment(Authentication authentication, Long commentId) {
+        try {
+            User currentUser = getUserOrThrow(authentication);
+            Comment comment = getCommentOrThrow(commentId);
 
-        validateCommentDeletion(comment, currentUser);
+            validateCommentDeletion(comment, currentUser);
 
-        Post post = getPostOrThrow(comment.getPost().getId());
-        commentRepository.delete(comment);
+            Post post = getPostOrThrow(comment.getPost().getId());
+            commentRepository.delete(comment);
 
-        updatePostCommentCount(post);
+            updatePostCommentCount(post);
+            return ResponseEntity.ok(Map.of("message", "Comment deleted successfully"));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     // ==================== Private Helper Methods ====================
@@ -236,25 +346,25 @@ public class Posts {
 
     private Post getPostOrThrow(Long id) {
         return postRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 
     private Comment getCommentOrThrow(Long id) {
         return commentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
     }
 
     private String validateAndNormalizeTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
             throw new RuntimeException("Post title cannot be empty");
         }
-        
+
         String normalized = title.replaceAll("\r\n", "\n").trim();
-        
+
         if (normalized.length() > MAX_TITLE_LENGTH) {
             throw new RuntimeException("Post title cannot exceed " + MAX_TITLE_LENGTH + " characters");
         }
-        
+
         return normalized;
     }
 
@@ -262,13 +372,13 @@ public class Posts {
         if (description == null || description.trim().isEmpty()) {
             throw new RuntimeException("Post description cannot be empty");
         }
-        
+
         String normalized = description.replaceAll("\r\n", "\n").trim();
-        
+
         if (normalized.length() > MAX_DESCRIPTION_LENGTH) {
             throw new RuntimeException("Post description cannot exceed " + MAX_DESCRIPTION_LENGTH + " characters");
         }
-        
+
         return normalized;
     }
 
@@ -276,13 +386,13 @@ public class Posts {
         if (content == null || content.trim().isEmpty()) {
             throw new RuntimeException("Comment content cannot be empty");
         }
-        
+
         String normalized = content.replaceAll("\r\n", "\n").trim();
-        
+
         if (normalized.length() > MAX_COMMENT_LENGTH) {
             throw new RuntimeException("Comment content cannot exceed " + MAX_COMMENT_LENGTH + " characters");
         }
-        
+
         return normalized;
     }
 
@@ -341,17 +451,17 @@ public class Posts {
     private List<Long> getFollowingIds(Long userId) {
         List<Follow> followings = followRepository.findByFollower_Id(userId);
         return followings.stream()
-            .map(f -> f.getFollowing().getId())
-            .collect(Collectors.toList());
+                .map(f -> f.getFollowing().getId())
+                .collect(Collectors.toList());
     }
 
     private Page<Post> addLikeStatus(Page<Post> postsPage, Long userId) {
         List<Post> updatedPosts = postsPage.getContent().stream()
-            .map(post -> {
-                post.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(userId, post.getId()));
-                return post;
-            })
-            .collect(Collectors.toList());
+                .map(post -> {
+                    post.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(userId, post.getId()));
+                    return post;
+                })
+                .collect(Collectors.toList());
 
         return new PageImpl<>(updatedPosts, postsPage.getPageable(), postsPage.getTotalElements());
     }
@@ -362,8 +472,8 @@ public class Posts {
             User follower = userRepository.findById(follow.getFollower().getId()).orElse(null);
             if (follower != null) {
                 notificationService.addNotification(
-                    follower, user, POST, post, null,
-                    user.getUsername() + " created a new post.");
+                        follower, user, POST, post, null,
+                        user.getUsername() + " created a new post.");
             }
         }
     }
@@ -372,10 +482,10 @@ public class Posts {
         Like like = likeRepository.findByUser_IdAndPost_Id(user.getId(), post.getId());
         if (like != null) {
             likeRepository.delete(like);
-            
+
             if (!user.getId().equals(post.getUser().getId())) {
                 notificationRepository.deleteByRecipientAndSenderAndPostAndType(
-                    post.getUser(), user, post, LIKE);
+                        post.getUser(), user, post, LIKE);
             }
         }
     }
@@ -385,11 +495,11 @@ public class Posts {
         like.setPost(post);
         like.setUser(user);
         likeRepository.save(like);
-        
+
         if (!user.getId().equals(post.getUser().getId())) {
             notificationService.addNotification(
-                post.getUser(), user, LIKE, post, null,
-                user.getUsername() + " liked your post.");
+                    post.getUser(), user, LIKE, post, null,
+                    user.getUsername() + " liked your post.");
         }
     }
 

@@ -62,17 +62,12 @@ public class AuthController {
             @RequestPart("description") String description,
             @RequestPart("title") String title,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
-        try {
-            PostRequest request = new PostRequest();
-            request.setDescription(description);
-            request.setTitle(title);
-            Post post = postsService.createPost(authentication, request, mediaFile);
-            return ResponseEntity.status(HttpStatus.CREATED).body(post);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+
+        PostRequest request = new PostRequest();
+        request.setDescription(description);
+        request.setTitle(title);
+        return postsService.createPost(authentication, request, mediaFile);
+
     }
 
     @GetMapping("/posts")
@@ -80,27 +75,23 @@ public class AuthController {
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-            Page<Post> posts = postsService.getPosts(authentication, pageable);
-            return ResponseEntity.ok(posts);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+        return postsService.getPosts(authentication, pageable);
+
     }
 
     @DeleteMapping("/posts/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
-        try {
-            postsService.deletePost(id, authentication);
-            return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        // try {
+
+        //
+        // } catch (RuntimeException e) {
+        // return ResponseEntity
+        // .status(HttpStatus.BAD_REQUEST)
+        // .body(Map.of("error", e.getMessage()));
+        // }
+        return postsService.deletePost(id, authentication);
     }
 
     @PatchMapping("/posts/{id}")
@@ -111,29 +102,18 @@ public class AuthController {
             @RequestPart("description") String description,
             @RequestPart("title") String title,
             @RequestPart(value = "removeImage", required = false) String removeImage) {
-        try {
-            PostRequest request = new PostRequest();
-            request.setDescription(description);
-            request.setTitle(title);
-            Post post = postsService.updatePost(id, authentication, request, mediaFile, removeImage);
-            return ResponseEntity.ok(post);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        PostRequest request = new PostRequest();
+        request.setDescription(description);
+        request.setTitle(title);
+
+        return postsService.updatePost(id, authentication, request, mediaFile, removeImage);
+
     }
 
     @PostMapping("/posts/like")
     public ResponseEntity<?> likePost(@RequestBody PostRequest request, Authentication authentication) {
-        try {
-            Post post = postsService.likePost(request.getPostId(), authentication);
-            return ResponseEntity.ok(post);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return postsService.likePost(request.getPostId(), authentication);
+
     }
 
     @GetMapping("/posts/CurrentUserPost")
@@ -141,15 +121,9 @@ public class AuthController {
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-            Page<Post> posts = postsService.getMyPosts(authentication, pageable);
-            return ResponseEntity.ok(posts);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+
+        return postsService.getMyPosts(authentication, pageable);
     }
 
     @GetMapping("/posts/{username}")
@@ -158,39 +132,20 @@ public class AuthController {
             @PathVariable String username,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-            Page<Post> posts = postsService.getPostsUser(authentication, username, pageable);
-            return ResponseEntity.ok(posts);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+
+        return postsService.getPostsUser(authentication, username, pageable);
     }
 
     @PostMapping("/posts/comment")
     public ResponseEntity<?> createComment(Authentication authentication, @RequestBody CommentRequest request) {
-        try {
-            Comment comment = postsService.createComment(authentication, request.getContent(), request.getPostId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(comment);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return postsService.createComment(authentication, request.getContent(), request.getPostId());
     }
 
     @GetMapping("/posts/getComment/{postId}")
     public ResponseEntity<?> getPostComments(Authentication authentication, @PathVariable Long postId) {
-        try {
-            List<Comment> comments = postsService.getPostComments(authentication, postId);
-            return ResponseEntity.ok(comments);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return postsService.getPostComments(authentication, postId);
     }
 
     @PatchMapping("/posts/comment/{commentId}")
@@ -198,51 +153,32 @@ public class AuthController {
             Authentication authentication,
             @PathVariable Long commentId,
             @RequestBody CommentRequest request) {
-        try {
-            Comment comment = postsService.updateComment(authentication, commentId, request);
-            return ResponseEntity.ok(comment);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+            return postsService.updateComment(authentication, commentId, request);
     }
 
     @DeleteMapping("/posts/comment/{commentId}")
     public ResponseEntity<?> deleteComment(Authentication authentication, @PathVariable Long commentId) {
-        try {
-            postsService.deleteComment(authentication, commentId);
-            return ResponseEntity.ok(Map.of("message", "Comment deleted successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        // try {
+        //     postsService.deleteComment(authentication, commentId);
+        //     return ResponseEntity.ok(Map.of("message", "Comment deleted successfully"));
+        // } catch (RuntimeException e) {
+        //     return ResponseEntity
+        //             .status(HttpStatus.BAD_REQUEST)
+        //             .body(Map.of("error", e.getMessage()));
+        // }
+
+        return postsService.deleteComment(authentication, commentId);
     }
 
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(Authentication authentication) {
-        try {
-            List<Map<String, Object>> response = usersService.getAllUsers(authentication);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return usersService.getAllUsers(authentication);
     }
 
     @PostMapping("/users/follow")
     public ResponseEntity<?> follow(Authentication authentication, @RequestBody Map<String, Long> payload) {
-        try {
-            Long userId = payload.get("userId");
-            usersService.follow(authentication, userId);
-            return ResponseEntity.ok(Map.of("message", "User followed successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        Long userId = payload.get("userId");
+        return usersService.follow(authentication, userId);
     }
 
     @PostMapping("/profile")
@@ -252,37 +188,17 @@ public class AuthController {
             @RequestPart("username") String username,
             @RequestPart(value = "bio", required = false) String bio,
             @RequestPart(value = "removeImage", required = false) String removeImage) {
-        try {
-            User user = profileService.updateProfile(authentication, username, bio, removeImage, avatarFile);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return profileService.updateProfile(authentication, username, bio, removeImage, avatarFile);
     }
 
     @GetMapping("/profile/{username}")
     public ResponseEntity<?> getInfoUser(Authentication authentication, @PathVariable String username) {
-        try {
-            return profileService.getInfoUser(authentication, username);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return profileService.getInfoUser(authentication, username);
     }
 
     @PostMapping("/profile/report")
     public ResponseEntity<?> report(Authentication authentication, @RequestBody ReportRequest request) {
-        try {
-            profileService.report(authentication, request);
-            return ResponseEntity.ok(Map.of("message", "Profile reported successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return profileService.report(authentication, request);
     }
 
     @GetMapping("/post/{id}")
@@ -325,13 +241,15 @@ public class AuthController {
 
     @GetMapping("/notification")
     public ResponseEntity<?> getNotifications(Authentication authentication) {
-        try {
-            List<Notification> notifications = notificationService.getNotifications(authentication);
-            return ResponseEntity.ok(notifications);
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        // try {
+        // List<Notification> notifications =
+        // notificationService.getNotifications(authentication);
+        // return ResponseEntity.ok(notifications);
+        // } catch (RuntimeException e) {
+        // return ResponseEntity
+        // .status(HttpStatus.BAD_REQUEST)
+        // .body(Map.of("error", e.getMessage()));
+        // }
+        return notificationService.getNotifications(authentication);
     }
 }

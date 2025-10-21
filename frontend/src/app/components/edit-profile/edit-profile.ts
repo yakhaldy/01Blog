@@ -94,13 +94,13 @@ export class EditProfile {
         this.dialogRef.close(result);
       },
       error: (error) => {
-        console.log("==>", error.error);
+        console.log("==>", error.error.error);
         this.isError = true;
-        this.errorback = error.error;
+        this.errorback = error.error.error;
         const  resultError = {
-          error: error
+          error: error.error.error
         }
-        this.dialogRef.close(resultError);
+        // this.dialogRef.close(resultError);
         this.cdr.markForCheck();
       }
     });

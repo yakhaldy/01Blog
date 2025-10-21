@@ -2,9 +2,9 @@
     [x] admin
     [x] login
     [x] register
-    [ ] notification
-    [ ] users
-    [ ] profile
+    [x] notification
+    [x] users
+    [x] profile
     [ ] poste
 
  

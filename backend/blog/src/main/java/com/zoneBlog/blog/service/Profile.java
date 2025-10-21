@@ -3,6 +3,7 @@ package com.zoneBlog.blog.service;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class Profile {
     private final Helper helper;
 
     public Profile(UserRepository userRepository, FollowRepository followRepository,
-                  ReportRepository reportRepository, Helper helper) {
+            ReportRepository reportRepository, Helper helper) {
         this.userRepository = userRepository;
         this.followRepository = followRepository;
         this.reportRepository = reportRepository;
@@ -39,43 +40,79 @@ public class Profile {
 
     @Transactional(readOnly = true)
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        User user = getUserOrThrow(authentication);
-        return ResponseEntity.ok(buildUserResponse(user, null));
+        try {
+            User user = getUserOrThrow(authentication);
+            return ResponseEntity.ok(buildUserResponse(user, null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     @Transactional(readOnly = true)
     public ResponseEntity<?> getInfoUser(Authentication authentication, String username) {
-        User currentUser = getUserOrThrow(authentication);
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            User currentUser = getUserOrThrow(authentication);
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
-            currentUser.getId(), user.getId()
-        );
+            boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
+                    currentUser.getId(), user.getId());
 
-        return ResponseEntity.ok(buildUserResponse(user, isFollowing));
+            return ResponseEntity.ok(buildUserResponse(user, isFollowing));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
-    public User updateProfile(Authentication authentication, String username, String bio, 
-                            String removeImage, MultipartFile avatarFile) {
-        User user = getUserOrThrow(authentication);
+    public ResponseEntity<?> updateProfile(Authentication authentication, String username, String bio,
+            String removeImage, MultipartFile avatarFile) {
+        try {
+            User user = getUserOrThrow(authentication);
 
-        validateAndUpdateUsername(user, username);
-        validateAndUpdateBio(user, bio);
-        handleAvatarUpdate(user, avatarFile, removeImage);
+            validateAndUpdateUsername(user, username);
+            validateAndUpdateBio(user, bio);
+            handleAvatarUpdate(user, avatarFile, removeImage);
 
-        return userRepository.save(user);
+            userRepository.save(user);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
-    public void report(Authentication authentication, ReportRequest request) {
-        User currentUser = getUserOrThrow(authentication);
-        User reportedUser = userRepository.findById(request.getReportedUserId())
-            .orElseThrow(() -> new RuntimeException("Reported user not found"));
+    public ResponseEntity<?> report(Authentication authentication, ReportRequest request) {
+        try {
+            User currentUser = getUserOrThrow(authentication);
+            User reportedUser = userRepository.findById(request.getReportedUserId())
+                    .orElseThrow(() -> new RuntimeException("Reported user not found"));
 
-        validateReport(currentUser, reportedUser);
+            validateReport(currentUser, reportedUser);
 
-        Report report = createReport(currentUser, reportedUser, request.getReportReason());
-        reportRepository.save(report);
+            Report report = createReport(currentUser, reportedUser, request.getReportReason());
+            reportRepository.save(report);
+            return ResponseEntity.ok(Map.of("message", "Profile reported successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        }
     }
 
     // Private helper methods
@@ -117,9 +154,8 @@ public class Profile {
             throw new RuntimeException("Username cannot exceed " + MAX_USERNAME_LENGTH + " characters");
         }
 
-        // Check if username exists and is not the current user's username
-        if (!trimmedUsername.equals(user.getUsername()) && 
-            userRepository.existsByUsername(trimmedUsername)) {
+        if (!trimmedUsername.equals(user.getUsername()) &&
+                userRepository.existsByUsername(trimmedUsername)) {
             throw new RuntimeException("Username already exists");
         }
 
@@ -127,9 +163,10 @@ public class Profile {
     }
 
     private void validateAndUpdateBio(User user, String bio) {
-        // if (bio == null) {
-        //     return;
-        // }
+        if (bio == null) {
+        user.setBio("");
+        return;
+        }
 
         String normalizedBio = bio.replaceAll("\r\n", "\n").trim();
 

@@ -2,6 +2,9 @@ package com.zoneBlog.blog.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -11,10 +14,15 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class JwtUtil {
 
-    // Use a fixed secret key (in production, store this securely)
-    private static final String SECRET_KEY = "mySecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong";
-    private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-    private final long expiration = 1000 * 60 * 60 * 24; // 24              
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
+    private Key key;
+    private final long expiration = 1000 * 60 * 60 *10; // 10  
+    
+    @PostConstruct
+    public void init() {
+        key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    }
 
     public String generateToken(String username) {
         return Jwts.builder()
