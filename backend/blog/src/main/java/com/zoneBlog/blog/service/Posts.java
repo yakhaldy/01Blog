@@ -153,8 +153,7 @@ public class Posts {
 
             handleMediaUpdate(post, mediaFile, removeImage);
 
-            postRepository.save(post);
-
+            // Post postAp = postRepository.save(post);
             return ResponseEntity.ok(post);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)

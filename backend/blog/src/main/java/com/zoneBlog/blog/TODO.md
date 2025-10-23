@@ -5,6 +5,6 @@
     [x] notification
     [x] users
     [x] profile
-    [ ] poste
+    [x] poste
 
  

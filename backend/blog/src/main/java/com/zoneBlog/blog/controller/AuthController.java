@@ -13,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -83,14 +82,6 @@ public class AuthController {
 
     @DeleteMapping("/posts/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
-        // try {
-
-        //
-        // } catch (RuntimeException e) {
-        // return ResponseEntity
-        // .status(HttpStatus.BAD_REQUEST)
-        // .body(Map.of("error", e.getMessage()));
-        // }
         return postsService.deletePost(id, authentication);
     }
 
@@ -158,15 +149,6 @@ public class AuthController {
 
     @DeleteMapping("/posts/comment/{commentId}")
     public ResponseEntity<?> deleteComment(Authentication authentication, @PathVariable Long commentId) {
-        // try {
-        //     postsService.deleteComment(authentication, commentId);
-        //     return ResponseEntity.ok(Map.of("message", "Comment deleted successfully"));
-        // } catch (RuntimeException e) {
-        //     return ResponseEntity
-        //             .status(HttpStatus.BAD_REQUEST)
-        //             .body(Map.of("error", e.getMessage()));
-        // }
-
         return postsService.deleteComment(authentication, commentId);
     }
 

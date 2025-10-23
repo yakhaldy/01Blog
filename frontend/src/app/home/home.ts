@@ -105,7 +105,7 @@ export class Home implements OnInit {
   private loadCurrentUser(): void {
     this.homeService.getCurrentUser().subscribe({
       next: (user) => {
-        console.log(user);
+        console.table(user)
 
         this.currentUser = user;
         this.isLoading = false;
@@ -124,7 +124,7 @@ export class Home implements OnInit {
       next: (users) => {
         this.users = users;
         this.isLoadingUsers = false;
-        console.log("==> ", users);
+        console.table(users);
         this.cdr.markForCheck();
 
       },
@@ -138,14 +138,14 @@ export class Home implements OnInit {
 
 
   private handleAuthError(error: any): void {
-    console.log(error);
+    console.table(error);
   }
 
   /**************************** */
   hasMorePosts = true;
   currentPage = 0;
   pageSize = 10;
-  scrollDistance = 2;
+  scrollDistance = 0;
   /******************************* */
 
 
