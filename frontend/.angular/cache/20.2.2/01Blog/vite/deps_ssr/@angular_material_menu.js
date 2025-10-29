@@ -5,11 +5,17 @@ import {
   createFlexibleConnectedPositionStrategy,
   createOverlayRef,
   createRepositionScrollStrategy
-} from "./chunk-MVHWFUP6.js";
+} from "./chunk-ZPR2GGV3.js";
 import {
   DomPortalOutlet,
   TemplatePortal
 } from "./chunk-N3YOYQSB.js";
+import {
+  CdkScrollableModule,
+  ScrollDispatcher,
+  ViewportRuler
+} from "./chunk-GFC67GOZ.js";
+import "./chunk-WTBZP6N4.js";
 import {
   MatRippleModule
 } from "./chunk-EB2JTCZL.js";
@@ -20,13 +26,6 @@ import {
 import "./chunk-E2LMXH7Z.js";
 import "./chunk-5XYFHA5V.js";
 import "./chunk-QJVLQKZV.js";
-import {
-  CdkScrollableModule,
-  ScrollDispatcher,
-  ViewportRuler
-} from "./chunk-GFC67GOZ.js";
-import "./chunk-WTBZP6N4.js";
-import "./chunk-FQL6O3MQ.js";
 import {
   _animationsDisabled
 } from "./chunk-VIQNTZNK.js";
@@ -48,6 +47,7 @@ import {
   isFakeMousedownFromScreenReader,
   isFakeTouchstartFromScreenReader
 } from "./chunk-6J627IAM.js";
+import "./chunk-FQL6O3MQ.js";
 import {
   Directionality
 } from "./chunk-T4PXRGKK.js";

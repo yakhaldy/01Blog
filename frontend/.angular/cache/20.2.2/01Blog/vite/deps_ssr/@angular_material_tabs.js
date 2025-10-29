@@ -5,22 +5,21 @@ import {
   TemplatePortal
 } from "./chunk-N3YOYQSB.js";
 import {
-  MAT_RIPPLE_GLOBAL_OPTIONS,
-  MatRipple,
-  _StructuralStylesLoader
-} from "./chunk-LGM3OYAL.js";
-import {
   SharedResizeObserver
 } from "./chunk-5ONYDZD7.js";
-import "./chunk-E2LMXH7Z.js";
-import "./chunk-5XYFHA5V.js";
-import "./chunk-QJVLQKZV.js";
 import {
   CdkScrollable,
   ViewportRuler
 } from "./chunk-GFC67GOZ.js";
 import "./chunk-WTBZP6N4.js";
-import "./chunk-FQL6O3MQ.js";
+import {
+  MAT_RIPPLE_GLOBAL_OPTIONS,
+  MatRipple,
+  _StructuralStylesLoader
+} from "./chunk-LGM3OYAL.js";
+import "./chunk-E2LMXH7Z.js";
+import "./chunk-5XYFHA5V.js";
+import "./chunk-QJVLQKZV.js";
 import {
   _animationsDisabled
 } from "./chunk-VIQNTZNK.js";
@@ -35,6 +34,7 @@ import {
   _IdGenerator,
   hasModifierKey
 } from "./chunk-6J627IAM.js";
+import "./chunk-FQL6O3MQ.js";
 import {
   Directionality
 } from "./chunk-T4PXRGKK.js";

@@ -54,43 +54,43 @@ export class Notifications implements OnDestroy {
     // Close existing connection if any
     // this.disconnect();
 
-    console.log('🔌 Creating new SSE connection...');
+    // console.log('🔌 Creating new SSE connection...');
 
-    this.eventSource = new EventSource(
-      `http://localhost:8080/api/notifications/stream?token=${jwt}`,
-      { withCredentials: true }
-    );
+    // this.eventSource = new EventSource(
+    //   `http://localhost:8080/api/notifications/stream?token=${jwt}`,
+    //   { withCredentials: true }
+    // );
 
-    this.eventSource.onopen = (event) => {
-      console.log('✅ SSE Connection opened', event);
-      this.isConnected = true;
-    };
+    // this.eventSource.onopen = (event) => {
+    //   console.log('✅ SSE Connection opened', event);
+    //   this.isConnected = true;
+    // };
 
-    this.eventSource.addEventListener('unreadCount', (event: MessageEvent) => {
-      this.zone.run(() => {
-        const count = Number(event.data);
-        console.log("📩 unreadCount received:", count);
-        this.notificationSubject.next(count);
-      });
-    });
+    // this.eventSource.addEventListener('unreadCount', (event: MessageEvent) => {
+    //   this.zone.run(() => {
+    //     const count = Number(event.data);
+    //     console.log("📩 unreadCount received:", count);
+    //     this.notificationSubject.next(count);
+    //   });
+    // });
 
-    this.eventSource.onerror = (error) => {
-      console.error('❌ SSE error', error);
-      this.isConnected = false;
+    // this.eventSource.onerror = (error) => {
+    //   console.error('❌ SSE error', error);
+    //   this.isConnected = false;
 
-      // Check if it's a fatal error
-      if (this.eventSource?.readyState === EventSource.CLOSED) {
-        console.log('🔴 SSE connection closed by server');
-        this.notificationSubject.error(error);
+    //   // Check if it's a fatal error
+    //   if (this.eventSource?.readyState === EventSource.CLOSED) {
+    //     console.log('🔴 SSE connection closed by server');
+    //     this.notificationSubject.error(error);
 
-        // Attempt to reconnect after 5 seconds
-        // setTimeout(() => {
-        //   console.log('🔄 Attempting to reconnect...');
-        //   this.connect();
-        // }, 100);
-      }
-      // For network errors, EventSource will auto-reconnect
-    };
+    //     // Attempt to reconnect after 5 seconds
+    //     // setTimeout(() => {
+    //     //   console.log('🔄 Attempting to reconnect...');
+    //     //   this.connect();
+    //     // }, 100);
+    //   }
+    //   // For network errors, EventSource will auto-reconnect
+    // };
   }
 
   private disconnect(): void {

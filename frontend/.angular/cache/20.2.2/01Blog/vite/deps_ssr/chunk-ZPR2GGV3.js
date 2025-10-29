@@ -5,19 +5,16 @@ import {
   TemplatePortal
 } from "./chunk-N3YOYQSB.js";
 import {
-  _isTestEnvironment
-} from "./chunk-5XYFHA5V.js";
-import {
-  coerceCssPixelValue
-} from "./chunk-QJVLQKZV.js";
-import {
   ScrollDispatcher,
   ScrollingModule,
   ViewportRuler
 } from "./chunk-GFC67GOZ.js";
 import {
-  supportsScrollBehavior
-} from "./chunk-FQL6O3MQ.js";
+  _isTestEnvironment
+} from "./chunk-5XYFHA5V.js";
+import {
+  coerceCssPixelValue
+} from "./chunk-QJVLQKZV.js";
 import {
   ESCAPE,
   _IdGenerator,
@@ -25,6 +22,9 @@ import {
   coerceArray,
   hasModifierKey
 } from "./chunk-6J627IAM.js";
+import {
+  supportsScrollBehavior
+} from "./chunk-FQL6O3MQ.js";
 import {
   BidiModule,
   Directionality
@@ -2900,4 +2900,4 @@ export {
   createOverlayRef,
   OverlayModule
 };
-//# sourceMappingURL=chunk-MVHWFUP6.js.map
+//# sourceMappingURL=chunk-ZPR2GGV3.js.map

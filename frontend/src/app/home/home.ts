@@ -1,10 +1,11 @@
-// home.component.ts
+// home.component.ts - محسّن مع معالجة أخطاء أفضل
 
 import {
-  Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy
+  Component, OnInit, ChangeDetectorRef,signal
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { HttpErrorResponse } from '@angular/common/http';
 
 // Angular Material Modules
 import { MatCardModule } from '@angular/material/card';
@@ -21,7 +22,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { isValidMediaType, isValidMediaSize,isImage, isVideo } from '../helper/postHleper';
+import { isValidMediaType, isValidMediaSize, isImage, isVideo } from '../helper/postHleper';
 
 // App Modules
 import { CommonModule } from '@angular/common';
@@ -31,18 +32,23 @@ import { FilterPipe } from '../pipes/filter-pipe';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 
 import { User, UpdatePostResult, NewPost, Post } from '../model/model';
+import {
+  getErrorMessage,
+  HTTP_STATUS,
+  getFirstValidationError
+} from '../model/error-response.model';
 import { HomeService } from './home.service';
 
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
-import { Auth } from '../service/auth'
+import { Auth } from '../service/auth';
 import { ToastService } from '../service/toast-service';
+
 @Component({
   selector: 'app-home',
   standalone: true,
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -82,6 +88,15 @@ export class Home implements OnInit {
     mediaFile: undefined
   };
 
+  hasMorePosts = true;
+  currentPage = 0;
+  pageSize = 10;
+  scrollDistance = 0;
+
+  showModal = false;
+  isOpen = false;
+  PostToDelete?: Post;
+
   constructor(
     private router: Router,
     private homeService: HomeService,
@@ -96,24 +111,23 @@ export class Home implements OnInit {
   }
 
   private initializeComponent(): void {
-    // Sequential loading approach
     this.loadCurrentUser();
     this.loadPosts();
     this.loadUsers();
   }
 
+  // ==================== Load Data Methods ====================
+
   private loadCurrentUser(): void {
     this.homeService.getCurrentUser().subscribe({
       next: (user) => {
-        console.table(user)
-
         this.currentUser = user;
         this.isLoading = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         this.isLoading = false;
-        this.handleAuthError(error);
+        this.handleError(error, 'Failed to load user profile');
         this.cdr.markForCheck();
       }
     });
@@ -124,113 +138,74 @@ export class Home implements OnInit {
       next: (users) => {
         this.users = users;
         this.isLoadingUsers = false;
-        console.table(users);
         this.cdr.markForCheck();
-
       },
-      error: (error) => {
-        this.handleAuthError(error);
+      error: (error: HttpErrorResponse) => {
         this.isLoadingUsers = false;
+        this.handleError(error, 'Failed to load users', false);
         this.cdr.markForCheck();
       }
     });
   }
 
-
-  private handleAuthError(error: any): void {
-    console.table(error);
-  }
-
-  /**************************** */
-  hasMorePosts = true;
-  currentPage = 0;
-  pageSize = 10;
-  scrollDistance = 0;
-  /******************************* */
-
-
   loadPosts(): void {
     if (this.isLoadingPost || !this.hasMorePosts) return;
-    
+
     this.isLoadingPost = true;
     this.homeService.getPosts(this.currentPage, this.pageSize).subscribe({
       next: (response) => {
-        const postsPage = response; 
-
-        if (postsPage && postsPage.content.length > 0) {
-          this.posts.push(...postsPage.content);
+        if (response && response.content.length > 0) {
+          this.posts.push(...response.content);
           this.currentPage++;
-          if (this.currentPage >= postsPage.totalPages) {
+          if (this.currentPage >= response.totalPages) {
             this.hasMorePosts = false;
           }
         } else {
-          this.hasMorePosts = false; 
+          this.hasMorePosts = false;
         }
 
         this.isLoadingPost = false;
         this.cdr.detectChanges();
       },
-      error: (error) => {
-        console.error('Failed to load posts:', error);
+      error: (error: HttpErrorResponse) => {
         this.isLoadingPost = false;
+        this.handleError(error, 'Failed to load posts', false);
         this.cdr.markForCheck();
       }
     });
   }
 
-trackByPostId(index: number, post: any): number {
-  return post.id;
-}
+  // ==================== Post CRUD Operations ====================
 
+  createPost(): void {
+    if (!this.isPostFormValid || this.isSubmittingPost) return;
 
-  onScroll(): void {
-    console.log(".............................onScroll.......................");
-    this.loadPosts();
-  }
+    this.isSubmittingPost = true;
 
-  isMyPost(post: Post): boolean {
-    return post.user?.username === this.currentUser?.username;
-  }
+    const formData = new FormData();
 
-  showModal = false;
-  isOpen = false;
+    const postJson = JSON.stringify({
+      title: this.newPost.title.trim()+"5444",
+      description: this.newPost.description.trim()
+    });
 
-  PostToDelete?: Post; // add this at the top of your component
+    formData.append('post', new Blob([postJson], { type: 'application/json' }));
 
-  deletePost(post: Post): void {
-    this.PostToDelete = post;
-    this.open();
-  }
+    if (this.newPost.mediaFile) {
+      formData.append('mediaFile', this.newPost.mediaFile);
+    }
 
-  open() {
-    this.showModal = true;
-    setTimeout(() => {
-      this.isOpen = true;
-    }, 10);
-
-  }
-
-  close() {
-    this.isOpen = false;
-    this.showModal = false;
-    this.PostToDelete = undefined;
-
-  }
-
-
-  confirm() {
-    if (!this.PostToDelete) return;
-    this.isOpen = false;
-    this.showModal = false;
-
-    this.homeService.deletePost(this.PostToDelete.id).subscribe({
-      next: () => {
-        this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
-        this.toastService.show("Post deleted successfully", "success")
+    this.homeService.createPost(formData).subscribe({
+      next: (newPost) => {
+        this.posts = [newPost, ...this.posts];
+        this.isSubmittingPost = false;
+        this.resetPostForm();
+        this.toastService.show('Post created successfully', 'success');
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        this.toastService.show("Failed to delete Post", "error")
+      error: (error: HttpErrorResponse) => {
+        this.isSubmittingPost = false;
+        this.handleError(error, 'Failed to create post');
         this.cdr.markForCheck();
       }
     });
@@ -266,19 +241,15 @@ trackByPostId(index: number, post: any): number {
 
         this.homeService.updatePost(post.id!, updateData).subscribe({
           next: (updatedPost) => {
-            console.log("updatePost :", updatedPost);
-
             const index = this.posts.findIndex(p => p.id === post.id);
             if (index !== -1) {
               this.posts[index] = updatedPost;
             }
-
-            this.toastService.show("Post deleted successfully", "success")
+            this.toastService.show('Post updated successfully', 'success');
             this.cdr.markForCheck();
           },
-          error: (error) => {
-            const errorMessage = this.handleUpdatePostError(error);
-            this.toastService.show(errorMessage, "error")
+          error: (error: HttpErrorResponse) => {
+            this.handleError(error, 'Failed to update post');
             this.cdr.markForCheck();
           }
         });
@@ -286,39 +257,101 @@ trackByPostId(index: number, post: any): number {
     });
   }
 
-  private handleUpdatePostError(error: any): string {
-    let errorMessage = 'Failed to update post';
-    if (error.status === 401 || error.status === 403) {
-      errorMessage = 'Unauthorized to update this post';
-      this.handleAuthError(error);
-    } else if (error.status === 404) {
-      errorMessage = 'Post not found';
-    } else if (error.status === 400) {
-      errorMessage = error.error?.message || 'Invalid post data';
-    } else if (error.status === 413) {
-      errorMessage = 'File size too large';
-    } else if (error.status === 415) {
-      errorMessage = 'Unsupported file type';
-    }
-    return errorMessage;
+  deletePost(post: Post): void {
+    this.PostToDelete = post;
+    this.open();
   }
+
+  confirm(): void {
+    if (!this.PostToDelete) return;
+
+    this.close();
+
+    this.homeService.deletePost(this.PostToDelete.id).subscribe({
+      next: () => {
+        this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
+        this.toastService.show('Post deleted successfully', 'success');
+        this.PostToDelete = undefined;
+        this.cdr.markForCheck();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.PostToDelete = undefined;
+        this.handleError(error, 'Failed to delete post');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  likePoste(id: number): void {
+    const post = this.posts.find(p => p.id === id);
+    if (!post) return;
+
+    // Optimistic update
+    const originalIsLiked = post.isLiked;
+    const originalLikesCount = post.likesCount;
+
+    post.isLiked = !post.isLiked;
+    post.likesCount += post.isLiked ? 1 : -1;
+
+    this.homeService.likePost(id).subscribe({
+      next: (updatedPost) => {
+        const index = this.posts.findIndex(p => p.id === id);
+        if (index !== -1) {
+          this.posts[index].likesCount = updatedPost.likesCount;
+          // this.posts[index].isLiked = updatedPost.isLiked;
+        }
+      },
+      error: (error: HttpErrorResponse) => {
+        // Revert optimistic update
+        post.isLiked = originalIsLiked;
+        post.likesCount = originalLikesCount;
+        this.handleError(error, 'Failed to like post', false);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  // ==================== User Actions ====================
+
+  follow(user: User): void {
+    if (!user.id) return;
+
+    this.homeService.follow(user.id).subscribe({
+      next: () => {
+        const index = this.users.findIndex(u => u.id === user.id);
+        if (index !== -1) {
+          this.users[index].isfollowing = !this.users[index].isfollowing;
+        }
+        this.cdr.markForCheck();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.handleError(error, 'Failed to follow user', false);
+      }
+    });
+  }
+
+  // ==================== Media Handling ====================
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
-    if (file) {
-      if (!isValidMediaType(file)) {
-        alert('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).');
-        return;
-      }
-      if (!isValidMediaSize(file)) {
-        alert('File size exceeds 10MB limit.');
-        return;
-      }
+    if (!file) return;
 
-      this.newPost.mediaFile = file;
-      this.selectedFileName = file.name;
-      this.cdr.markForCheck();
+    if (!isValidMediaType(file)) {
+      this.toastService.show(
+        'Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).',
+        'error'
+      );
+      return;
     }
+
+    if (!isValidMediaSize(file)) {
+      this.toastService.show('File size exceeds 10MB limit.', 'error');
+      return;
+    }
+
+    this.newPost.mediaFile = file;
+    this.selectedFileName = file.name;
+    this.cdr.markForCheck();
   }
 
   removeMediaFile(): void {
@@ -329,37 +362,68 @@ trackByPostId(index: number, post: any): number {
     this.cdr.markForCheck();
   }
 
-  createPost(): void {
-    if (!this.isPostFormValid || this.isSubmittingPost) return;
+  // ==================== Error Handling ====================
 
-    this.isSubmittingPost = true;
+  private handleError(
+    error: HttpErrorResponse,
+    defaultMessage: string = 'An error occurred',
+    showToast: boolean = true
+  ): void {
+    console.error('Error:', error);
 
-    const formData = new FormData();
-    formData.append('title', this.newPost.title.trim());
-    formData.append('description', this.newPost.description.trim());
+    let errorMessage = defaultMessage;
 
-    if (this.newPost.mediaFile) {
-      formData.append('mediaFile', this.newPost.mediaFile);
+    // معالجة حسب status code
+    switch (error.status) {
+      case HTTP_STATUS.BAD_REQUEST:
+        // قد يكون validation error أو business error
+        errorMessage = getErrorMessage(error);
+        break;
+
+      case HTTP_STATUS.UNAUTHORIZED:
+        errorMessage = 'Your session has expired. Please login again.';
+        // الـ AuthInterceptor سيتعامل مع redirect
+        break;
+
+      case HTTP_STATUS.FORBIDDEN:
+        errorMessage = getErrorMessage(error) || 'You do not have permission to perform this action.';
+        break;
+
+      case HTTP_STATUS.NOT_FOUND:
+        errorMessage = getErrorMessage(error) || 'The requested resource was not found.';
+        break;
+
+      case HTTP_STATUS.CONFLICT:
+        errorMessage = getErrorMessage(error) || 'This resource already exists.';
+        break;
+
+      case HTTP_STATUS.PAYLOAD_TOO_LARGE:
+        errorMessage = 'File size is too large. Maximum size is 10MB.';
+        break;
+
+      case HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE:
+        errorMessage = 'File type is not supported.';
+        break;
+
+      case HTTP_STATUS.INTERNAL_SERVER_ERROR:
+        errorMessage = 'Server error. Please try again later.';
+        break;
+
+      case 0:
+        // Network error
+        errorMessage = 'Network error. Please check your connection.';
+        break;
+
+      default:
+        errorMessage = getErrorMessage(error) || defaultMessage;
     }
 
-    this.homeService.createPost(formData).subscribe({
-      next: (newPost) => {
-        this.posts = [newPost, ...this.posts];
-        this.isSubmittingPost = false;
-        this.resetPostForm();
-        this.toastService.show("Post create successfully", "success")
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.error('Failed to create post:', error);
-        this.isSubmittingPost = false;
-        this.handleAuthError(error);
-        this.toastService.show(error.error, "error")
-        this.cdr.markForCheck();
-      }
-    });
+    if (showToast) {
+      this.toastService.show(errorMessage, 'error');
+    }
   }
 
+  // ==================== Helper Methods ====================
 
   private resetPostForm(): void {
     this.newPost = { title: '', description: '', mediaFile: undefined };
@@ -370,67 +434,59 @@ trackByPostId(index: number, post: any): number {
     if (input) input.value = '';
   }
 
-  likePoste(id: number): void {
-    const post = this.posts.find(p => p.id === id);
-    if (post) {
-      // Optimistic update
-      const originalIsLiked = post.isLiked;
-      const originalLikesCount = post.likesCount;
+  open(): void {
+    this.showModal = true;
+    setTimeout(() => this.isOpen = true, 10);
+  }
 
-      post.isLiked = !post.isLiked;
-      post.likesCount += post.isLiked ? 1 : -1;
+  close(): void {
+    this.isOpen = false;
+    this.showModal = false;
+    this.PostToDelete = undefined;
+  }
 
-      this.cdr.markForCheck();
+  onScroll(): void {
+    this.loadPosts();
+  }
 
-      this.homeService.likePost(id).subscribe({
-        next: (updatedPost) => {
-          const index = this.posts.findIndex(p => p.id === post.id);
-          if (index !== -1) {
-            this.posts[index].likesCount = updatedPost.likesCount;
-          }
-          this.cdr.markForCheck();
-        },
-        error: (error) => {
-          // Revert optimistic update on error
-          post.isLiked = originalIsLiked;
-          post.likesCount = originalLikesCount;
-          this.handleAuthError(error);
-          this.cdr.markForCheck();
-        }
-      });
-    }
+  isMyPost(post: Post): boolean {
+    return post.user?.username === this.currentUser?.username;
   }
 
   goToPost(id: number): void {
-    console.log('go to post', id);
     this.router.navigate([`post/${id}`]);
-  }
-
-  follow(user: User): void {
-    if (!user.id) return;
-    console.log('Following user:', user.username);
-    this.homeService.follow(user.id).subscribe({
-      next: (res) => {
-        console.log(res);
-        const index = this.users.findIndex(u => u.id === user.id);
-        if (index !== -1) {
-          this.users[index].isfollowing = !this.users[index].isfollowing;
-        }
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.handleAuthError(error);
-      }
-    });
-
   }
 
   goToProfile(username: string): void {
     this.router.navigate([`profile/${username}`]);
   }
 
+  trackByPostId(index: number, post: Post): number {
+    return post.id;
+  }
+
+  onSearch(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+    this.filteredUsers = term === ''
+      ? []
+      : this.users.filter(user => user.username.toLowerCase().includes(term));
+  }
+
+  onImageError(event: Event): void {
+    (event.target as HTMLImageElement).src = 'assets/img/default-avatar.png';
+  }
+
+  getImage(path: string | undefined): string | undefined {
+    return this.homeService.getImage(path);
+  }
+
+  // ==================== Form Validation ====================
+
   get isPostFormValid(): boolean {
-    return this.newPost.description.trim().length > 0 && this.newPost.title.trim().length > 0 && !this.isCharacterLimitExceeded && !this.isCharacterTitleLimitExceeded;
+    return this.newPost.description.trim().length > 0
+      && this.newPost.title.trim().length > 0
+      && !this.isCharacterLimitExceeded
+      && !this.isCharacterTitleLimitExceeded;
   }
 
   get postCharacterCount(): number {
@@ -441,38 +497,15 @@ trackByPostId(index: number, post: any): number {
     return this.postCharacterCount > 5000;
   }
 
-
   get postTitelCharacterCount(): number {
     return this.newPost.title.length;
   }
+
   get isCharacterTitleLimitExceeded(): boolean {
     return this.postTitelCharacterCount > 280;
   }
 
-
-  // Optionally use these from home.helpers.ts
+  // Media helpers
   isImage = isImage;
   isVideo = isVideo;
-
-  getImage(path: string | undefined): string | undefined {
-    return this.homeService.getImage(path)
-  }
-
-  onSearch(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-
-    if (term === '') {
-      this.filteredUsers = [];
-      return;
-    }
-
-    this.filteredUsers = this.users.filter(user =>
-      user.username.toLowerCase().includes(term)
-    );
-  }
-  onImageError(event: Event): void {
-    (event.target as HTMLImageElement).src = 'assets/img/default-avatar.png';
-  }
-
-
 }

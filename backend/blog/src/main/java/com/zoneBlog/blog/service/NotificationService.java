@@ -2,22 +2,19 @@ package com.zoneBlog.blog.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zoneBlog.blog.controller.NotificationController;
+import com.zoneBlog.blog.exception.ResourceNotFoundException;
 import com.zoneBlog.blog.model.Comment;
 import com.zoneBlog.blog.model.Notification;
 import com.zoneBlog.blog.model.Post;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.NotificationRepository;
-import com.zoneBlog.blog.controller.NotificationController;
 
 @Service
 public class NotificationService {
@@ -35,30 +32,22 @@ public class NotificationService {
     }
 
     @Transactional
-    public ResponseEntity<?> getNotifications(Authentication authentication) {
-        try {
-            User user = getUserOrThrow(authentication);
-            List<Notification> notifications = notificationRepository
-                    .findByRecipientOrderByCreatedAtDesc(user);
+    public List<Notification> getNotifications(Authentication authentication) {
+        User user = getUserOrThrow(authentication);
+        List<Notification> notifications = notificationRepository
+                .findByRecipientOrderByCreatedAtDesc(user);
 
-            boolean anyUpdated = markNotificationsAsRead(notifications);
+        boolean anyUpdated = markNotificationsAsRead(notifications);
 
-            if (anyUpdated) {
-                notificationRepository.saveAll(notifications);
-                notificationRepository.flush();
-            }
-
-            Long unreadCount = notificationRepository.countByRecipient_IdAndIsReadFalse(user.getId());
-            sendNotificationCountAsync(user.getId(), unreadCount);
-
-            return ResponseEntity.ok(notifications);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        if (anyUpdated) {
+            notificationRepository.saveAll(notifications);
+            notificationRepository.flush();
         }
+
+        Long unreadCount = notificationRepository.countByRecipient_IdAndIsReadFalse(user.getId());
+        sendNotificationCountAsync(user.getId(), unreadCount);
+
+        return notifications;
     }
 
     @Transactional
@@ -81,7 +70,7 @@ public class NotificationService {
     private User getUserOrThrow(Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("User not found");
         }
         return user;
     }
@@ -122,11 +111,12 @@ public class NotificationService {
         return notification;
     }
 
-    @Async
+    // @Async
     private void sendNotificationCountAsync(Long userId, Long count) {
         try {
             notificationController.sendNotificationCount(userId, count);
         } catch (Exception e) {
+            // Log error but don't throw - async notification delivery is non-critical
         }
     }
 }

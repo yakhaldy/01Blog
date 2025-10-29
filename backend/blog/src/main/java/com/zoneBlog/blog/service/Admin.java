@@ -3,12 +3,13 @@ package com.zoneBlog.blog.service;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zoneBlog.blog.exception.BusinessException;
+import com.zoneBlog.blog.exception.ResourceNotFoundException;
+import com.zoneBlog.blog.exception.UnauthorizedException;
 import com.zoneBlog.blog.model.Report;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.CommentRepository;
@@ -39,146 +40,79 @@ public class Admin {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getReports(Authentication authentication) {
-        try {
-            validateAdminAccess(authentication);
-            List<Report> reports = reportRepository.findAll();
-            return ResponseEntity.ok(reports);
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
-        }
+    public List<Report> getReports(Authentication authentication) {
+        validateAdminAccess(authentication);
+        return reportRepository.findAll();
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getDashboardStats(Authentication authentication) {
-        try {
-            validateAdminAccess(authentication);
-            Map<String, Long> dashboardStats = new HashMap<>();
-            dashboardStats.put("totalUsers", userRepository.count());
-            dashboardStats.put("totalPosts", postRepository.count());
-            dashboardStats.put("totalReports", reportRepository.count());
-            dashboardStats.put("bannedUsers", userRepository.countByIsBanned(true));
-            dashboardStats.put("activeReports", reportRepository.countByStatus(PENDING_STATUS));
+    public Map<String, Long> getDashboardStats(Authentication authentication) {
+        validateAdminAccess(authentication);
+        
+        Map<String, Long> dashboardStats = new HashMap<>();
+        dashboardStats.put("totalUsers", userRepository.count());
+        dashboardStats.put("totalPosts", postRepository.count());
+        dashboardStats.put("totalReports", reportRepository.count());
+        dashboardStats.put("bannedUsers", userRepository.countByIsBanned(true));
+        dashboardStats.put("activeReports", reportRepository.countByStatus(PENDING_STATUS));
 
-            return ResponseEntity.ok(dashboardStats);
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
-        }
+        return dashboardStats;
     }
 
-    public ResponseEntity<?> deleteUser(Authentication authentication, Long id) {
+    public void deleteUser(Authentication authentication, Long id) {
+        validateAdminAccess(authentication);
 
-        try {
-            validateAdminAccess(authentication);
+        User user = getUserOrThrow(id);
 
-            User user = getUserOrThrow(id);
-
-            if (ADMIN_ROLE.equals(user.getRole())) {
-                throw new IllegalStateException("Admin users cannot be deleted");
-            }
-
-            userRepository.delete(user);
-            return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
-
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        if (ADMIN_ROLE.equals(user.getRole())) {
+            throw new BusinessException("Admin users cannot be deleted");
         }
+
+        userRepository.delete(user);
     }
 
-    public ResponseEntity<?> banUser(Authentication authentication, Long id) {
-        try {
-            validateAdminAccess(authentication);
+    public User banUser(Authentication authentication, Long id) {
+        validateAdminAccess(authentication);
 
-            User user = getUserOrThrow(id);
+        User user = getUserOrThrow(id);
 
-            if (ADMIN_ROLE.equals(user.getRole())) {
-                throw new IllegalStateException("Admin users cannot be banned");
-            }
-
-            boolean currentBanStatus = Boolean.TRUE.equals(user.getIsBanned());
-            user.setIsBanned(!currentBanStatus);
-
-            if (!currentBanStatus) {
-                user.setBannedAt(LocalDateTime.now());
-            } else {
-                user.setBannedAt(null);
-            }
-
-            userRepository.save(user);
-            return ResponseEntity.ok(user);
-
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        if (ADMIN_ROLE.equals(user.getRole())) {
+            throw new BusinessException("Admin users cannot be banned");
         }
+
+        boolean currentBanStatus = Boolean.TRUE.equals(user.getIsBanned());
+        user.setIsBanned(!currentBanStatus);
+
+        if (!currentBanStatus) {
+            user.setBannedAt(LocalDateTime.now());
+        } else {
+            user.setBannedAt(null);
+        }
+
+        return userRepository.save(user);
     }
 
-    public ResponseEntity<?> deleteReport(Authentication authentication, Long id) {
-        try {
-            validateAdminAccess(authentication);
+    public void deleteReport(Authentication authentication, Long id) {
+        validateAdminAccess(authentication);
 
-            Report report = reportRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Report not found"));
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
 
-            reportRepository.delete(report);
-            return ResponseEntity.ok(Map.of("message", "Report deleted successfully"));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
-        }
+        reportRepository.delete(report);
     }
 
     private void validateAdminAccess(Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("User not found");
         }
         if (!ADMIN_ROLE.equals(user.getRole())) {
-            throw new SecurityException("Admin access required");
+            throw new UnauthorizedException("Admin access required");
         }
     }
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }

@@ -25,6 +25,8 @@ export class App {
         window.scrollTo(0, 0);
       }
     });
+        setTimeout(() => this.title.set('My Blog 🚀'), 2000);
   }
   protected readonly title = signal('01Blog');
+
 }

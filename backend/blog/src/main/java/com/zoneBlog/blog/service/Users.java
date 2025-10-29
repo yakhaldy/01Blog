@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zoneBlog.blog.exception.BusinessException;
+import com.zoneBlog.blog.exception.ResourceNotFoundException;
 import com.zoneBlog.blog.model.Follow;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.FollowRepository;
@@ -47,60 +47,39 @@ public class Users {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getAllUsers(Authentication authentication) {
-        try {
-            User currentUser = getUserOrThrow(authentication);
+    public List<Map<String, Object>> getAllUsers(Authentication authentication) {
+        User currentUser = getUserOrThrow(authentication);
 
-            List<User> users = userRepository.findByUsernameNot(currentUser.getUsername());
-            List<Map<String, Object>> response = new ArrayList<>();
+        List<User> users = userRepository.findByUsernameNot(currentUser.getUsername());
+        List<Map<String, Object>> response = new ArrayList<>();
 
-            for (User user : users) {
-                response.add(buildUserResponse(user, currentUser.getId()));
-            }
-
-            return ResponseEntity.ok(response);
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        for (User user : users) {
+            response.add(buildUserResponse(user, currentUser.getId()));
         }
+
+        return response;
     }
 
-    public ResponseEntity<?> follow(Authentication authentication, Long userId) {
-        try {
-            User currentUser = getUserOrThrow(authentication);
+    public void follow(Authentication authentication, Long userId) {
+        User currentUser = getUserOrThrow(authentication);
 
-            if (currentUser.getId().equals(userId)) {
-                throw new IllegalArgumentException("You cannot follow yourself");
-            }
-
-            User userToFollow = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User to follow not found"));
-
-            boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
-                    currentUser.getId(), userId);
-
-            if (isFollowing) {
-                unfollowUser(currentUser, userToFollow);
-            } else {
-                followUser(currentUser, userToFollow);
-            }
-
-            updateFollowCounts(currentUser, userToFollow);
-            return ResponseEntity.ok(Map.of("message", "User followed successfully"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An unexpected error occurred during registration"));
+        if (currentUser.getId().equals(userId)) {
+            throw new BusinessException("You cannot follow yourself");
         }
+
+        User userToFollow = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User to follow not found"));
+
+        boolean isFollowing = followRepository.existsByFollower_IdAndFollowing_Id(
+                currentUser.getId(), userId);
+
+        if (isFollowing) {
+            unfollowUser(currentUser, userToFollow);
+        } else {
+            followUser(currentUser, userToFollow);
+        }
+
+        updateFollowCounts(currentUser, userToFollow);
     }
 
     // Private helper methods
@@ -108,7 +87,7 @@ public class Users {
     private User getUserOrThrow(Authentication authentication) {
         User user = helper.getCurrentUser(authentication);
         if (user == null) {
-            throw new RuntimeException("Authenticated user not found");
+            throw new ResourceNotFoundException("Authenticated user not found");
         }
         return user;
     }
@@ -158,7 +137,6 @@ public class Users {
     }
 
     private void updateFollowCounts(User follower, User following) {
-
         follower.setFollowing(followRepository.countByFollower_Id(follower.getId()));
         follower.setFollowers(followRepository.countByFollowing_Id(follower.getId()));
 

@@ -16,6 +16,13 @@ import { Navbar } from '../components/navbar/navbar';
 import { User, Post, Comment, UpdatePostResult } from '../model/model';
 import { Auth } from '../service/auth';
 import { ToastService } from '../service/toast-service';
+import {
+  getErrorMessage,
+  HTTP_STATUS,
+  getFirstValidationError
+} from '../model/error-response.model';
+import { HttpErrorResponse } from '@angular/common/http';
+
 @Component({
   selector: 'app-singal-post',
   standalone: true,
@@ -92,10 +99,11 @@ export class SingalPost implements OnInit {
         this.isLoading = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         this.error = 'Post not found or you do not have permission to view it.';
-        this.showErrorMessage('Post not found or you do not have permission to view it.'); 
+        // this.showErrorMessage('Post not found or you do not have permission to view it.'); 
         this.isLoading = false;
+        this.handleError(error, 'Failed to load posts', true);
         this.cdr.markForCheck();
       }
     });
@@ -137,8 +145,9 @@ export class SingalPost implements OnInit {
             this.showSuccessMessage('Post updated successfully!');
             this.cdr.markForCheck();
           },
-          error: (error) => {
-            this.showErrorMessage('Failed to update post.');
+          error: (error: HttpErrorResponse) => {
+            // this.showErrorMessage('Failed to update post.');
+           this.handleError(error, 'Failed to update post.', true);
             this.cdr.markForCheck();
           }
         });
@@ -173,12 +182,13 @@ export class SingalPost implements OnInit {
         }
         this.cdr.markForCheck();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         if (this.post) {
           // Revert on error
           this.post.isLiked = originalIsLiked;
           this.post.likesCount = originalLikesCount;
-          this.showErrorMessage('Failed to like/unlike post.');
+          // this.showErrorMessage('Failed to like/unlike post.');
+           this.handleError(error, 'Failed to like/unlike post.', true);
           this.cdr.markForCheck();
         }
       }
@@ -200,8 +210,10 @@ export class SingalPost implements OnInit {
         }
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        this.showErrorMessage('Error loading comments:');
+      error: (error: HttpErrorResponse) => {
+        // this.showErrorMessage('Error loading comments:');
+        this.handleError(error, 'Failed to like/unlike post.', true);
+
         this.isLoadingComments = false;
         this.cdr.markForCheck();
       }
@@ -236,10 +248,11 @@ export class SingalPost implements OnInit {
         this.showSuccessMessage('Comment posted successfully!'); 
         this.cdr.markForCheck();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error posting comment:', error);
         this.isSubmittingComment = false;
-        this.showErrorMessage('Failed to post comment. Please try again.'); 
+        // this.showErrorMessage('Failed to post comment. Please try again.');
+        this.handleError(error, 'Failed to post comment. Please try again.', true);
         this.cdr.markForCheck();
       }
     });
@@ -256,15 +269,18 @@ export class SingalPost implements OnInit {
   saveEditedComment(comment: Comment): void {
     if (this.editedContent.length > 500) return;
 
-    this.auth.updateComment(comment.id, { content: this.editedContent }).subscribe({
+    this.auth.updateComment(comment.id, {postId: comment.id,content: this.editedContent }).subscribe({
       next: (updatedComment) => {
         comment.content = this.editedContent;
         this.cancelEdit();
         this.showSuccessMessage('Comment update successfully!'); 
         this.cdr.markForCheck();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         this.showErrorMessage('Failed to update comment. Please try again.');
+        this.handleError(error, 'Failed to update comment. Please try again.', true);
+
+        this.cdr.markForCheck();
       }
     });
 
@@ -320,9 +336,10 @@ export class SingalPost implements OnInit {
           this.commentToDelete = undefined;
           this.close();
         },
-        error: (error) => {
-          console.error('Failed to delete comment:', error);
-          this.showErrorMessage('Failed to delete comment. Please try again.');
+        error: (error: HttpErrorResponse) => {
+          // console.error('Failed to delete comment:', error);
+          // this.showErrorMessage('Failed to delete comment. Please try again.');
+          this.handleError(error, 'Failed to delete comment. Please try again.', true);
           this.commentToDelete = undefined; 
           this.close();
         }
@@ -334,8 +351,10 @@ export class SingalPost implements OnInit {
           this.router.navigate([`/`]);
            this.close();
         },
-        error: (error) => {
-          this.showErrorMessage('Failed to delete post.');
+        error: (error: HttpErrorResponse) => {
+          // this.showErrorMessage('Failed to delete post.');
+          this.handleError(error, 'Failed to delete post.', true);
+
           this.cdr.markForCheck();
           this.close();
         }
@@ -351,9 +370,11 @@ export class SingalPost implements OnInit {
         this.currentUser = user;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         // console.log('User not logged in'); // Log is fine, no action needed for non-logged user
-          this.showErrorMessage('User not logged in.');
+          // this.showErrorMessage('User not logged in.');
+          this.handleError(error, 'User not logged in.', true);
+
         this.currentUser = null;
         this.cdr.markForCheck();
       }
@@ -393,4 +414,59 @@ export class SingalPost implements OnInit {
   // Exported functions
   isImage = isImage;
   isVideo = isVideo;
+private handleError(
+    error: HttpErrorResponse,
+    defaultMessage: string = 'An error occurred',
+    showToast: boolean = true
+  ): void {
+    console.error('Error:', error);
+
+    let errorMessage = defaultMessage;
+
+    switch (error.status) {
+      case HTTP_STATUS.BAD_REQUEST:
+        errorMessage = getErrorMessage(error);
+        break;
+
+      case HTTP_STATUS.UNAUTHORIZED:
+        errorMessage = 'Your session has expired. Please login again.';
+        break;
+
+      case HTTP_STATUS.FORBIDDEN:
+        errorMessage = getErrorMessage(error) || 'You do not have permission to perform this action.';
+        break;
+
+      case HTTP_STATUS.NOT_FOUND:
+        errorMessage = getErrorMessage(error) || 'The requested resource was not found.';
+        break;
+
+      case HTTP_STATUS.CONFLICT:
+        errorMessage = getErrorMessage(error) || 'This resource already exists.';
+        break;
+
+      case HTTP_STATUS.PAYLOAD_TOO_LARGE:
+        errorMessage = 'File size is too large. Maximum size is 10MB.';
+        break;
+
+      case HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE:
+        errorMessage = 'File type is not supported.';
+        break;
+
+      case HTTP_STATUS.INTERNAL_SERVER_ERROR:
+        errorMessage = 'Server error. Please try again later.';
+        break;
+
+      case 0:
+        // Network error
+        errorMessage = 'Network error. Please check your connection.';
+        break;
+
+      default:
+        errorMessage = getErrorMessage(error) || defaultMessage;
+    }
+
+    if (showToast) {
+      this.toastService.show(errorMessage, 'error');
+    }
+  }
 }
