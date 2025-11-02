@@ -63,21 +63,7 @@ public class AuthController {
         return ResponseEntity.ok(profile);
     }
 
-    // @PostMapping(value = "/posts", consumes = "multipart/form-data")
-    // public ResponseEntity<?> createPost(
-    // Authentication authentication,
-    // @RequestPart("description") String description,
-    // @RequestPart("title") String title,
-    // @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile)
-    // {
 
-    // PostRequest request = new PostRequest();
-    // request.setDescription(description);
-    // request.setTitle(title);
-
-    // Post post = postsService.createPost(authentication, request, mediaFile);
-    // return ResponseEntity.status(HttpStatus.CREATED).body(post);
-    // }
     @PostMapping(value = "/posts", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             Authentication authentication,

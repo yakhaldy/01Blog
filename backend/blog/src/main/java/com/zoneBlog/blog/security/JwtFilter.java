@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -67,7 +66,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 System.out.println("📦 JWT extracted from URL parameter: " + (token != null ? "Present" : "Missing"));
             }
 
-            // String token = authHeader.substring(7);
+          
             System.out.println("📝 Processing JWT token...");
 
             try {

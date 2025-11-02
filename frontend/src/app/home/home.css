@@ -1325,3 +1325,8 @@
         justify-content: center;
     }
 }
+
+
+.file-preview{
+    max-width: 80px;
+}

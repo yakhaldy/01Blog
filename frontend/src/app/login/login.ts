@@ -44,16 +44,25 @@ export class Login implements OnInit {
         this.router.navigate(['/']);
       },
       error: (err) => {
-        if (err.status === 401 || err.status === 400) {
-          this.errorMessage = err.error.error;
-          this.cdr.detectChanges();
+        console.log(err.error);
 
+        if (err.status === 400 || err.status === 401 || err.status === 403) {
+          if (err.error?.errors) {
+            const firstError = Object.values(err.error.errors)[0];
+            this.errorMessage = firstError as string;
+          } else if (err.error?.message) {
+            this.errorMessage = err.error.message;
+          } else {
+            this.errorMessage = 'Invalid credentials';
+          }
         } else {
           console.log('Login failed', err);
           this.errorMessage = 'An unexpected error occurred';
-          this.cdr.detectChanges();
         }
+
+        this.cdr.detectChanges();
       }
+
     });
   }
   goToRegister() {

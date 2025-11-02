@@ -19,7 +19,6 @@ import { ToastService } from '../service/toast-service';
 import {
   getErrorMessage,
   HTTP_STATUS,
-  getFirstValidationError
 } from '../model/error-response.model';
 import { HttpErrorResponse } from '@angular/common/http';
 

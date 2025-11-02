@@ -42,7 +42,7 @@ public class BlogApplication {
         }
 
         /// test print beans
-        printBeans();
+        // printBeans();
     }
 
     @Autowired

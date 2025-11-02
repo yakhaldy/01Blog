@@ -13,38 +13,38 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrls: ['./register.css']
 })
 
-export class Register implements OnInit{
-  user = { 
-    username: '', 
-    email: '', 
-    password: '', 
-    confirmPassword: '' 
+export class Register implements OnInit {
+  user = {
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
   };
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) {}
+  constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    const token =    localStorage.getItem('token');
-    if (token){
-    this.router.navigate(["/"]);
+    const token = localStorage.getItem('token');
+    if (token) {
+      this.router.navigate(["/"]);
     }
   }
   register() {
     this.errorMessage = null;
     this.successMessage = null;
-    if (this.user.username == "" ){
-       this.errorMessage = '"Username is Empty';
+    if (this.user.username == "") {
+      this.errorMessage = '"Username is Empty';
       this.cdr.detectChanges();
       return;
     }
-    if (this.user.email == "" ){
-       this.errorMessage = 'Email is Empty';
+    if (this.user.email == "") {
+      this.errorMessage = 'Email is Empty';
       this.cdr.detectChanges();
       return;
     }
-     if (!this.isValidEmail(this.user.email)) {
+    if (!this.isValidEmail(this.user.email)) {
       this.errorMessage = 'Please enter a valid email address';
       this.cdr.detectChanges();
       return;
@@ -69,22 +69,36 @@ export class Register implements OnInit{
         this.successMessage = 'Registration successful! Redirecting to login...';
         this.errorMessage = null;
         this.cdr.detectChanges();
-        
+
         // Redirect to login after 2 seconds
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 2000);
       },
       error: (err) => {
-        if (err.status === 400 ) {          
-          this.errorMessage = err.error.error || 'Registration failed';
-          this.cdr.detectChanges();
+        console.log('Error response:', err);
+
+        if (err.status === 400 || err.status === 401 || err.status === 409) {
+          let msg = 'Registration failed';
+
+          if (err.error?.errors) {
+            const firstError = Object.values(err.error.errors)[0];
+            msg = firstError as string;
+          } else if (err.error?.message) {
+            msg = err.error.message;
+          } else if (err.error?.error) {
+            msg = err.error.error;
+          }
+
+          this.errorMessage = msg;
         } else {
+          console.error('Unexpected error:', err);
           this.errorMessage = 'An unexpected error occurred';
-          console.log('Registration failed', err);
-          this.cdr.detectChanges();
         }
+
+        this.cdr.detectChanges();
       }
+
     });
   }
 
