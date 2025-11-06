@@ -63,11 +63,10 @@ public class AuthController {
         return ResponseEntity.ok(profile);
     }
 
-
     @PostMapping(value = "/posts", consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             Authentication authentication,
-            @Valid @RequestPart("post") PostRequest request, 
+            @Valid @RequestPart("post") PostRequest request,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
 
         Post post = postsService.createPost(authentication, request, mediaFile);
@@ -169,8 +168,18 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<Map<String, Object>>> getAllUsers(Authentication authentication) {
-        List<Map<String, Object>> users = usersService.getAllUsers(authentication);
+    public ResponseEntity<Page<Map<String, Object>>> getAllUsers(Authentication authentication,@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Map<String, Object>> users = usersService.getAllUsers(authentication,page, size);
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/users/search")
+    public ResponseEntity<List<Map<String, Object>>> searchUsers(
+            @RequestParam(required = false, defaultValue = "") String searchTerm,
+            Authentication authentication) {
+
+        List<Map<String, Object>> users = usersService.searchUsers(authentication, searchTerm);
         return ResponseEntity.ok(users);
     }
 

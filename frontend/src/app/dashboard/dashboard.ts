@@ -108,18 +108,18 @@ export class Dashboard implements OnInit {
   loadUsers(): void {
     this.isLoadingUsers = true;
     // Replace with actual API call
-    this.auth.getAllUsers().subscribe({
-      next: (users) => {
-        this.users = users;
-        this.isLoadingUsers = false;
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        console.error('Failed to load users:', error);
-        this.isLoadingUsers = false;
-        this.cdr.markForCheck();
-      },
-    });
+    // this.auth.getAllUsers().subscribe({
+    //   next: (users) => {
+    //     this.users = users;
+    //     this.isLoadingUsers = false;
+    //     this.cdr.markForCheck();
+    //   },
+    //   error: (error) => {
+    //     console.error('Failed to load users:', error);
+    //     this.isLoadingUsers = false;
+    //     this.cdr.markForCheck();
+    //   },
+    // });
   }
 
   hasMorePosts = true;

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,10 @@ import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
 
 import static com.zoneBlog.blog.model.Notification.NotificationType.FOLLOW;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional
@@ -47,10 +52,27 @@ public class Users {
     }
 
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> getAllUsers(Authentication authentication) {
+    public Page<Map<String, Object>> getAllUsers(Authentication authentication, int page, int size) {
         User currentUser = getUserOrThrow(authentication);
 
-        List<User> users = userRepository.findByUsernameNot(currentUser.getUsername());
+        if (page < 0)
+            page = 0;
+        if (size < 0 || size > 50)
+            size = 7;
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<User> users = userRepository.findByUsernameNot(currentUser.getUsername(), pageable);
+
+        return users.map(user -> buildUserResponse(user, currentUser.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> searchUsers(Authentication authentication, String searchTerm) {
+        User currentUser = getUserOrThrow(authentication);
+
+        List<User> users = userRepository.searchUsersByUsername(
+                searchTerm.trim());
         List<Map<String, Object>> response = new ArrayList<>();
 
         for (User user : users) {

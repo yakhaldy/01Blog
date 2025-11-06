@@ -180,61 +180,12 @@
 
     </main>
 
-    <!-- Right Sidebar - Suggestions -->
+
     <aside class="sidebar-right">
-      <section class="users-card" role="region" aria-label="Suggested users to follow">
+      <section class="users-card" role="region" aria-label="User search and suggestions">
         <header class="card-header">
-          <h3 class="card-title">Who to follow</h3>
+          <h3 class="card-title">{{ searchTerm.trim().length > 0 ? 'Search Results' : 'Who to follow' }}</h3>
         </header>
-
-        <div class="search-container">
-          <mat-form-field class="search-field" appearance="outline">
-            <mat-icon matPrefix>search</mat-icon>
-            <input matInput [(ngModel)]="searchTerm" placeholder="Search users..." aria-label="Search users"
-              style="color: aliceblue;">
-          </mat-form-field>
-        </div>
-        <div *ngIf="isLoadingUsers" class="loading-container">
-          <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
-          <p class="loading-text">Loading...</p>
-        </div>
-        <div class="users-list">
-          <div *ngFor="let user of users | filter:searchTerm; " class="user-item" role="article"
-            [attr.aria-label]="'User: ' + user.username">
-            <div class="user-info" matTooltip="go to profile" (click)="goToProfile(user.username)">
-              <div class="user-avatar">
-                <!-- <mat-icon class="avatar-icon">account_circle</mat-icon> -->
-                <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'"
-                  [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
-              </div>
-              <div class="user-details">
-                <h4 class="username">{{ user.username }}</h4>
-              </div>
-            </div>
-
-            <button *ngIf="!user.isfollowing" mat-raised-button color="primary" class="follow-btn"
-              (click)="follow(user)" [attr.aria-label]="'Follow ' + user.username">
-              <mat-icon>person_add</mat-icon>
-              Follow
-            </button>
-            <button *ngIf="user.isfollowing" mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
-              [attr.aria-label]="'Follow ' + user.username">
-              <mat-icon>person_remove</mat-icon>
-              UnFollow
-            </button>
-          </div>
-
-        </div>
-        <!-- <button class="show-more-btn" type="button">
-          <span class="show-more-text">Show more</span>
-        </button> -->
-      </section>
-    </aside>
-
-
-    <!--  -->
-    <aside class="sidebar-search">
-      <section class="users-card" role="region" aria-label="Search users">
 
         <!-- Search Input -->
         <div class="search-container">
@@ -246,35 +197,72 @@
         </div>
 
         <!-- Loading Spinner -->
-        <div *ngIf="isLoadingUsers" class="loading-container">
+        <div *ngIf="isLoadingUsers || isLoadingSearch" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading users"></mat-spinner>
-          <p class="loading-text">Loading...</p>
+          <p class="loading-text">{{ searchTerm.trim().length > 0 ? 'Searching...' : 'Loading...' }}</p>
         </div>
 
-        <!-- Search Results -->
-        <div class="users-list" *ngIf="searchTerm.trim().length > 0">
-          <div *ngIf="filteredUsers.length === 0">
-            <p>No users found.</p>
-          </div>
+        <!-- User Lists Container with Infinite Scroll -->
+         <!-- infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="300"
+          (scrolled)="onUserListScroll()" -->
+        <div class="users-list" >
 
-          <div *ngFor="let user of filteredUsers" class="user-item" role="article"
-            [attr.aria-label]="'User: ' + user.username">
-            <div class="user-info" matTooltip="go to profile" (click)="goToProfile(user.username)">
-              <div class="user-avatar">
-                <img [src]="getImage(user.avatar)" (error)="onImageError($event)"
-                  [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
-              </div>
-              <div class="user-details">
-                <h4 class="username">{{ user.username }}</h4>
+          <!-- Show suggested users when no search term -->
+          <ng-container *ngIf="searchTerm.trim().length === 0">
+            <div class="users-list-normal">
+              <div *ngFor="let user of users" class="user-item" role="article"
+                [attr.aria-label]="'User: ' + user.username">
+                <div class="user-info" matTooltip="Go to profile" (click)="goToProfile(user.username)">
+                  <div class="user-avatar">
+                    <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'"
+                      [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
+                  </div>
+                  <div class="user-details">
+                    <h4 class="username">{{ user.username }}</h4>
+                  </div>
+                </div>
+
+                <button mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
+                  [attr.aria-label]="(user.isfollowing ? 'Unfollow ' : 'Follow ') + user.username">
+                  <mat-icon>{{ user.isfollowing ? 'person_remove' : 'person_add' }}</mat-icon>
+                  {{ user.isfollowing ? 'Unfollow' : 'Follow' }}
+                </button>
               </div>
             </div>
+          </ng-container>
 
-            <button mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
-              [attr.aria-label]="(user.isfollowing ? 'Unfollow ' : 'Follow ') + user.username">
-              <mat-icon>{{ user.isfollowing ? 'person_remove' : 'person_add' }}</mat-icon>
-              {{ user.isfollowing ? 'UnFollow' : 'Follow' }}
-            </button>
-          </div>
+          <!-- Show search results when search term exists -->
+          <ng-container *ngIf="searchTerm.trim().length > 0">
+            <!-- No Results Message -->
+            <div *ngIf="searchResults.length === 0 && !isLoadingSearch" class="no-results-message">
+              <p>No users found for "{{ searchTerm }}"</p>
+            </div>
+
+            <!-- Search Results List -->
+            <div *ngFor="let user of searchResults; trackBy: trackByUserId" class="user-item" role="article"
+              [attr.aria-label]="'User: ' + user.username">
+              <div class="user-info" matTooltip="Go to profile" (click)="goToProfile(user.username)">
+                <div class="user-avatar">
+                  <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'" (error)="onImageError($event)"
+                    [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
+                </div>
+                <div class="user-details">
+                  <h4 class="username">{{ user.username }}</h4>
+                  <p class="user-email">{{ user.email }}</p>
+                </div>
+                <button mat-raised-button color="primary" class="follow-btn" (click)="follow(user)"
+                  [attr.aria-label]="(user.isfollowing ? 'Unfollow ' : 'Follow ') + user.username">
+                  <mat-icon>{{ user.isfollowing ? 'person_remove' : 'person_add' }}</mat-icon>
+                  {{ user.isfollowing ? 'Unfollow' : 'Follow' }}
+                </button>
+              </div>
+
+            </div>
+
+          </ng-container>
+        </div>
+        <div class="show-more-btn">
+          <button class="button-show-more" (click)="onUserListScroll()">show more</button>
         </div>
       </section>
     </aside>

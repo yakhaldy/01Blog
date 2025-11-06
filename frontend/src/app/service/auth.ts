@@ -1,5 +1,5 @@
 import { Injectable, Inject, PLATFORM_ID  } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, EMPTY } from 'rxjs';
 import { User, Post, Comment, Report, DashboardStats, Notification,Page } from '../model/model';
 import { Notifications } from './notifications';
@@ -74,9 +74,9 @@ export class Auth {
     if (!this.isBrowser) return EMPTY;
     return this.http.post<Post>(`${this.apiUrl}/posts/like`, { postId: id })
   }
-  getAllUsers(): Observable<User[]> {
+  getAllUsers(page: number = 0, size: number = 7): Observable<Page<User>> {
     if (!this.isBrowser) return EMPTY;
-    return this.http.get<User[]>(`${this.apiUrl}/users`)
+    return this.http.get<Page<User>>(`${this.apiUrl}/users?page=${page}&size=${size}`)
 
   }
   follow(userId: string): Observable<any> {
@@ -167,4 +167,15 @@ export class Auth {
 
   }
 
+  searchUsers(searchTerm: string, page: number = 0, size: number = 10): Observable<User[]> {
+    // let params = new HttpParams()
+    //   .set('page', page.toString())
+    //   .set('size', size.toString());
+    
+    // if (searchTerm && searchTerm.trim()) {
+    //   params = params.set('searchTerm', searchTerm.trim());
+    // }
+
+    return this.http.get<User[]>(`${this.apiUrl}/users/search?searchTerm=${searchTerm}`);
+  }
 }

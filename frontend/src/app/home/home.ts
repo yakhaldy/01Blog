@@ -1,7 +1,5 @@
-// home.component.ts - محسّن مع معالجة أخطاء أفضل
-
 import {
-  Component, OnInit, ChangeDetectorRef,signal
+  Component, OnInit, ChangeDetectorRef, signal
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -43,6 +41,8 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 import { Auth } from '../service/auth';
 import { ToastService } from '../service/toast-service';
+
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -108,6 +108,7 @@ export class Home implements OnInit {
 
   ngOnInit(): void {
     this.initializeComponent();
+    this.setupSearchDebounce();
   }
 
   private initializeComponent(): void {
@@ -134,18 +135,48 @@ export class Home implements OnInit {
   }
 
   private loadUsers(): void {
-    this.homeService.getAllUsers().subscribe({
-      next: (users) => {
-        this.users = users;
+
+     this.isLoadingUsers = true;
+    this.currentUsersPage++;
+    this.homeService.getAllUsers(this.currentUsersPage, this.usersPageSize).subscribe({
+      next: (response) => {
+        // Append new results to existing ones
+        this.users.push(...response.content);
+        this.hasMoreUsersResults = this.currentUsersPage + 1 < response.totalPages;
         this.isLoadingUsers = false;
-        this.cdr.markForCheck();
+        console.table(this.users);
+        console.log(this.isLoadingUsers);
+        
+        
+        this.cdr.detectChanges();
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoadingUsers = false;
-        this.handleError(error, 'Failed to load users', false);
+        this.currentUsersPage--; 
+       this.isLoadingUsers = false;
+        this.handleError(error, 'Failed to load more results', false);
         this.cdr.markForCheck();
       }
     });
+  }
+
+    // Unified scroll handler for the user list
+  onUserListScroll(): void {
+    console.log('=====> User List Scroll');
+      this.loadMoreSearchResults();
+
+  }
+
+  // Load more search results
+  private loadMoreSearchResults(): void {
+    if (!this.hasMoreUsersResults ) {
+      return;
+    }
+    this.loadUsers();
+  }
+
+  // Track by function for better performance
+  trackByUserId(index: number, user: User): number {
+    return Number(user.id) || index;
   }
 
   loadPosts(): void {
@@ -185,7 +216,7 @@ export class Home implements OnInit {
     const formData = new FormData();
 
     const postJson = JSON.stringify({
-      title: this.newPost.title.trim()+"5444",
+      title: this.newPost.title.trim() + "5444",
       description: this.newPost.description.trim()
     });
 
@@ -373,16 +404,16 @@ export class Home implements OnInit {
 
     let errorMessage = defaultMessage;
 
-    // معالجة حسب status code
+
     switch (error.status) {
       case HTTP_STATUS.BAD_REQUEST:
-        // قد يكون validation error أو business error
+
         errorMessage = getErrorMessage(error);
         break;
 
       case HTTP_STATUS.UNAUTHORIZED:
         errorMessage = 'Your session has expired. Please login again.';
-        // الـ AuthInterceptor سيتعامل مع redirect
+
         break;
 
       case HTTP_STATUS.FORBIDDEN:
@@ -464,13 +495,81 @@ export class Home implements OnInit {
   trackByPostId(index: number, post: Post): number {
     return post.id;
   }
+  /***************=>Search<=***********************/
+  // Updated methods for your home.component.ts
 
-  onSearch(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-    this.filteredUsers = term === ''
-      ? []
-      : this.users.filter(user => user.username.toLowerCase().includes(term));
+  // Replace the search-related variables and methods with these:
+
+  // Variables (add/update these in your component)
+  searchResults: User[] = [];
+  isLoadingSearch = false;
+  hasMoreUsersResults = true;
+  currentUsersPage = 0;
+  usersPageSize = 6;
+  private searchSubject = new Subject<string>();
+
+  // In ngOnInit, call this:
+  private setupSearchDebounce(): void {
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(searchTerm => {
+        this.performSearch(searchTerm);
+      });
   }
+
+  // Search method
+  onSearch(): void {
+    console.log('=====> ', this.searchTerm.trim());
+
+    const term = this.searchTerm.trim();
+
+    if (term.length === 0) {
+      // Clear search results when search is empty
+      this.searchResults = [];
+      // this.currentUsersPage = 0;
+      // this.hasMoreSearchResults = true;
+      return;
+    }
+
+    // Reset search state for new search
+    // this.currentUsersPage = 0;
+    // this.hasMoreSearchResults = true;
+    this.searchResults = [];
+
+    // Trigger debounced search
+    this.searchSubject.next(term);
+  }
+
+  // Perform the actual search
+  private performSearch(searchTerm: string): void {
+    if (!searchTerm || searchTerm.length === 0) {
+      this.searchResults = [];
+      return;
+    }
+
+    this.isLoadingSearch = true;
+
+    this.homeService.searchUsers(searchTerm).subscribe({
+      next: (response) => {
+        this.searchResults = response;
+        this.isLoadingSearch = false;
+        this.cdr.markForCheck();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isLoadingSearch = false;
+        this.handleError(error, 'Failed to search users', false);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+
+
+
+  /*****************************************************/
 
   onImageError(event: Event): void {
     (event.target as HTMLImageElement).src = 'assets/img/default-avatar.png';

@@ -35,13 +35,17 @@ export class HomeService {
   likePost(postId: number): Observable<Post> {
     return this.auth.likePost(postId);
   }
-  getAllUsers(): Observable<User[]> {
-    return this.auth.getAllUsers();
+  getAllUsers(page: number = 0, size: number = 10): Observable<Page<User>> {
+    return this.auth.getAllUsers(page, size);
   }
   follow(userID: string): Observable<any> {
     return this.auth.follow(userID);
   }
   getImage(path: string | undefined): string | undefined {
     return this.auth.getImage(path)
+  }
+
+  searchUsers(searchTerm: string): Observable<User[]> {
+   return this.auth.searchUsers(searchTerm);
   }
 }
