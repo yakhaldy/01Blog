@@ -1216,3 +1216,24 @@
 .custom-tab-label {
   color: #ffffff;
 }
+
+
+.button-show-more {
+    padding: .55rem 1.2rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: .875rem;
+    font-weight: 500;
+    background: #eee;
+    width: 100%;
+    transition: background .25s, transform .1s;
+}
+
+.button-show-more:hover {
+    background: #e2e2e2;
+}
+
+.button-show-more:active {
+    transform: scale(.97);
+}

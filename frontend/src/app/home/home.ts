@@ -30,18 +30,14 @@ import { FilterPipe } from '../pipes/filter-pipe';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 
 import { User, UpdatePostResult, NewPost, Post } from '../model/model';
-import {
-  getErrorMessage,
-  HTTP_STATUS,
-  getFirstValidationError
-} from '../model/error-response.model';
+
 import { HomeService } from './home.service';
 
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 import { Auth } from '../service/auth';
 import { ToastService } from '../service/toast-service';
-
+import { ErrorHandlerService } from '../helper/handleError'; 
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
@@ -103,7 +99,8 @@ export class Home implements OnInit {
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
     private auth: Auth,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private errorHandler: ErrorHandlerService
   ) { }
 
   ngOnInit(): void {
@@ -128,7 +125,7 @@ export class Home implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.isLoading = false;
-        this.handleError(error, 'Failed to load user profile');
+        this.errorHandler.handle(error, 'Failed to load user profile');
         this.cdr.markForCheck();
       }
     });
@@ -153,26 +150,21 @@ export class Home implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.currentUsersPage--; 
        this.isLoadingUsers = false;
-        this.handleError(error, 'Failed to load more results', false);
+        this.errorHandler.handle(error, 'Failed to load more results', false);
         this.cdr.markForCheck();
       }
     });
   }
 
     // Unified scroll handler for the user list
-  onUserListScroll(): void {
-    console.log('=====> User List Scroll');
-      this.loadMoreSearchResults();
-
-  }
-
-  // Load more search results
-  private loadMoreSearchResults(): void {
+  showMoreUsers(): void {
     if (!this.hasMoreUsersResults ) {
       return;
     }
     this.loadUsers();
   }
+
+ 
 
   // Track by function for better performance
   trackByUserId(index: number, user: User): number {
@@ -200,7 +192,7 @@ export class Home implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.isLoadingPost = false;
-        this.handleError(error, 'Failed to load posts', false);
+        this.errorHandler.handle(error, 'Failed to load posts', false);
         this.cdr.markForCheck();
       }
     });
@@ -236,7 +228,7 @@ export class Home implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.isSubmittingPost = false;
-        this.handleError(error, 'Failed to create post');
+        this.errorHandler.handle(error, 'Failed to create post');
         this.cdr.markForCheck();
       }
     });
@@ -280,7 +272,7 @@ export class Home implements OnInit {
             this.cdr.markForCheck();
           },
           error: (error: HttpErrorResponse) => {
-            this.handleError(error, 'Failed to update post');
+            this.errorHandler.handle(error, 'Failed to update post');
             this.cdr.markForCheck();
           }
         });
@@ -307,7 +299,7 @@ export class Home implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.PostToDelete = undefined;
-        this.handleError(error, 'Failed to delete post');
+        this.errorHandler.handle(error, 'Failed to delete post');
         this.cdr.markForCheck();
       }
     });
@@ -336,7 +328,7 @@ export class Home implements OnInit {
         // Revert optimistic update
         post.isLiked = originalIsLiked;
         post.likesCount = originalLikesCount;
-        this.handleError(error, 'Failed to like post', false);
+        this.errorHandler.handle(error, 'Failed to like post', false);
         this.cdr.markForCheck();
       }
     });
@@ -356,7 +348,7 @@ export class Home implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        this.handleError(error, 'Failed to follow user', false);
+        this.errorHandler.handle(error, 'Failed to follow user', false);
       }
     });
   }
@@ -391,67 +383,6 @@ export class Home implements OnInit {
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
     this.cdr.markForCheck();
-  }
-
-  // ==================== Error Handling ====================
-
-  private handleError(
-    error: HttpErrorResponse,
-    defaultMessage: string = 'An error occurred',
-    showToast: boolean = true
-  ): void {
-    console.error('Error:', error);
-
-    let errorMessage = defaultMessage;
-
-
-    switch (error.status) {
-      case HTTP_STATUS.BAD_REQUEST:
-
-        errorMessage = getErrorMessage(error);
-        break;
-
-      case HTTP_STATUS.UNAUTHORIZED:
-        errorMessage = 'Your session has expired. Please login again.';
-
-        break;
-
-      case HTTP_STATUS.FORBIDDEN:
-        errorMessage = getErrorMessage(error) || 'You do not have permission to perform this action.';
-        break;
-
-      case HTTP_STATUS.NOT_FOUND:
-        errorMessage = getErrorMessage(error) || 'The requested resource was not found.';
-        break;
-
-      case HTTP_STATUS.CONFLICT:
-        errorMessage = getErrorMessage(error) || 'This resource already exists.';
-        break;
-
-      case HTTP_STATUS.PAYLOAD_TOO_LARGE:
-        errorMessage = 'File size is too large. Maximum size is 10MB.';
-        break;
-
-      case HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE:
-        errorMessage = 'File type is not supported.';
-        break;
-
-      case HTTP_STATUS.INTERNAL_SERVER_ERROR:
-        errorMessage = 'Server error. Please try again later.';
-        break;
-
-      case 0:
-        // Network error
-        errorMessage = 'Network error. Please check your connection.';
-        break;
-
-      default:
-        errorMessage = getErrorMessage(error) || defaultMessage;
-    }
-
-    if (showToast) {
-      this.toastService.show(errorMessage, 'error');
-    }
   }
 
   // ==================== Helper Methods ====================
@@ -560,7 +491,7 @@ export class Home implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.isLoadingSearch = false;
-        this.handleError(error, 'Failed to search users', false);
+        this.errorHandler.handle(error, 'Failed to search users', false);
         this.cdr.markForCheck();
       }
     });

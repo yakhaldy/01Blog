@@ -71,7 +71,7 @@ public class Users {
     public List<Map<String, Object>> searchUsers(Authentication authentication, String searchTerm) {
         User currentUser = getUserOrThrow(authentication);
 
-        List<User> users = userRepository.searchUsersByUsername(
+        List<User> users = userRepository.findTop6ByUsernameContainingIgnoreCase(
                 searchTerm.trim());
         List<Map<String, Object>> response = new ArrayList<>();
 

@@ -17,6 +17,8 @@ import { Auth } from '../service/auth';
 import { User, Post, Report, DashboardStats } from '../model/model';
 import { ToastService } from '../service/toast-service';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ErrorHandlerService } from '../helper/handleError';
 
 
 interface Comment {
@@ -87,11 +89,16 @@ export class Dashboard implements OnInit {
   userPosts: Post[] = [];
   userComments: Comment[] = [];
 
+  hasMoreUsersResults = true;
+  currentUsersPage = 0;
+  usersPageSize = 6;
+
   constructor(
     private auth: Auth,
     private cdr: ChangeDetectorRef,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private errorHandler: ErrorHandlerService
   ) { }
 
   ngOnInit(): void {
@@ -107,20 +114,37 @@ export class Dashboard implements OnInit {
 
   loadUsers(): void {
     this.isLoadingUsers = true;
-    // Replace with actual API call
-    // this.auth.getAllUsers().subscribe({
-    //   next: (users) => {
-    //     this.users = users;
-    //     this.isLoadingUsers = false;
-    //     this.cdr.markForCheck();
-    //   },
-    //   error: (error) => {
-    //     console.error('Failed to load users:', error);
-    //     this.isLoadingUsers = false;
-    //     this.cdr.markForCheck();
-    //   },
-    // });
+    this.isLoadingUsers = true;
+    this.currentUsersPage++;
+    this.auth.getAllUsers(this.currentUsersPage, this.usersPageSize).subscribe({
+      next: (response) => {
+        // Append new results to existing ones
+        this.users.push(...response.content);
+        this.hasMoreUsersResults = this.currentUsersPage + 1 < response.totalPages;
+        this.isLoadingUsers = false;
+        console.table(this.users);
+        console.log(this.isLoadingUsers);
+
+
+        this.cdr.detectChanges();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.currentUsersPage--;
+        this.isLoadingUsers = false;
+        this.errorHandler.handle(error, 'Failed to load more results', false);
+        this.cdr.markForCheck();
+      }
+    });
   }
+
+  showMoreUsers(): void {
+    if (!this.hasMoreUsersResults) {
+      return;
+    }
+    this.loadUsers();
+  }
+
+
 
   hasMorePosts = true;
   currentPage = 0;
@@ -393,7 +417,7 @@ export class Dashboard implements OnInit {
 
     const term = this.searchTerm.toLowerCase();
     const filteredPosts = this.posts.filter(
-      p => 
+      p =>
         p.user.username.toLowerCase().includes(term)
     );
 

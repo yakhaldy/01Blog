@@ -26,10 +26,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Long countByIsBanned(Boolean isBanned);
 
 
-      @Query("""
-        SELECT u FROM User u
-        WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :term, '%'))
-        """)
-    List<User> searchUsersByUsername(@Param("term") String term);
+      // @Query("""
+      //   SELECT u FROM User u
+      //   WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :term, '%'))
+      //   """)
+    List<User> findTop6ByUsernameContainingIgnoreCase(@Param("term") String term);
 
 }
