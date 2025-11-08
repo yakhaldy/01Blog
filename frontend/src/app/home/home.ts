@@ -133,7 +133,7 @@ export class Home implements OnInit {
 
   private loadUsers(): void {
 
-     this.isLoadingUsers = true;
+    //  this.isLoadingUsers = true;
     this.currentUsersPage++;
     this.homeService.getAllUsers(this.currentUsersPage, this.usersPageSize).subscribe({
       next: (response) => {

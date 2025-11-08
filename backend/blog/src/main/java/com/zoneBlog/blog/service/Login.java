@@ -44,6 +44,6 @@ public class Login {
         }
 
         // Generate and return JWT token
-        return jwtUtil.generateToken(email);
+        return jwtUtil.generateToken(email, user.getId());
     }
 }

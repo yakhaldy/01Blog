@@ -109,6 +109,7 @@
     max-height: calc(100vh - 120px);
     overflow-y: auto;
     width: 18%;
+      right: 21px;
 }
 
 /* Card Base Styles */

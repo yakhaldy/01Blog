@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,11 +28,12 @@ public class JwtFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    // Define public endpoints that should skip JWT validation
     private final List<String> publicEndpoints = Arrays.asList(
             "/api/login",
             "/api/register",
-            "/uploads/**");
+            "/uploads/**",
+            "/api/notifications/stream"
+    );
 
     public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -39,101 +42,73 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
-        String requestPath = request.getRequestURI();
-        System.out.println("🔍 JWT Filter processing request: " + requestPath);
+        String path = request.getRequestURI();
 
         // Skip JWT validation for public endpoints
-        if (isPublicEndpoint(requestPath)) {
-            System.out.println("⏭️ Skipping JWT validation for public endpoint: " + requestPath);
-
+        if (isPublicEndpoint(path)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String authHeader = request.getHeader("Authorization");
-        System.out.println("🔑 Authorization header: " + (authHeader != null ? "Present" : "Missing"));
+        String token = extractToken(request);
+        if (token == null) {
+            sendUnauthorized(response, "Missing or invalid Authorization header");
+            return;
+        }
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")
-                || requestPath.contains("/api/notifications/stream")) {
-            String token = null;
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
-                System.out.println("📦 JWT extracted from Authorization header.");
-            } else {
-                token = request.getParameter("token");
-                System.out.println("📦 JWT extracted from URL parameter: " + (token != null ? "Present" : "Missing"));
-            }
-
-            System.out.println("📝 Processing JWT token...");
-
-            try {
-                String username = jwtUtil.extractUsername(token);
-                System.out.println("👤 Extracted username: " + username);
-
-                if (username == null) {
-                    System.out.println("❌ Username could not be extracted from token");
-                    sendUnauthorizedResponse(response, "Invalid token: unable to extract username");
-                    return;
-                }
-
-                if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    System.out.println("✅ Loaded user details for: " + userDetails.getUsername());
-
-                    if (jwtUtil.validateToken(token, userDetails.getUsername())) {
-                        System.out.println("✅ Token is valid for user: " + username);
-
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                        authToken.setDetails(
-                                new org.springframework.security.web.authentication.WebAuthenticationDetailsSource()
-                                        .buildDetails(request));
-
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
-                        System.out.println("✅ Authentication set for user: " + username);
-                    } else {
-                        System.out.println("❌ Token validation failed for user: " + username);
-                        sendUnauthorizedResponse(response, "Token is invalid or expired");
-                        return;
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("❌ Error processing JWT token: " + e.getMessage());
-                e.printStackTrace();
-                sendUnauthorizedResponse(response, "Token processing error: " + e.getMessage());
+        try {
+            String username = jwtUtil.extractUsername(token);
+            if (username == null || !jwtUtil.validateToken(token, username)) {
+                sendUnauthorized(response, "Invalid or expired token");
                 return;
             }
-        } else {
-            System.out.println("❌ Missing or invalid Authorization header");
-            sendUnauthorizedResponse(response, "❌ Missing or invalid Authorization header");
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(
+                        new org.springframework.security.web.authentication.WebAuthenticationDetailsSource()
+                                .buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        } catch (Exception e) {
+            sendUnauthorized(response, "Token processing error: " + e.getMessage());
             return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private boolean isPublicEndpoint(String requestPath) {
-        return publicEndpoints.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
+    private boolean isPublicEndpoint(String path) {
+        return publicEndpoints.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
-    private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        // For SSE endpoint: token as query param
+        return request.getParameter("token");
+    }
+
+    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        Map<String, Object> errorResponse = Map.of(
+        Map<String, Object> body = Map.of(
                 "error", "Unauthorized",
                 "message", message,
-                "status", 401);
+                "status", 401
+        );
 
-        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-        response.getWriter().write(jsonResponse);
+        response.getWriter().write(objectMapper.writeValueAsString(body));
         response.getWriter().flush();
-
-        System.out.println("❌ Sent 401 Unauthorized response: " + message);
     }
 }
