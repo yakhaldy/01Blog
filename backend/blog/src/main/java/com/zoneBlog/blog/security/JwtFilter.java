@@ -49,6 +49,7 @@ public class JwtFilter extends OncePerRequestFilter {
         // Skip JWT validation for public endpoints
         if (isPublicEndpoint(requestPath)) {
             System.out.println("⏭️ Skipping JWT validation for public endpoint: " + requestPath);
+
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,17 +57,17 @@ public class JwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         System.out.println("🔑 Authorization header: " + (authHeader != null ? "Present" : "Missing"));
 
-        if (authHeader != null && authHeader.startsWith("Bearer ") || requestPath.contains("/api/notifications/stream") ) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")
+                || requestPath.contains("/api/notifications/stream")) {
             String token = null;
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
                 System.out.println("📦 JWT extracted from Authorization header.");
             } else {
-                token = request.getParameter("token"); 
+                token = request.getParameter("token");
                 System.out.println("📦 JWT extracted from URL parameter: " + (token != null ? "Present" : "Missing"));
             }
 
-          
             System.out.println("📝 Processing JWT token...");
 
             try {

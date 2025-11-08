@@ -129,6 +129,24 @@
                   <time class="post-time" [attr.datetime]="post.createdAt">{{ post.createdAt | date:'medium' }}</time>
                 </div>
               </div>
+
+              <div class="post-actions" *ngIf="isMyPost(post)">
+                <button mat-icon-button [matMenuTriggerFor]="optionsMenu" class="Options" matTooltip="Options">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+
+                <!-- Menu that shows when the button is clicked -->
+                <mat-menu #optionsMenu="matMenu" class="optionsMenu">
+                  <button mat-menu-item (click)="updatePost(post)">
+                    <mat-icon>edit_document</mat-icon>
+                    <span>Edit</span>
+                  </button>
+                  <button mat-menu-item (click)="deletePost(post)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </div>
             </header>
 
             <!-- Post Content -->
@@ -203,9 +221,9 @@
         </div>
 
         <!-- User Lists Container with Infinite Scroll -->
-         <!-- infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="300"
+        <!-- infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="300"
           (scrolled)="onUserListScroll()" -->
-        <div class="users-list" >
+        <div class="users-list">
 
           <!-- Show suggested users when no search term -->
           <ng-container *ngIf="searchTerm.trim().length === 0">

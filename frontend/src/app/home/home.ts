@@ -289,6 +289,7 @@ export class Home implements OnInit {
     if (!this.PostToDelete) return;
 
     this.close();
+    
 
     this.homeService.deletePost(this.PostToDelete.id).subscribe({
       next: () => {
@@ -404,7 +405,7 @@ export class Home implements OnInit {
   close(): void {
     this.isOpen = false;
     this.showModal = false;
-    this.PostToDelete = undefined;
+    // this.PostToDelete = undefined;
   }
 
   onScroll(): void {

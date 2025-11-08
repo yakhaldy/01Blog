@@ -37,11 +37,11 @@
         <div class="current-image-container">
             <!-- <img [src]="currentImageUrl" alt="Current post image" class="current-image"> -->
               <!-- IMAGE -->
-                <img *ngIf="isImage(currentImageUrl)" [src]="currentImageUrl" class="current-image"
+                <img *ngIf="isImage(currentImageUrl)" [src]="getImage(currentImageUrl)" class="current-image"
                    class="post-image" loading="lazy">
 
                 <!-- VIDEO -->
-                <video *ngIf="isVideo(currentImageUrl)" [src]="currentImageUrl" controls class="post-video" class="current-image"
+                <video *ngIf="isVideo(currentImageUrl)" [src]="getImage(currentImageUrl)" controls class="post-video" class="current-image"
                   preload="metadata">
                   Your browser does not support the video tag.
                 </video>

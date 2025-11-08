@@ -17,9 +17,9 @@
     <article *ngIf="post && !isLoading" class="post-article" role="article">
         <!-- Post Header -->
         <header class="post-header">
-                        <!-- Author Info -->
+            <!-- Author Info -->
             <div class="author-section">
-                <div class="author-info"  matTooltip="go to profile" (click)="goToProfile(post.user.username)">
+                <div class="author-info" matTooltip="go to profile" (click)="goToProfile(post.user.username)">
                     <div class="author-avatar">
                         <img [src]="getImage(post.user.avatar) || 'assets/img/default-avatar.png'"
                             [alt]="post.user.username + ' profile picture'" class="avatar-image" loading="lazy">
@@ -38,17 +38,6 @@
                         matTooltip="Options">
                         <mat-icon>more_vert</mat-icon>
                     </button>
-
-                    <mat-menu #postOptionsMenu="matMenu" class="options-menu">
-                        <button mat-menu-item (click)="editPost()">
-                            <mat-icon>edit</mat-icon>
-                            <span>Edit Post</span>
-                        </button>
-                        <button mat-menu-item (click)="deletePost()" class="delete-option">
-                            <mat-icon>delete</mat-icon>
-                            <span>Delete Post</span>
-                        </button>
-                    </mat-menu>
                 </div>
             </div>
         </header>
@@ -90,6 +79,16 @@
                     </button> -->
                 </div>
             </div>
+            <mat-menu #postOptionsMenu="matMenu" class="options-menu">
+                <button mat-menu-item (click)="editPost()">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit Post</span>
+                </button>
+                <button mat-menu-item (click)="deletePost()" class="delete-option">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete Post</span>
+                </button>
+            </mat-menu>
         </div>
 
         <!-- Comments Section -->
@@ -231,8 +230,8 @@
             <div class="door-panel" [class.open]="isOpen">
                 <div class="door-message">
                     <mat-icon class="warning-icon">warning</mat-icon>
-                    <h3 *ngIf="commentToDelete" >Are you sure you want to delete this comment?</h3>
-                    <h3 *ngIf="PostToDelete" >Are you sure you want to delete this post?</h3>
+                    <h3 *ngIf="commentToDelete">Are you sure you want to delete this comment?</h3>
+                    <h3 *ngIf="PostToDelete">Are you sure you want to delete this post?</h3>
                 </div>
                 <div class="door-buttons">
                     <button class="confirm-btn" (click)="confirm()">Confirm</button>

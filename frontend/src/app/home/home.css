@@ -497,9 +497,15 @@
 
 /* Post Content */
 .post-content {
-    margin-bottom: 12px;
-    cursor: pointer;
+  margin-bottom: 12px;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;     /* make sure it's a row */
+  justify-content: flex-start; /* start from left */
+  align-items: center;     /* align items vertically */
 }
+
 
 .post-description {
     color: #ffffff;
@@ -519,6 +525,8 @@
     border: 1px solid rgba(47, 51, 54, 0.5);
     transition: border-color 0.2s ease;
     width: fit-content;
+
+
 }
 
 .post-media:hover {
@@ -1128,8 +1136,9 @@
     }
 
     .users-list-normal,
-    .card-header, .show-more-btn {
-        display: none ;
+    .card-header,
+    .show-more-btn {
+        display: none;
     }
 
     .user-info {
@@ -1294,6 +1303,7 @@
     .profile-card,
     .create-post-card {
         padding: 12px;
+        height: 100px;
     }
 
     .profile-stats {
@@ -1339,10 +1349,3 @@
         line-height: 18px;
     }
 }
-
-
-
-
-
-
-

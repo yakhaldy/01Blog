@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { isValidMediaType ,isValidMediaSize } from '../helper/postHleper'
+import { Auth } from '../service/auth';
 interface UpdatePostData {
   title: string;
   content: string;
@@ -47,7 +48,8 @@ export class UpdatePostDialog {
 
   constructor(
     public dialogRef: MatDialogRef<UpdatePostDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: UpdatePostData
+    @Inject(MAT_DIALOG_DATA) public data: UpdatePostData,
+    private   auth: Auth,
   ) {
 
     this.postUpdate.description = this.data.content || '';
@@ -147,4 +149,8 @@ export class UpdatePostDialog {
  isVideo(url: string | null | undefined): boolean {
   return !!url && /\.(mp4|webm|avi)$/i.test(url);
 }
+
+getImage(path: string | undefined): string | undefined {
+    return this.auth.getImage(path);
+  }
 }

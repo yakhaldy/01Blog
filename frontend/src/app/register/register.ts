@@ -62,6 +62,13 @@ export class Register implements OnInit {
       return;
     }
 
+    if (!/^[A-Za-z]+$/.test(this.user.username)) {
+      this.errorMessage = 'Username must contain only letters A–Z';
+      this.cdr.detectChanges();
+      return;
+    }
+
+
     // Call auth service
     this.auth.register(this.user).subscribe({
       next: (res) => {
