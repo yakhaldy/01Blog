@@ -162,9 +162,6 @@ export class Profile implements OnInit {
 
     this.auth.getMyPosts(this.currentPage, this.pageSize).subscribe({
       next: (postsPage) => {
-        // this.posts = posts
-        console.log("<=====>", postsPage);
-
         if (postsPage && postsPage.content.length > 0) {
           this.posts.push(...postsPage.content);
           this.currentPage++;
@@ -192,7 +189,6 @@ export class Profile implements OnInit {
 
 
   onScroll(): void {
-    console.log(".............................onScroll.......................");
     if (this.isOwnProfile) {
       this.loadCurrentUserPosts();
     } else {
@@ -229,7 +225,6 @@ export class Profile implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result: UpdateProfileResult) => {
-      console.log("***", result);
       if (result?.error) {
         this.toastService.show("Failed to edit profile", "error");
         this.cdr.markForCheck();

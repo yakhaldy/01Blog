@@ -1,4 +1,3 @@
-// auth.interceptor.ts - محسّن مع معالجة أفضل للأخطاء
 
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -67,60 +66,45 @@ export class AuthInterceptor implements HttpInterceptor {
 
         return next.handle(authReq).pipe(
             catchError((error: HttpErrorResponse) => {
-                // معالجة الأخطاء بشكل مركزي
                 this.handleError(error);
                 return throwError(() => error);
             })
         );
     }
 
-    /**
-     * معالجة مركزية للأخطاء
-     */
     private handleError(error: HttpErrorResponse): void {
         if (!this.isBrowser) return;
 
         switch (error.status) {
             case 401:
-                // Unauthorized - Session expired
                 this.handleUnauthorized();
                 break;
 
             case 403:
-                // Forbidden - Access denied
                 this.handleForbidden();
                 break;
 
             case 500:
-                // Internal Server Error
                 this.handleServerError();
                 break;
 
             default:
-                // Other errors - يتم معالجتها في Components
                 console.error('HTTP Error:', error);
         }
     }
 
-    /**
-     * معالجة 401 - Session Expired
-     */
     private handleUnauthorized(): void {
         console.log('Session expired - redirecting to login');
         this.removeToken();
         
-        // إغلاق أي dialogs مفتوحة
         this.dialog.closeAll();
         
-        // Redirect to login
         this.router.navigate(['/login']);
     }
 
-    /**
-     * معالجة 403 - Access Denied
-     */
+ 
     private handleForbidden(): void {
-        // عرض dialog فقط إذا لم يكن هناك dialog مفتوح
+        //dialog
         if (this.dialog.openDialogs.length === 0) {
             this.dialog.open(Error403, {
                 width: '100vw',
@@ -133,11 +117,7 @@ export class AuthInterceptor implements HttpInterceptor {
         }
     }
 
-    /**
-     * معالجة 500 - Server Error
-     */
     private handleServerError(): void {
-        // عرض dialog فقط إذا لم يكن هناك dialog مفتوح
         if (this.dialog.openDialogs.length === 0) {
             this.dialog.open(Error500, {
                 width: '100vw',

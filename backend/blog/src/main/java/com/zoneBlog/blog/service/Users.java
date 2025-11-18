@@ -63,7 +63,6 @@ public class Users {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<User> users = userRepository.findByUsernameNot(currentUser.getUsername(), pageable);
-
         return users.map(user -> buildUserResponse(user, currentUser.getId()));
     }
 
@@ -115,6 +114,7 @@ public class Users {
     }
 
     private Map<String, Object> buildUserResponse(User user, Long currentUserId) {
+
         Map<String, Object> userResponse = new HashMap<>();
         userResponse.put("id", user.getId());
         userResponse.put("username", user.getUsername());

@@ -20,6 +20,7 @@ import {
 import "./chunk-E2LMXH7Z.js";
 import "./chunk-5XYFHA5V.js";
 import "./chunk-QJVLQKZV.js";
+import "./chunk-FQL6O3MQ.js";
 import {
   _animationsDisabled
 } from "./chunk-VIQNTZNK.js";
@@ -34,7 +35,6 @@ import {
   _IdGenerator,
   hasModifierKey
 } from "./chunk-6J627IAM.js";
-import "./chunk-FQL6O3MQ.js";
 import {
   Directionality
 } from "./chunk-T4PXRGKK.js";

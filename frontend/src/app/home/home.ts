@@ -134,17 +134,16 @@ export class Home implements OnInit {
   private loadUsers(): void {
 
     //  this.isLoadingUsers = true;
-    this.currentUsersPage++;
     this.homeService.getAllUsers(this.currentUsersPage, this.usersPageSize).subscribe({
-      next: (response) => {
-        // Append new results to existing ones
+      next: (response) => {        
         this.users.push(...response.content);
+        console.log(response.content);
+        
         this.hasMoreUsersResults = this.currentUsersPage + 1 < response.totalPages;
         this.isLoadingUsers = false;
+        this.currentUsersPage++;
         console.table(this.users);
         console.log(this.isLoadingUsers);
-        
-        
         this.cdr.detectChanges();
       },
       error: (error: HttpErrorResponse) => {

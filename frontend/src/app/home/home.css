@@ -740,6 +740,29 @@
     flex-shrink: 0;
 }
 
+.crown-icon {
+  position: absolute;
+  top: -14px;        /* Ajuste la hauteur */
+  right: -6px;       /* Ajuste la position */
+  width: 22px;       /* Taille de la couronne */
+  fill: gold;        /* Couleur de la couronne */
+  stroke: #b8860b;   /* Contour */
+  stroke-width: 2px;
+  pointer-events: none;
+   transform: rotate(33deg);
+}
+.crown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-user-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+
 .avatar-icon {
     font-size: 40px;
     width: 40px;

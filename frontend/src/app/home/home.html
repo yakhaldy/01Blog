@@ -231,7 +231,11 @@
               <div *ngFor="let user of users" class="user-item" role="article"
                 [attr.aria-label]="'User: ' + user.username">
                 <div class="user-info" matTooltip="Go to profile" (click)="goToProfile(user.username)">
-                  <div class="user-avatar">
+                  <div class="user-avatar crown-container">
+                    <svg *ngIf="user.username === 'admin' " class="crown-icon" viewBox="0 0 64 64">
+                      <path d="M4 20 L20 40 L32 10 L44 40 L60 20 L54 50 H10 Z" />
+                    </svg>
+
                     <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'"
                       [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
                   </div>
@@ -263,7 +267,11 @@
             <div *ngFor="let user of searchResults; trackBy: trackByUserId" class="user-item" role="article"
               [attr.aria-label]="'User: ' + user.username">
               <div class="user-info" matTooltip="Go to profile" (click)="goToProfile(user.username)">
-                <div class="user-avatar">
+                <div class="user-avatar crown-container">
+                   <svg *ngIf="user.username === 'admin' " class="crown-icon" viewBox="0 0 64 64">
+                      <path d="M4 20 L20 40 L32 10 L44 40 L60 20 L54 50 H10 Z" />
+                    </svg>
+
                   <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'" (error)="onImageError($event)"
                     [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">
                 </div>
@@ -283,8 +291,5 @@
         </div>
       </section>
     </aside>
-
-
-
   </div>
 </div>

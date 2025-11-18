@@ -5,7 +5,7 @@ import {
   createFlexibleConnectedPositionStrategy,
   createOverlayRef,
   createRepositionScrollStrategy
-} from "./chunk-ZPR2GGV3.js";
+} from "./chunk-NZKHNPGW.js";
 import {
   DomPortalOutlet,
   TemplatePortal
@@ -26,6 +26,7 @@ import {
 import "./chunk-E2LMXH7Z.js";
 import "./chunk-5XYFHA5V.js";
 import "./chunk-QJVLQKZV.js";
+import "./chunk-FQL6O3MQ.js";
 import {
   _animationsDisabled
 } from "./chunk-VIQNTZNK.js";
@@ -47,7 +48,6 @@ import {
   isFakeMousedownFromScreenReader,
   isFakeTouchstartFromScreenReader
 } from "./chunk-6J627IAM.js";
-import "./chunk-FQL6O3MQ.js";
 import {
   Directionality
 } from "./chunk-T4PXRGKK.js";

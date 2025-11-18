@@ -59,7 +59,6 @@ export class EditProfile {
     this.profileUpdate.username = this.data.username || '';
     this.profileUpdate.bio = this.data.bio || '';
     this.currentAvatarUrl = this.data.AvatarUrl || '';
-    console.log("Profile data loaded:", this.data);
   }
 
   save() {
