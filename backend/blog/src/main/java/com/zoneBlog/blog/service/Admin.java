@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.zoneBlog.blog.exception.BusinessException;
 import com.zoneBlog.blog.exception.ResourceNotFoundException;
 import com.zoneBlog.blog.exception.UnauthorizedException;
+import com.zoneBlog.blog.exception.ForbiddenException;
 import com.zoneBlog.blog.model.Report;
 import com.zoneBlog.blog.model.User;
 import com.zoneBlog.blog.repository.CommentRepository;
@@ -107,7 +108,7 @@ public class Admin {
             throw new ResourceNotFoundException("User not found");
         }
         if (!ADMIN_ROLE.equals(user.getRole())) {
-            throw new UnauthorizedException("Admin access required");
+            throw new ForbiddenException("Admin access required");
         }
     }
 

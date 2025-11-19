@@ -168,14 +168,10 @@ export class Auth {
   }
 
   searchUsers(searchTerm: string, page: number = 0, size: number = 10): Observable<User[]> {
-    // let params = new HttpParams()
-    //   .set('page', page.toString())
-    //   .set('size', size.toString());
-    
-    // if (searchTerm && searchTerm.trim()) {
-    //   params = params.set('searchTerm', searchTerm.trim());
-    // }
-
     return this.http.get<User[]>(`${this.apiUrl}/users/search?searchTerm=${searchTerm}`);
+  }
+  markNotificationAsRead(ids: number[]): Observable<any> {
+    if (!this.isBrowser) return EMPTY;
+    return this.http.post(`${this.apiUrl}/notification/markAsRead`, { ids: ids });
   }
 }

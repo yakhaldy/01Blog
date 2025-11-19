@@ -81,6 +81,7 @@ export interface DashboardStats {
 
 
 export interface Notification {
+  id: number;
   sender: User;
   type: string;
   message: string;

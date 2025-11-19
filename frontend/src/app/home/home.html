@@ -100,7 +100,7 @@
 
       <!-- Posts Feed -->
       <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
-        [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
+        [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()" >
 
         <div *ngIf="isLoadingPost" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>

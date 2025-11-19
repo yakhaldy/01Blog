@@ -37,16 +37,8 @@ public class NotificationService {
         List<Notification> notifications = notificationRepository
                 .findByRecipientOrderByCreatedAtDesc(user);
 
-        boolean anyUpdated = markNotificationsAsRead(notifications);
-
-        if (anyUpdated) {
-            notificationRepository.saveAll(notifications);
-            notificationRepository.flush();
-        }
-
         Long unreadCount = notificationRepository.countByRecipient_IdAndIsReadFalse(user.getId());
         sendNotificationCountAsync(user.getId(), unreadCount);
-
         return notifications;
     }
 
@@ -118,5 +110,24 @@ public class NotificationService {
         } catch (Exception e) {
             // Log error but don't throw - async notification delivery is non-critical
         }
+    }
+
+    @Transactional
+    public void markNotificationsAsRead(Authentication authentication, List<Long> notificationIds) {
+        System.out.println("===================\nMarking notifications as read: " + notificationIds);
+        User user = getUserOrThrow(authentication);
+        List<Notification> notifications = notificationRepository
+                .findByIdInAndRecipient(notificationIds, user);
+        if(notifications.isEmpty()) {
+            return;
+        }
+        boolean anyUpdated = markNotificationsAsRead(notifications);
+
+        if (anyUpdated) {
+            notificationRepository.saveAll(notifications);
+            notificationRepository.flush();
+        }
+        Long unreadCount = notificationRepository.countByRecipient_IdAndIsReadFalse(user.getId());
+        sendNotificationCountAsync(user.getId(), unreadCount);
     }
 }

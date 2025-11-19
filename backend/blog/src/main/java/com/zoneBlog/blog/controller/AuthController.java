@@ -168,9 +168,10 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<Page<Map<String, Object>>> getAllUsers(Authentication authentication,@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<Page<Map<String, Object>>> getAllUsers(Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Map<String, Object>> users = usersService.getAllUsers(authentication,page, size);
+        Page<Map<String, Object>> users = usersService.getAllUsers(authentication, page, size);
         return ResponseEntity.ok(users);
     }
 
@@ -257,5 +258,14 @@ public class AuthController {
     public ResponseEntity<List<Notification>> getNotifications(Authentication authentication) {
         List<Notification> notifications = notificationService.getNotifications(authentication);
         return ResponseEntity.ok(notifications);
+    }
+
+    @PostMapping("/notification/markAsRead")
+    public ResponseEntity<?> markNotificationsAsRead(
+            Authentication authentication,
+            @RequestBody Map<String, List<Long>> payload) {
+        List<Long> ids = payload.get("ids");
+        notificationService.markNotificationsAsRead(authentication, ids);
+        return ResponseEntity.ok(Map.of("message", "Notifications marked as read"));
     }
 }

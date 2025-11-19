@@ -27,7 +27,7 @@ public class RateLimiter {
     private final long TIME_WINDOW = 1000; // 1 second
     
     // SSE endpoints - more restrictive
-    private final int MAX_SSE_REQUESTS = 3;
+    private final int MAX_SSE_REQUESTS = 10;
     private final long SSE_TIME_WINDOW = 10000; // 10 seconds
 
     /**
