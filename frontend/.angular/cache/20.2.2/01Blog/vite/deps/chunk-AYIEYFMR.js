@@ -2,11 +2,11 @@ import {
   SharedResizeObserver
 } from "./chunk-5CIJHR4H.js";
 import {
-  coerceBooleanProperty
-} from "./chunk-46HAYV32.js";
-import {
   _animationsDisabled
 } from "./chunk-HW2W75PE.js";
+import {
+  coerceBooleanProperty
+} from "./chunk-46HAYV32.js";
 import {
   _IdGenerator
 } from "./chunk-LNIG675M.js";
@@ -14,11 +14,11 @@ import {
   Platform
 } from "./chunk-VYTZ55CF.js";
 import {
-  Directionality
-} from "./chunk-DON4SEJH.js";
-import {
   NgTemplateOutlet
 } from "./chunk-O5QOUXSI.js";
+import {
+  Directionality
+} from "./chunk-DON4SEJH.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -1534,4 +1534,4 @@ export {
   MAT_FORM_FIELD_DEFAULT_OPTIONS,
   MatFormField
 };
-//# sourceMappingURL=chunk-TZHKGKEN.js.map
+//# sourceMappingURL=chunk-AYIEYFMR.js.map
