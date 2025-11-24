@@ -782,3 +782,7 @@
 ::ng-deep .mat-menu-item:hover {
   background: #333 !important;
 }
+
+.posts-container{
+margin-top: 0;
+}

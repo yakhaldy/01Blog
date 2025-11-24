@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../service/auth';
 import { ChangeDetectorRef } from '@angular/core';
-import { Token } from '@angular/compiler';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ToastService } from '../service/toast-service';
+import { getErrorMessage } from '../model/error-response.model';
 
 @Component({
   standalone: true,
@@ -17,7 +19,12 @@ import { Token } from '@angular/compiler';
 export class Login implements OnInit {
   user = { email: '', password: '' };
   errorMessage: string | null = null;
-  constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) { }
+  constructor(
+    private auth: Auth,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private toastService: ToastService
+  ) { }
 
   ngOnInit(): void {
     const token = localStorage.getItem('token');
@@ -41,28 +48,18 @@ export class Login implements OnInit {
       next: (res) => {
         this.errorMessage = null;
         localStorage.setItem('token', res.token);
+        this.toastService.show('Login successful!', 'success');
         this.router.navigate(['/']);
       },
-      error: (err) => {
-        console.log(err.error);
-
-        if (err.status === 400 || err.status === 401 || err.status === 403) {
-          if (err.error?.errors) {
-            const firstError = Object.values(err.error.errors)[0];
-            this.errorMessage = firstError as string;
-          } else if (err.error?.message) {
-            this.errorMessage = err.error.message;
-          } else {
-            this.errorMessage = 'Invalid credentials';
-          }
-        } else {
-          console.log('Login failed', err);
-          this.errorMessage = 'An unexpected error occurred';
+      error: (error: HttpErrorResponse) => {
+         if (error.status === 400 || error.status === 401 || error.status === 409) {
+        this.errorMessage = getErrorMessage(error);
+        }else {
+          this.errorMessage = 'An unexpected error occurred. Please try again later.';
         }
-
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
+        
       }
-
     });
   }
   goToRegister() {

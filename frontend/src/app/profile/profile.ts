@@ -11,6 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { EditProfile } from '../components/edit-profile/edit-profile'
 import { Navbar } from '../components/navbar/navbar';
@@ -18,6 +19,7 @@ import { User, Post, UpdatePostResult, UpdateProfileResult } from '../model/mode
 import { Auth } from '../service/auth'
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { ToastService } from '../service/toast-service';
+import { ErrorHandlerService } from '../helper/handleError';
 
 
 @Component({
@@ -27,7 +29,7 @@ import { ToastService } from '../service/toast-service';
     MatFormFieldModule,
     MatInputModule, InfiniteScrollModule],
   templateUrl: './profile.html',
-  styleUrls: ['./profile.css', '../home/home.css'],
+  styleUrls: [ '../home/home.css','./profile.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Profile implements OnInit {
@@ -58,7 +60,8 @@ export class Profile implements OnInit {
     private auth: Auth,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private errorHandler: ErrorHandlerService
   ) { }
 
   ngOnInit(): void {
@@ -106,9 +109,9 @@ export class Profile implements OnInit {
         this.isLoading = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        console.log(error);
+      error: (error: HttpErrorResponse) => {
         this.isLoading = false;
+        this.errorHandler.handle(error, 'Failed to load user profile');
         this.cdr.markForCheck();
       },
     });
@@ -133,9 +136,9 @@ export class Profile implements OnInit {
         this.isLoadingPost = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        console.log(error);
+      error: (error: HttpErrorResponse) => {
         this.isLoadingPost = false;
+        this.errorHandler.handle(error, 'Failed to load user posts', false);
         this.cdr.markForCheck();
       },
     });
@@ -151,8 +154,9 @@ export class Profile implements OnInit {
         this.isLoading = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         this.isLoading = false;
+        this.errorHandler.handle(error, 'Failed to load current user profile');
         this.cdr.markForCheck();
       },
     });
@@ -174,9 +178,9 @@ export class Profile implements OnInit {
         this.isLoadingPost = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        console.log(error);
+      error: (error: HttpErrorResponse) => {
         this.isLoadingPost = false;
+        this.errorHandler.handle(error, 'Failed to load posts', false);
         this.cdr.markForCheck();
       },
     });
@@ -205,8 +209,9 @@ export class Profile implements OnInit {
         }
         this.cdr.markForCheck();
       },
-      error: (error) => {
-
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to follow user', false);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -265,10 +270,11 @@ export class Profile implements OnInit {
           }
           this.cdr.markForCheck();
         },
-        error: (error) => {
+        error: (error: HttpErrorResponse) => {
           // Revert optimistic update on error
           post.isLiked = originalIsLiked;
           post.likesCount = originalLikesCount;
+          this.errorHandler.handle(error, 'Failed to like post', false);
           this.cdr.markForCheck();
         }
       });
@@ -315,8 +321,8 @@ export class Profile implements OnInit {
         this.toastService.show("Post deleted successfully", "success")
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        this.toastService.show("Failed to delete Post", "error")
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to delete post');
         this.cdr.markForCheck();
       }
     });
@@ -361,8 +367,9 @@ export class Profile implements OnInit {
             this.toastService.show("Post update successfully", "success")
             this.cdr.markForCheck();
           },
-          error: (error) => {
-            this.toastService.show("Failed to update Post", "error")
+          error: (error: HttpErrorResponse) => {
+            this.errorHandler.handle(error, 'Failed to update post');
+            this.cdr.markForCheck();
           }
         });
       }
@@ -404,16 +411,12 @@ export class Profile implements OnInit {
         this.cdr.markForCheck();
 
       },
-      error: (error) => {
-        console.error('Report failed:', error);
-        this.errorReport = error.error.error;
+      error: (error: HttpErrorResponse) => {
         this.isErrorReport = true;
-        this.toastService.show("Failed to Report Profile", "error")
+        this.errorHandler.handle(error, 'Failed to submit report');
         this.cdr.markForCheck();
       }
     });
-    //  this.showReportPopup = false;
-    //   this.reportReason = '';
   }
 
 

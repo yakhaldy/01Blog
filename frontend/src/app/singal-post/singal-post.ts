@@ -16,10 +16,7 @@ import { Navbar } from '../components/navbar/navbar';
 import { User, Post, Comment, UpdatePostResult } from '../model/model';
 import { Auth } from '../service/auth';
 import { ToastService } from '../service/toast-service';
-import {
-  getErrorMessage,
-  HTTP_STATUS,
-} from '../model/error-response.model';
+import { ErrorHandlerService } from '../helper/handleError';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -66,7 +63,8 @@ export class SingalPost implements OnInit {
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private toastService : ToastService
+    private toastService: ToastService,
+    private errorHandler: ErrorHandlerService
   ) { }
 
   ngOnInit(): void {
@@ -100,9 +98,8 @@ export class SingalPost implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.error = 'Post not found or you do not have permission to view it.';
-        // this.showErrorMessage('Post not found or you do not have permission to view it.'); 
         this.isLoading = false;
-        this.handleError(error, 'Failed to load posts', true);
+        this.errorHandler.handle(error, 'Failed to load post');
         this.cdr.markForCheck();
       }
     });
@@ -145,8 +142,7 @@ export class SingalPost implements OnInit {
             this.cdr.markForCheck();
           },
           error: (error: HttpErrorResponse) => {
-            // this.showErrorMessage('Failed to update post.');
-           this.handleError(error, 'Failed to update post.', true);
+            this.errorHandler.handle(error, 'Failed to update post');
             this.cdr.markForCheck();
           }
         });
@@ -186,8 +182,7 @@ export class SingalPost implements OnInit {
           // Revert on error
           this.post.isLiked = originalIsLiked;
           this.post.likesCount = originalLikesCount;
-          // this.showErrorMessage('Failed to like/unlike post.');
-           this.handleError(error, 'Failed to like/unlike post.', true);
+          this.errorHandler.handle(error, 'Failed to like/unlike post', false);
           this.cdr.markForCheck();
         }
       }
@@ -210,9 +205,7 @@ export class SingalPost implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        // this.showErrorMessage('Error loading comments:');
-        this.handleError(error, 'Failed to like/unlike post.', true);
-
+        this.errorHandler.handle(error, 'Failed to load comments', false);
         this.isLoadingComments = false;
         this.cdr.markForCheck();
       }
@@ -250,8 +243,7 @@ export class SingalPost implements OnInit {
       error: (error: HttpErrorResponse) => {
         console.error('Error posting comment:', error);
         this.isSubmittingComment = false;
-        // this.showErrorMessage('Failed to post comment. Please try again.');
-        this.handleError(error, 'Failed to post comment. Please try again.', true);
+        this.errorHandler.handle(error, 'Failed to post comment');
         this.cdr.markForCheck();
       }
     });
@@ -276,9 +268,7 @@ export class SingalPost implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        this.showErrorMessage('Failed to update comment. Please try again.');
-        this.handleError(error, 'Failed to update comment. Please try again.', true);
-
+        this.errorHandler.handle(error, 'Failed to update comment');
         this.cdr.markForCheck();
       }
     });
@@ -336,9 +326,7 @@ export class SingalPost implements OnInit {
           this.close();
         },
         error: (error: HttpErrorResponse) => {
-          // console.error('Failed to delete comment:', error);
-          // this.showErrorMessage('Failed to delete comment. Please try again.');
-          this.handleError(error, 'Failed to delete comment. Please try again.', true);
+          this.errorHandler.handle(error, 'Failed to delete comment');
           this.commentToDelete = undefined; 
           this.close();
         }
@@ -351,9 +339,7 @@ export class SingalPost implements OnInit {
            this.close();
         },
         error: (error: HttpErrorResponse) => {
-          // this.showErrorMessage('Failed to delete post.');
-          this.handleError(error, 'Failed to delete post.', true);
-
+          this.errorHandler.handle(error, 'Failed to delete post');
           this.cdr.markForCheck();
           this.close();
         }
@@ -370,10 +356,7 @@ export class SingalPost implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        // console.log('User not logged in'); // Log is fine, no action needed for non-logged user
-          // this.showErrorMessage('User not logged in.');
-          this.handleError(error, 'User not logged in.', true);
-
+        this.errorHandler.handle(error, 'User not logged in', false);
         this.currentUser = null;
         this.cdr.markForCheck();
       }
@@ -413,59 +396,4 @@ export class SingalPost implements OnInit {
   // Exported functions
   isImage = isImage;
   isVideo = isVideo;
-private handleError(
-    error: HttpErrorResponse,
-    defaultMessage: string = 'An error occurred',
-    showToast: boolean = true
-  ): void {
-    console.error('Error:', error);
-
-    let errorMessage = defaultMessage;
-
-    switch (error.status) {
-      case HTTP_STATUS.BAD_REQUEST:
-        errorMessage = getErrorMessage(error);
-        break;
-
-      case HTTP_STATUS.UNAUTHORIZED:
-        errorMessage = 'Your session has expired. Please login again.';
-        break;
-
-      case HTTP_STATUS.FORBIDDEN:
-        errorMessage = getErrorMessage(error) || 'You do not have permission to perform this action.';
-        break;
-
-      case HTTP_STATUS.NOT_FOUND:
-        errorMessage = getErrorMessage(error) || 'The requested resource was not found.';
-        break;
-
-      case HTTP_STATUS.CONFLICT:
-        errorMessage = getErrorMessage(error) || 'This resource already exists.';
-        break;
-
-      case HTTP_STATUS.PAYLOAD_TOO_LARGE:
-        errorMessage = 'File size is too large. Maximum size is 10MB.';
-        break;
-
-      case HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE:
-        errorMessage = 'File type is not supported.';
-        break;
-
-      case HTTP_STATUS.INTERNAL_SERVER_ERROR:
-        errorMessage = 'Server error. Please try again later.';
-        break;
-
-      case 0:
-        // Network error
-        errorMessage = 'Network error. Please check your connection.';
-        break;
-
-      default:
-        errorMessage = getErrorMessage(error) || defaultMessage;
-    }
-
-    if (showToast) {
-      this.toastService.show(errorMessage, 'error');
-    }
-  }
 }

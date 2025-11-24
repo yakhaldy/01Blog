@@ -4,7 +4,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../service/auth';
 import { ChangeDetectorRef } from '@angular/core';
-
+import { HttpErrorResponse } from '@angular/common/http';
+import { ErrorHandlerService } from '../helper/handleError';
+import { ToastService } from '../service/toast-service';
+import { getErrorMessage } from '../model/error-response.model';
 @Component({
   standalone: true,
   selector: 'app-register',
@@ -23,7 +26,13 @@ export class Register implements OnInit {
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  constructor(private auth: Auth, private router: Router, private cdr: ChangeDetectorRef) { }
+  constructor(
+    private auth: Auth,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private errorHandler: ErrorHandlerService,
+    private toastService: ToastService
+  ) { }
 
   ngOnInit(): void {
     const token = localStorage.getItem('token');
@@ -49,7 +58,7 @@ export class Register implements OnInit {
       this.cdr.detectChanges();
       return;
     }
-    // Basic validation
+  
     if (this.user.password !== this.user.confirmPassword) {
       this.errorMessage = 'Passwords do not match';
       this.cdr.detectChanges();
@@ -69,12 +78,11 @@ export class Register implements OnInit {
     }
 
 
-    // Call auth service
     this.auth.register(this.user).subscribe({
       next: (res) => {
-        console.log('Registration successful===========>', res);
         this.successMessage = 'Registration successful! Redirecting to login...';
         this.errorMessage = null;
+        this.toastService.show('Registration successful!', 'success');
         this.cdr.detectChanges();
 
         // Redirect to login after 2 seconds
@@ -82,30 +90,11 @@ export class Register implements OnInit {
           this.router.navigate(['/login']);
         }, 2000);
       },
-      error: (err) => {
-        console.log('Error response:', err);
-
-        if (err.status === 400 || err.status === 401 || err.status === 409) {
-          let msg = 'Registration failed';
-
-          if (err.error?.errors) {
-            const firstError = Object.values(err.error.errors)[0];
-            msg = firstError as string;
-          } else if (err.error?.message) {
-            msg = err.error.message;
-          } else if (err.error?.error) {
-            msg = err.error.error;
-          }
-
-          this.errorMessage = msg;
-        } else {
-          console.error('Unexpected error:', err);
-          this.errorMessage = 'An unexpected error occurred';
-        }
-
-        this.cdr.detectChanges();
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Registration failed');
+        this.errorMessage = getErrorMessage(error);
+        this.cdr.markForCheck();
       }
-
     });
   }
 

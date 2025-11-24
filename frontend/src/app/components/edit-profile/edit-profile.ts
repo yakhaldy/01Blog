@@ -9,9 +9,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Auth } from '../../service/auth'
 import { isValidMediaType, isValidMediaSize } from '../../helper/postHleper';
-import { getErrorMessage } from '../../model/error-response.model';
 import { HttpErrorResponse } from '@angular/common/http';
-
+import { ErrorHandlerService } from '../../helper/handleError';
+import { ToastService } from '../../service/toast-service';
+import { getErrorMessage } from '../../model/error-response.model';
 interface UpdateProfileData {
   username: string;
   AvatarUrl?: string | null;
@@ -57,6 +58,8 @@ export class EditProfile {
     public dialogRef: MatDialogRef<EditProfile>,
     @Inject(MAT_DIALOG_DATA) public data: UpdateProfileData,
     private cdr: ChangeDetectorRef,
+    private errorHandler: ErrorHandlerService,
+    private toastService: ToastService
   ) {
     this.profileUpdate.username = this.data.username || '';
     this.profileUpdate.bio = this.data.bio || '';
@@ -68,7 +71,7 @@ export class EditProfile {
       return;
     }
     if (!/^[A-Za-z_]+$/.test(this.profileUpdate.username)) {
-      this.errorback = 'Username must contain only letters A–Z';
+      this.errorback = 'Username must contain only letters A–Z and underscores.';
       this.isError = true;
       this.cdr.markForCheck();
       return;
@@ -95,13 +98,12 @@ export class EditProfile {
     this.auth.updateProfile(updateData).subscribe({
       next: (updateProfile) => {
         result.user = updateProfile;
-        console.log("updateProfile :", updateProfile);
-        console.log("result :", result);
-
+        this.toastService.show('Profile updated successfully!', 'success');
         this.dialogRef.close(result);
       },
       error: (error: HttpErrorResponse) => {
-        this.isError = true;        
+        this.isError = true;
+        this.errorHandler.handle(error, 'Failed to update profile');
         this.errorback = getErrorMessage(error);
         this.cdr.markForCheck();
       }
@@ -136,21 +138,11 @@ export class EditProfile {
     if (file) {
       // Validate file type
       if (!isValidMediaType(file)) {
-        this.isError = true;
-        this.errorback = 'Invalid file type. Please select an image (JPEG, PNG, GIF)'
-        setTimeout(() => {
-          this.isError = false;
-          this.cdr.markForCheck();
-        }, 1000)
-
+        this.toastService.show('Invalid file type. Please select an image (JPEG, PNG, GIF)', 'error');
         return;
       }
       if (!isValidMediaSize(file)) {
-        this.isError = true;
-        this.errorback = 'File size exceeds 10MB limit.'
-        setTimeout(() => {
-          this.isError = false;
-        }, 100)
+        this.toastService.show('File size exceeds 10MB limit.', 'error');
         return;
       }
 

@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { isValidMediaType ,isValidMediaSize } from '../helper/postHleper'
 import { Auth } from '../service/auth';
+import { ToastService } from '../service/toast-service';
 interface UpdatePostData {
   title: string;
   content: string;
@@ -49,7 +50,8 @@ export class UpdatePostDialog {
   constructor(
     public dialogRef: MatDialogRef<UpdatePostDialog>,
     @Inject(MAT_DIALOG_DATA) public data: UpdatePostData,
-    private   auth: Auth,
+    private auth: Auth,
+    private toastService: ToastService
   ) {
 
     this.postUpdate.description = this.data.content || '';
@@ -106,11 +108,11 @@ export class UpdatePostDialog {
     if (file) {
       // Validate file type
       if (!isValidMediaType(file)) {
-        alert('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).');
+        this.toastService.show('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).', 'error');
         return;
       }
       if (!isValidMediaSize(file)) {
-        alert('File size exceeds 10MB limit.');
+        this.toastService.show('File size exceeds 10MB limit.', 'error');
         return;
       }
 
