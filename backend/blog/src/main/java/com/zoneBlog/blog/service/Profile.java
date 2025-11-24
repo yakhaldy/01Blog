@@ -117,6 +117,9 @@ public class Profile {
         if (trimmedUsername.length() > MAX_USERNAME_LENGTH) {
             throw new BusinessException("Username cannot exceed " + MAX_USERNAME_LENGTH + " characters");
         }
+        if (!trimmedUsername.matches("^[a-zA-Z_]+$")) {
+            throw new BusinessException("Username can only contain characters and underscores");
+        }
 
         if (!trimmedUsername.equals(user.getUsername()) &&
                 userRepository.existsByUsername(trimmedUsername)) {

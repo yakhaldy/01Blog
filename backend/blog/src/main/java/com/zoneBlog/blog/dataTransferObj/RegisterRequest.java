@@ -12,7 +12,7 @@ public class RegisterRequest {
 
     @NotBlank(message = "Username is required")
     @Size(max = 30, message = "Username cannot exceed 30 characters")
-    @Pattern(regexp = "^[A-Za-z]+$", message = "Username must contain only letters A–Z")
+    @Pattern(regexp = "^[A-Za-z_]+$", message = "Username must contain only letters A–Z")
     private String username;
 
     @NotBlank(message = "Password is required")

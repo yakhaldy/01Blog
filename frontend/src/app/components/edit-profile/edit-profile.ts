@@ -9,6 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Auth } from '../../service/auth'
 import { isValidMediaType, isValidMediaSize } from '../../helper/postHleper';
+import { getErrorMessage } from '../../model/error-response.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 interface UpdateProfileData {
   username: string;
@@ -65,6 +67,12 @@ export class EditProfile {
     if (!this.isProfileValid) {
       return;
     }
+    if (!/^[A-Za-z_]+$/.test(this.profileUpdate.username)) {
+      this.errorback = 'Username must contain only letters A–Z';
+      this.isError = true;
+      this.cdr.markForCheck();
+      return;
+    }
 
     const result = {
       user: null,
@@ -92,14 +100,9 @@ export class EditProfile {
 
         this.dialogRef.close(result);
       },
-      error: (error) => {
-        console.log("==>", error.error.error);
-        this.isError = true;
-        this.errorback = error.error.error;
-        const  resultError = {
-          error: error.error.error
-        }
-        // this.dialogRef.close(resultError);
+      error: (error: HttpErrorResponse) => {
+        this.isError = true;        
+        this.errorback = getErrorMessage(error);
         this.cdr.markForCheck();
       }
     });
@@ -135,19 +138,19 @@ export class EditProfile {
       if (!isValidMediaType(file)) {
         this.isError = true;
         this.errorback = 'Invalid file type. Please select an image (JPEG, PNG, GIF)'
-        setTimeout(()=>{
-           this.isError = false;
-           this.cdr.markForCheck();
-        },1000)
-        
+        setTimeout(() => {
+          this.isError = false;
+          this.cdr.markForCheck();
+        }, 1000)
+
         return;
       }
       if (!isValidMediaSize(file)) {
         this.isError = true;
         this.errorback = 'File size exceeds 10MB limit.'
-        setTimeout(()=>{
-           this.isError = false;
-        },100)
+        setTimeout(() => {
+          this.isError = false;
+        }, 100)
         return;
       }
 

@@ -1,23 +1,14 @@
-// ============================================
-// File: src/app/model/error-response.model.ts
-// ============================================
 
 import { HttpErrorResponse } from '@angular/common/http';
 
-/**
- * Standard Error Response من Backend
- * يطابق ErrorResponse في GlobalExceptionHandler
- */
+
 export interface ErrorResponse {
   status: number;
   message: string;
   timestamp: string;
 }
 
-/**
- * Validation Error Response من Backend
- * يأتي عند فشل @Valid validation
- */
+
 export interface ValidationErrorResponse {
   status: number;
   errors: {
@@ -26,16 +17,12 @@ export interface ValidationErrorResponse {
   timestamp: string;
 }
 
-/**
- * Success Response من Backend
- */
+
 export interface SuccessResponse {
   message: string;
 }
 
-/**
- * HTTP Status Code Constants
- */
+
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,
@@ -49,9 +36,6 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500
 } as const;
 
-/**
- * Type Guards
- */
 export function isValidationError(error: any): error is ValidationErrorResponse {
   return error && 
          error.status === HTTP_STATUS.BAD_REQUEST && 
@@ -67,27 +51,24 @@ export function isErrorResponse(error: any): error is ErrorResponse {
          typeof error.message === 'string';
 }
 
-/**
- * استخراج رسالة الخطأ من HttpErrorResponse
- */
+
 export function getErrorMessage(error: HttpErrorResponse): string {
   if (!error) return 'An unexpected error occurred';
 
-  // إذا كان error.error موجود
+  
   if (error.error) {
-    // Validation Error (400 مع errors object)
+    
     if (isValidationError(error.error)) {
       const errors = error.error.errors;
       const firstErrorKey = Object.keys(errors)[0];
       return errors[firstErrorKey] || 'Validation error';
     }
 
-    // Standard Error Response
+  
     if (isErrorResponse(error.error)) {
       return error.error.message;
     }
 
-    // إذا كان error.error نفسه رسالة string
     if (typeof error.error === 'string') {
       try {
         const parsed = JSON.parse(error.error);
@@ -97,18 +78,15 @@ export function getErrorMessage(error: HttpErrorResponse): string {
       }
     }
 
-    // إذا كان error.error.message موجود مباشرة
     if (error.error.message) {
       return error.error.message;
     }
   }
 
-  // إذا كان error.message موجود
   if (error.message) {
     return error.message;
   }
 
-  // Network error
   if (error.status === 0) {
     return 'Network error. Please check your connection.';
   }

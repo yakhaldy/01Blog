@@ -26,7 +26,6 @@ import { isValidMediaType, isValidMediaSize, isImage, isVideo } from '../helper/
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Navbar } from '../components/navbar/navbar';
-import { FilterPipe } from '../pipes/filter-pipe';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
 
 import { User, UpdatePostResult, NewPost, Post } from '../model/model';
@@ -62,7 +61,6 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
     MatTooltipModule,
     MatToolbarModule,
     Navbar,
-    FilterPipe,
     InfiniteScrollModule
   ]
 })
