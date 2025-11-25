@@ -75,7 +75,6 @@ export class Home implements OnInit {
   isLoadingUsers = signal(true);
   showMediaUpload = signal(false);
   selectedFileName = signal('');
-  filePreviewUrl = signal<string | null>(null);
   isSubmittingPost = signal(false);
   newPost = signal<NewPost>({
     title: '',
@@ -91,31 +90,6 @@ export class Home implements OnInit {
   showModal = signal(false);
   isOpen = signal(false);
   PostToDelete = signal<Post | undefined>(undefined);
-  
-  // Create Post Modal
-  showCreatePostModal = signal(false);
-
-  // Search-related signals
-  searchResults = signal<User[]>([]);
-  isLoadingSearch = signal(false);
-  hasMoreUsersResults = signal(true);
-  currentUsersPage = signal(0);
-  usersPageSize = 6;
-  private searchSubject = new Subject<string>();
-
-  // Computed signals
-  isPostFormValid = computed(() => {
-    const post = this.newPost();
-    return post.description.trim().length > 0
-      && post.title.trim().length > 0
-      && !this.isCharacterLimitExceeded()
-      && !this.isCharacterTitleLimitExceeded();
-  });
-
-  postCharacterCount = computed(() => this.newPost().description.length);
-  isCharacterLimitExceeded = computed(() => this.postCharacterCount() > 5000);
-  postTitelCharacterCount = computed(() => this.newPost().title.length);
-  isCharacterTitleLimitExceeded = computed(() => this.postTitelCharacterCount() > 280);
 
   constructor(
     private router: Router,
@@ -142,43 +116,51 @@ export class Home implements OnInit {
   private loadCurrentUser(): void {
     this.homeService.getCurrentUser().subscribe({
       next: (user) => {
-        this.currentUser.set(user);
-        this.isLoading.set(false);
+        this.currentUser = user;
+        this.isLoading = false;
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoading.set(false);
+        this.isLoading = false;
         this.errorHandler.handle(error, 'Failed to load user profile');
+        this.cdr.markForCheck();
       }
     });
   }
 
   private loadUsers(): void {
-    this.homeService.getAllUsers(this.currentUsersPage(), this.usersPageSize).subscribe({
+
+    //  this.isLoadingUsers = true;
+    this.homeService.getAllUsers(this.currentUsersPage, this.usersPageSize).subscribe({
       next: (response) => {        
-        this.users.update(users => [...users, ...response.content]);
+        this.users.push(...response.content);
         console.log(response.content);
         
-        this.hasMoreUsersResults.set(this.currentUsersPage() + 1 < response.totalPages);
-        this.isLoadingUsers.set(false);
-        this.currentUsersPage.update(page => page + 1);
-        console.table(this.users());
-        console.log(this.isLoadingUsers());
+        this.hasMoreUsersResults = this.currentUsersPage + 1 < response.totalPages;
+        this.isLoadingUsers = false;
+        this.currentUsersPage++;
+        console.table(this.users);
+        console.log(this.isLoadingUsers);
+        this.cdr.detectChanges();
       },
       error: (error: HttpErrorResponse) => {
-        this.currentUsersPage.update(page => page - 1);
-        this.isLoadingUsers.set(false);
+        this.currentUsersPage--; 
+       this.isLoadingUsers = false;
         this.errorHandler.handle(error, 'Failed to load more results', false);
+        this.cdr.markForCheck();
       }
     });
   }
 
-  // Unified scroll handler for the user list
+    // Unified scroll handler for the user list
   showMoreUsers(): void {
-    if (!this.hasMoreUsersResults()) {
+    if (!this.hasMoreUsersResults ) {
       return;
     }
     this.loadUsers();
   }
+
+ 
 
   // Track by function for better performance
   trackByUserId(index: number, user: User): number {
@@ -186,28 +168,28 @@ export class Home implements OnInit {
   }
 
   loadPosts(): void {
-    if (this.isLoadingPost() || !this.hasMorePosts()) return;
+    if (this.isLoadingPost || !this.hasMorePosts) return;
 
-    this.isLoadingPost.set(true);
-    this.homeService.getPosts(this.currentPage(), this.pageSize).subscribe({
+    this.isLoadingPost = true;
+    this.homeService.getPosts(this.currentPage, this.pageSize).subscribe({
       next: (response) => {
-        
         if (response && response.content.length > 0) {
-          this.posts.update(posts => [...posts, ...response.content]);
-          this.currentPage.update(page => page + 1);
-          if (this.currentPage() >= response.totalPages) {
-            this.hasMorePosts.set(false);
+          this.posts.push(...response.content);
+          this.currentPage++;
+          if (this.currentPage >= response.totalPages) {
+            this.hasMorePosts = false;
           }
         } else {
-          this.hasMorePosts.set(false);
+          this.hasMorePosts = false;
         }
 
-        this.isLoadingPost.set(false);
-        
+        this.isLoadingPost = false;
+        this.cdr.detectChanges();
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoadingPost.set(false);
+        this.isLoadingPost = false;
         this.errorHandler.handle(error, 'Failed to load posts', false);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -215,35 +197,35 @@ export class Home implements OnInit {
   // ==================== Post CRUD Operations ====================
 
   createPost(): void {
-    if (!this.isPostFormValid() || this.isSubmittingPost()) return;
+    if (!this.isPostFormValid || this.isSubmittingPost) return;
 
-    this.isSubmittingPost.set(true);
+    this.isSubmittingPost = true;
 
     const formData = new FormData();
-    const currentPost = this.newPost();
 
     const postJson = JSON.stringify({
-      title: currentPost.title.trim() + "5444",
-      description: currentPost.description.trim()
+      title: this.newPost.title.trim() + "5444",
+      description: this.newPost.description.trim()
     });
 
     formData.append('post', new Blob([postJson], { type: 'application/json' }));
 
-    if (currentPost.mediaFile) {
-      formData.append('mediaFile', currentPost.mediaFile);
+    if (this.newPost.mediaFile) {
+      formData.append('mediaFile', this.newPost.mediaFile);
     }
 
     this.homeService.createPost(formData).subscribe({
       next: (newPost) => {
-        this.posts.update(posts => [newPost, ...posts]);
-        this.isSubmittingPost.set(false);
+        this.posts = [newPost, ...this.posts];
+        this.isSubmittingPost = false;
         this.resetPostForm();
-        this.closeCreatePostModal();
         this.toastService.show('Post created successfully', 'success');
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        this.isSubmittingPost.set(false);
+        this.isSubmittingPost = false;
         this.errorHandler.handle(error, 'Failed to create post');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -278,19 +260,16 @@ export class Home implements OnInit {
 
         this.homeService.updatePost(post.id!, updateData).subscribe({
           next: (updatedPost) => {
-            this.posts.update(posts => {
-              const index = posts.findIndex(p => p.id === post.id);
-              if (index !== -1) {
-                const newPosts = [...posts];
-                newPosts[index] = updatedPost;
-                return newPosts;
-              }
-              return posts;
-            });
+            const index = this.posts.findIndex(p => p.id === post.id);
+            if (index !== -1) {
+              this.posts[index] = updatedPost;
+            }
             this.toastService.show('Post updated successfully', 'success');
+            this.cdr.markForCheck();
           },
           error: (error: HttpErrorResponse) => {
             this.errorHandler.handle(error, 'Failed to update post');
+            this.cdr.markForCheck();
           }
         });
       }
@@ -298,32 +277,33 @@ export class Home implements OnInit {
   }
 
   deletePost(post: Post): void {
-    this.PostToDelete.set(post);
+    this.PostToDelete = post;
     this.open();
   }
 
   confirm(): void {
-    const postToDelete = this.PostToDelete();
-    if (!postToDelete) return;
+    if (!this.PostToDelete) return;
 
     this.close();
+    
 
-    this.homeService.deletePost(postToDelete.id).subscribe({
+    this.homeService.deletePost(this.PostToDelete.id).subscribe({
       next: () => {
-        this.posts.update(posts => posts.filter(p => postToDelete.id !== p.id));
+        this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
         this.toastService.show('Post deleted successfully', 'success');
-        this.PostToDelete.set(undefined);
+        this.PostToDelete = undefined;
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        this.PostToDelete.set(undefined);
+        this.PostToDelete = undefined;
         this.errorHandler.handle(error, 'Failed to delete post');
+        this.cdr.markForCheck();
       }
     });
   }
 
   likePoste(id: number): void {
-    const posts = this.posts();
-    const post = posts.find(p => p.id === id);
+    const post = this.posts.find(p => p.id === id);
     if (!post) return;
 
     // Optimistic update
@@ -332,26 +312,21 @@ export class Home implements OnInit {
 
     post.isLiked = !post.isLiked;
     post.likesCount += post.isLiked ? 1 : -1;
-    this.posts.set([...posts]);
 
     this.homeService.likePost(id).subscribe({
       next: (updatedPost) => {
-        this.posts.update(posts => {
-          const index = posts.findIndex(p => p.id === id);
-          if (index !== -1) {
-            const newPosts = [...posts];
-            newPosts[index].likesCount = updatedPost.likesCount;
-            return newPosts;
-          }
-          return posts;
-        });
+        const index = this.posts.findIndex(p => p.id === id);
+        if (index !== -1) {
+          this.posts[index].likesCount = updatedPost.likesCount;
+          // this.posts[index].isLiked = updatedPost.isLiked;
+        }
       },
       error: (error: HttpErrorResponse) => {
         // Revert optimistic update
         post.isLiked = originalIsLiked;
         post.likesCount = originalLikesCount;
-        this.posts.set([...posts]);
         this.errorHandler.handle(error, 'Failed to like post', false);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -363,15 +338,11 @@ export class Home implements OnInit {
 
     this.homeService.follow(user.id).subscribe({
       next: () => {
-        this.users.update(users => {
-          const index = users.findIndex(u => u.id === user.id);
-          if (index !== -1) {
-            const newUsers = [...users];
-            newUsers[index].isfollowing = !newUsers[index].isfollowing;
-            return newUsers;
-          }
-          return users;
-        });
+        const index = this.users.findIndex(u => u.id === user.id);
+        if (index !== -1) {
+          this.users[index].isfollowing = !this.users[index].isfollowing;
+        }
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.errorHandler.handle(error, 'Failed to follow user', false);
@@ -381,99 +352,56 @@ export class Home implements OnInit {
 
   // ==================== Media Handling ====================
 
-  // Helper methods for ngModel binding with signals
-  updatePostTitle(title: string): void {
-    this.newPost.update(post => ({ ...post, title }));
-  }
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  updatePostDescription(description: string): void {
-    this.newPost.update(post => ({ ...post, description }));
-  }
-
-  updateSearchTerm(term: string): void {
-    this.searchTerm.set(term);
-    this.onSearch();
-  }
-
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-
-      if (!isValidMediaType(file)) {
-        this.toastService.show('Please select a valid image or video file (JPEG, PNG, GIF, MP4, AVI, MOV)', 'error');
-        return;
-      }
-
-      if (!isValidMediaSize(file)) {
-        this.toastService.show('File size must be less than 10MB', 'error');
-        return;
-      }
-
-      // Revoke previous URL if exists
-      const prevUrl = this.filePreviewUrl();
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl);
-      }
-
-      // Create new preview URL
-      const previewUrl = URL.createObjectURL(file);
-      
-      this.newPost.update(post => ({ ...post, mediaFile: file }));
-      this.selectedFileName.set(file.name);
-      this.filePreviewUrl.set(previewUrl);
+    if (!isValidMediaType(file)) {
+      this.toastService.show(
+        'Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).',
+        'error'
+      );
+      return;
     }
+
+    if (!isValidMediaSize(file)) {
+      this.toastService.show('File size exceeds 10MB limit.', 'error');
+      return;
+    }
+
+    this.newPost.mediaFile = file;
+    this.selectedFileName = file.name;
+    this.cdr.markForCheck();
   }
 
   removeMediaFile(): void {
-    // Revoke the blob URL to free memory
-    const prevUrl = this.filePreviewUrl();
-    if (prevUrl) {
-      URL.revokeObjectURL(prevUrl);
-    }
-    
-    this.newPost.update(post => ({ ...post, mediaFile: undefined }));
-    this.selectedFileName.set('');
-    this.filePreviewUrl.set(null);
-
+    this.newPost.mediaFile = undefined;
+    this.selectedFileName = '';
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
+    if (fileInput) fileInput.value = '';
+    this.cdr.markForCheck();
   }
 
   // ==================== Helper Methods ====================
 
   private resetPostForm(): void {
-    this.newPost.set({ title: '', description: '', mediaFile: undefined });
-    this.selectedFileName.set('');
-    if (this.filePreviewUrl()) {
-      URL.revokeObjectURL(this.filePreviewUrl()!);
-      this.filePreviewUrl.set(null);
-    }
+    this.newPost = { title: '', description: '', mediaFile: undefined };
+    this.selectedFileName = '';
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
     const input = document.getElementById('input') as HTMLInputElement;
     if (input) input.value = '';
   }
 
-  openCreatePostModal(): void {
-    this.showCreatePostModal.set(true);
-  }
-
-  closeCreatePostModal(): void {
-    this.showCreatePostModal.set(false);
-    this.resetPostForm();
-  }
-
   open(): void {
-    this.showModal.set(true);
-    setTimeout(() => this.isOpen.set(true), 10);
+    this.showModal = true;
+    setTimeout(() => this.isOpen = true, 10);
   }
 
   close(): void {
-    this.isOpen.set(false);
-    this.showModal.set(false);
+    this.isOpen = false;
+    this.showModal = false;
+    // this.PostToDelete = undefined;
   }
 
   onScroll(): void {
@@ -481,8 +409,7 @@ export class Home implements OnInit {
   }
 
   isMyPost(post: Post): boolean {
-    const user = this.currentUser();
-    return post.user?.username === user?.username;
+    return post.user?.username === this.currentUser?.username;
   }
 
   goToPost(id: number): void {
@@ -496,9 +423,20 @@ export class Home implements OnInit {
   trackByPostId(index: number, post: Post): number {
     return post.id;
   }
-
   /***************=>Search<=***********************/
+  // Updated methods for your home.component.ts
 
+  // Replace the search-related variables and methods with these:
+
+  // Variables (add/update these in your component)
+  searchResults = signal<User[]>([]);
+  isLoadingSearch = signal(false);
+  hasMoreUsersResults = signal(true);
+  currentUsersPage = signal(0);
+  usersPageSize = 6;
+  private searchSubject = new Subject<string>();
+
+  // In ngOnInit, call this:
   private setupSearchDebounce(): void {
     this.searchSubject
       .pipe(
@@ -512,38 +450,52 @@ export class Home implements OnInit {
 
   // Search method
   onSearch(): void {
-    const term = this.searchTerm().trim();
-    console.log('=====> ', term);
+    console.log('=====> ', this.searchTerm.trim());
+
+    const term = this.searchTerm.trim();
 
     if (term.length === 0) {
-      this.searchResults.set([]);
+      // Clear search results when search is empty
+      this.searchResults = [];
+      // this.currentUsersPage = 0;
+      // this.hasMoreSearchResults = true;
       return;
     }
 
-    this.searchResults.set([]);
+    // Reset search state for new search
+    // this.currentUsersPage = 0;
+    // this.hasMoreSearchResults = true;
+    this.searchResults = [];
+
+    // Trigger debounced search
     this.searchSubject.next(term);
   }
 
   // Perform the actual search
   private performSearch(searchTerm: string): void {
     if (!searchTerm || searchTerm.length === 0) {
-      this.searchResults.set([]);
+      this.searchResults = [];
       return;
     }
 
-    this.isLoadingSearch.set(true);
+    this.isLoadingSearch = true;
 
     this.homeService.searchUsers(searchTerm).subscribe({
       next: (response) => {
-        this.searchResults.set(response);
-        this.isLoadingSearch.set(false);
+        this.searchResults = response;
+        this.isLoadingSearch = false;
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoadingSearch.set(false);
+        this.isLoadingSearch = false;
         this.errorHandler.handle(error, 'Failed to search users', false);
+        this.cdr.markForCheck();
       }
     });
   }
+
+
+
 
   /*****************************************************/
 
@@ -553,6 +505,36 @@ export class Home implements OnInit {
 
   getImage(path: string | undefined): string | undefined {
     return this.homeService.getImage(path);
+  }
+
+  getFilePreviewUrl(file: File | undefined): string | null {
+    if (!file) return null;
+    return URL.createObjectURL(file);
+  }
+
+  // ==================== Form Validation ====================
+
+  get isPostFormValid(): boolean {
+    return this.newPost.description.trim().length > 0
+      && this.newPost.title.trim().length > 0
+      && !this.isCharacterLimitExceeded
+      && !this.isCharacterTitleLimitExceeded;
+  }
+
+  get postCharacterCount(): number {
+    return this.newPost.description.length;
+  }
+
+  get isCharacterLimitExceeded(): boolean {
+    return this.postCharacterCount > 5000;
+  }
+
+  get postTitelCharacterCount(): number {
+    return this.newPost.title.length;
+  }
+
+  get isCharacterTitleLimitExceeded(): boolean {
+    return this.postTitelCharacterCount > 280;
   }
 
   // Media helpers

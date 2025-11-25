@@ -52,13 +52,13 @@ export class Login implements OnInit {
         this.router.navigate(['/']);
       },
       error: (error: HttpErrorResponse) => {
-         if (error.status === 400 || error.status === 401 || error.status === 409) {
-        this.errorMessage = getErrorMessage(error);
-        }else {
+        if (error.status === 400 || error.status === 401 || error.status === 409) {
+          this.errorMessage = getErrorMessage(error);
+        } else {
           this.errorMessage = 'An unexpected error occurred. Please try again later.';
         }
         this.cdr.markForCheck();
-        
+
       }
     });
   }

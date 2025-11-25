@@ -13,34 +13,34 @@
     <aside class="sidebar-left">
       <section class="profile-card" role="region" aria-label="User Profile">
         <!-- Loading State -->
-        <div *ngIf="isLoading()" class="loading-container">
+        <div *ngIf="isLoading" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
           <p class="loading-text">Loading...</p>
         </div>
 
         <!-- User Profile Content -->
-        <div *ngIf="currentUser() && !isLoading()" class="profile-content">
+        <div *ngIf="currentUser && !isLoading" class="profile-content">
           <header class="profile-header">
             <div class="profile-avatar">
-              <img [src]="getImage(currentUser()?.avatar) || 'assets/img/default-avatar.png'"
-                [alt]="currentUser()?.username + ' profile picture'" class="avatar-img" loading="lazy">
+              <img [src]="getImage(currentUser.avatar) || 'assets/img/default-avatar.png'"
+                [alt]="currentUser.username + ' profile picture'" class="avatar-img" loading="lazy">
             </div>
 
             <div class="profile-info">
-              <h2 class="profile-name">{{ currentUser()?.username }}</h2>
-              <p class="profile-handle">{{ currentUser()?.email }}</p>
+              <h2 class="profile-name">{{ currentUser.username }}</h2>
+              <p class="profile-handle">{{ currentUser.email }}</p>
             </div>
           </header>
 
-          <p class="profile-bio">{{ currentUser()?.bio || 'Bio not available' }}</p>
+          <p class="profile-bio">{{ currentUser.bio || 'Bio not available' }}</p>
 
           <div class="profile-stats">
             <span class="stat-item">
-              <strong class="stat-number">{{ currentUser()?.followingCount || 0 }}</strong>
+              <strong class="stat-number">{{ currentUser.followingCount || 0 }}</strong>
               <span class="stat-label">Following</span>
             </span>
             <span class="stat-item">
-              <strong class="stat-number">{{ currentUser()?.followersCount || 0 }}</strong>
+              <strong class="stat-number">{{ currentUser.followersCount || 0 }}</strong>
               <span class="stat-label">Followers</span>
             </span>
           </div>
@@ -50,87 +50,75 @@
 
     <!-- Main Feed -->
     <main class="main-feed" role="main">
-      <!-- Create Post Button -->
-      <button mat-fab extended class="create-post-fab" (click)="openCreatePostModal()" aria-label="Create new post">
-        <mat-icon>add</mat-icon>
-        Create Post
-      </button>
+      <!-- Create Post Section -->
+      <section class="create-post-card" role="region" aria-label="Create new post">
+        <form class="post-form" (ngSubmit)="createPost()" #postForm="ngForm">
+          <div class="post-input-container">
+            <mat-form-field class="post-textarea" appearance="outline">
+              <textarea matInput [(ngModel)]="newPost.title" name="postTitle" rows="3" id="input"
+                placeholder="What's title?" maxlength="280" aria-label="Post content" #postTextarea
+                style="color: aliceblue;"></textarea>
+              <mat-hint>{{ postTitelCharacterCount }}/280</mat-hint>
+            </mat-form-field>
 
-      <!-- Create Post Modal -->
-      <div *ngIf="showCreatePostModal()" class="modal-backdrop" (click)="closeCreatePostModal()">
-        <section class="create-post-modal" role="dialog" aria-label="Create new post" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h2>Create New Post</h2>
-            <button mat-icon-button (click)="closeCreatePostModal()" aria-label="Close">
-              <mat-icon>close</mat-icon>
-            </button>
-          </div>
-          
-          <form class="post-form" (ngSubmit)="createPost()" #postForm="ngForm">
-            <!-- Form Inputs Container - Fixed size -->
-            <div class="post-input-container">
-              <mat-form-field class="post-textarea" appearance="outline">
-                <textarea matInput [ngModel]="newPost().title" (ngModelChange)="updatePostTitle($event)" name="postTitle" rows="3" id="input"
-                  placeholder="What's title?" maxlength="280" aria-label="Post content" #postTextarea
-                  style="color: aliceblue;"></textarea>
-                <mat-hint>{{ postTitelCharacterCount() }}/280</mat-hint>
-              </mat-form-field>
+            <mat-form-field class="post-textarea" appearance="outline">
+              <textarea matInput [(ngModel)]="newPost.description" name="postDescription" rows="3" id="input"
+                placeholder="What's happening?" maxlength="5000" aria-label="Post content" #postTextarea
+                style="color: aliceblue;"></textarea>
+              <mat-hint>{{ postCharacterCount }}/5000</mat-hint>
+            </mat-form-field>
 
-              <mat-form-field class="post-textarea" appearance="outline">
-                <textarea matInput [ngModel]="newPost().description" (ngModelChange)="updatePostDescription($event)" name="postDescription" rows="3" id="input"
-                  placeholder="What's happening?" maxlength="5000" aria-label="Post content" #postTextarea
-                  style="color: aliceblue;"></textarea>
-                <mat-hint>{{ postCharacterCount() }}/5000</mat-hint>
-              </mat-form-field>
+            <!-- Media Upload Section -->
 
-              <!-- File Input -->
-              <label for="file-input" class="file-upload-label">
-                <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
-              </label>
-              <input type="file" id="file-input" (change)="onFileSelected($event)" accept="image/*,video/*"
-                style="display: none;">
+            <!-- File Input -->
+            <label for="file-input" class="file-upload-label">
+              <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
+            </label>
+            <input type="file" id="file-input" (change)="onFileSelected($event)" accept="image/*,video/*"
+              style="display: none;">
 
-              <button mat-raised-button color="primary" type="submit" class="submit-post-btn"
-                [disabled]="isSubmittingPost() || !isPostFormValid() ">
-                <mat-icon *ngIf="isSubmittingPost()">send</mat-icon>
-                <mat-spinner *ngIf=" isSubmittingPost()" diameter="16"></mat-spinner>
-                {{ isSubmittingPost() ? 'Posting...' : 'Post' }}
+            <!-- File Preview -->
+            <div *ngIf="selectedFileName" class="file-preview">
+              <!-- <span class="file-name">{{ selectedFileName }}</span> -->
+              <img *ngIf="isImage(newPost.mediaFile?.name)" [src]="getFilePreviewUrl(newPost.mediaFile)" alt="Selected image preview"
+                class="file-preview-image" loading="lazy">
+              <video *ngIf="isVideo(newPost.mediaFile?.name)" [src]="getFilePreviewUrl(newPost.mediaFile)" controls class="file-preview-video"
+                preload="metadata">Your browser does not support the video tag.</video>
+              <button type="button" class="remove-file-btn" (click)="removeMediaFile()" aria-label="Remove file">
+                <mat-icon>close</mat-icon>
               </button>
             </div>
 
-            <!-- Image Preview Container - Separate div below -->
-            <div *ngIf="selectedFileName()" class="file-preview-container">
-              <div class="file-preview">
-                <img *ngIf="isImage(newPost().mediaFile?.name)" [src]="filePreviewUrl()" alt="Selected image preview"
-                  class="file-preview-image" loading="lazy">
-                <video *ngIf="isVideo(newPost().mediaFile?.name)" [src]="filePreviewUrl()" controls class="file-preview-video"
-                  preload="metadata">Your browser does not support the video tag.</video>
-                <button type="button" class="remove-file-btn" (click)="removeMediaFile()" aria-label="Remove file">
-                  <mat-icon>close</mat-icon>
-                </button>
-              </div>
-            </div>
-          </form>
-        </section>
-      </div>
+
+
+            <button mat-raised-button color="primary" type="submit" class="submit-post-btn"
+              [disabled]="isSubmittingPost || !isPostFormValid ">
+              <mat-icon *ngIf="isSubmittingPost">send</mat-icon>
+              <mat-spinner *ngIf=" isSubmittingPost" diameter="16"></mat-spinner>
+              {{ isSubmittingPost ? 'Posting...' : 'Post' }}
+            </button>
+
+          </div>
+        </form>
+      </section>
 
       <!-- Posts Feed -->
       <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
         [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()" >
 
-        <div *ngIf="isLoadingPost()" class="loading-container">
+        <div *ngIf="isLoadingPost" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
           <p class="loading-text">Loading...</p>
         </div>
 
         <!-- No posts message -->
-        <div *ngIf="posts().length === 0 && !isLoadingPost()" class="empty-feed">
+        <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
           <p class="empty-message">No posts yet. Be the first to share something!</p>
         </div>
 
         <!-- Posts List -->
-        <div *ngIf="posts().length > 0" class="posts-list">
-          <article *ngFor="let post of posts(); trackBy: trackByPostId " class="post-card" role="article"
+        <div *ngIf=" posts.length > 0" class="posts-list">
+          <article *ngFor="let post of posts; trackBy: trackByPostId " class="post-card" role="article"
             [attr.aria-label]="'Post by ' + post.user.username">
 
             <!-- Post Header -->
@@ -195,9 +183,9 @@
         </div>
 
         <!-- Modal for delete confirmation -->
-        <div class="door-backdrop" *ngIf="showModal()" (click)="close()">
+        <div class="door-backdrop" *ngIf="showModal" (click)="close()">
           <div class="door" (click)="$event.stopPropagation()">
-            <div class="door-panel" [class.open]="isOpen()">
+            <div class="door-panel" [class.open]="isOpen">
               <div class="door-message">
                 <mat-icon class="warning-icon">warning</mat-icon>
                 <h3>Are you sure you want to delete this post?</h3>
@@ -218,22 +206,22 @@
     <aside class="sidebar-right">
       <section class="users-card" role="region" aria-label="User search and suggestions">
         <header class="card-header">
-          <h3 class="card-title">{{ searchTerm().trim().length > 0 ? 'Search Results' : 'Who to follow' }}</h3>
+          <h3 class="card-title">{{ searchTerm.trim().length > 0 ? 'Search Results' : 'Who to follow' }}</h3>
         </header>
 
         <!-- Search Input -->
         <div class="search-container">
           <mat-form-field class="search-field" appearance="outline">
             <mat-icon matPrefix>search</mat-icon>
-            <input matInput [ngModel]="searchTerm()" (ngModelChange)="updateSearchTerm($event)" placeholder="Search users..."
+            <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" placeholder="Search users..."
               aria-label="Search users" style="color: aliceblue;">
           </mat-form-field>
         </div>
 
         <!-- Loading Spinner -->
-        <div *ngIf="isLoadingUsers() || isLoadingSearch()" class="loading-container">
+        <div *ngIf="isLoadingUsers || isLoadingSearch" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading users"></mat-spinner>
-          <p class="loading-text">{{ searchTerm().trim().length > 0 ? 'Searching...' : 'Loading...' }}</p>
+          <p class="loading-text">{{ searchTerm.trim().length > 0 ? 'Searching...' : 'Loading...' }}</p>
         </div>
 
         <!-- User Lists Container with Infinite Scroll -->
@@ -242,9 +230,9 @@
         <div class="users-list">
 
           <!-- Show suggested users when no search term -->
-          <ng-container *ngIf="searchTerm().trim().length === 0">
+          <ng-container *ngIf="searchTerm.trim().length === 0">
             <div class="users-list-normal">
-              <div *ngFor="let user of users()" class="user-item" role="article"
+              <div *ngFor="let user of users" class="user-item" role="article"
                 [attr.aria-label]="'User: ' + user.username">
                 <div class="user-info" matTooltip="Go to profile" (click)="goToProfile(user.username)">
                   <div class="user-avatar crown-container">
@@ -273,14 +261,14 @@
           </ng-container>
 
           <!-- Show search results when search term exists -->
-          <ng-container *ngIf="searchTerm().trim().length > 0">
+          <ng-container *ngIf="searchTerm.trim().length > 0">
             <!-- No Results Message -->
-            <div *ngIf="searchResults().length === 0 && !isLoadingSearch()" class="no-results-message">
-              <p>No users found for "{{ searchTerm() }}"</p>
+            <div *ngIf="searchResults.length === 0 && !isLoadingSearch" class="no-results-message">
+              <p>No users found for "{{ searchTerm }}"</p>
             </div>
 
             <!-- Search Results List -->
-            <div *ngFor="let user of searchResults(); trackBy: trackByUserId" class="user-item" role="article"
+            <div *ngFor="let user of searchResults; trackBy: trackByUserId" class="user-item" role="article"
               [attr.aria-label]="'User: ' + user.username">
               <div class="user-info" matTooltip="Go to profile" (click)="goToProfile(user.username)">
                 <div class="user-avatar crown-container">
