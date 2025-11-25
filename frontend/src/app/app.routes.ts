@@ -7,15 +7,18 @@ import { Notifications} from './notifications/notifications'
 import { Error404 } from './components/error-404/error-404'
 import { SingalPost } from './singal-post/singal-post'
 import { Dashboard } from './dashboard/dashboard'
+import { authGuard } from './service/auth-guard';
+import { AdminGuard } from './service/admin-guard';
+
 export const routes: Routes = [
-  { path: '', component: Home},
+  { path: '', component: Home, canActivate: [authGuard] },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
-  {path: 'profile', component: Profile},
-   { path: 'profile/:username', component: Profile}, 
-  {path: 'notifications', component: Notifications},
-   { path: 'post/:id', component: SingalPost}, 
-  {path: 'dashboard', component: Dashboard},
+  {path: 'profile', component: Profile, canActivate: [authGuard]},
+   { path: 'profile/:username', component: Profile, canActivate: [authGuard] }, 
+  {path: 'notifications', component: Notifications, canActivate: [authGuard]},
+   { path: 'post/:id', component: SingalPost, canActivate: [authGuard] }, 
+  {path: 'dashboard', component: Dashboard, canActivate: [AdminGuard]},
 
 
   { path: '**', component: Error404 }

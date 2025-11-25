@@ -17,8 +17,8 @@ export interface CreatePostRequest {
   providedIn: 'root'
 })
 export class Auth {
-  private apiUrl = 'http://localhost:8080/api';
-  private urlImage = 'http://localhost:8080/uploads'
+  private apiUrl = 'http://10.1.16.8:8080/api';
+  private urlImage = 'http://10.1.16.8:8080/uploads'
   private isBrowser: boolean;
 
   constructor(private http: HttpClient, private notifications: Notifications,     @Inject(PLATFORM_ID) private platformId: Object) {
