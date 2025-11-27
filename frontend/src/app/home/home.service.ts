@@ -35,7 +35,7 @@ export class HomeService {
   likePost(postId: number): Observable<Post> {
     return this.auth.likePost(postId);
   }
-  getAllUsers(page: number = 0, size: number = 10): Observable<Page<User>> {
+  getAllUsers(page: number = 0, size: number = 10): Observable<Page<User>> { 
     return this.auth.getAllUsers(page, size);
   }
   follow(userID: string): Observable<any> {

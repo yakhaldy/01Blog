@@ -76,6 +76,7 @@ export class Auth {
   }
   getAllUsers(page: number = 0, size: number = 7): Observable<Page<User>> {
     if (!this.isBrowser) return EMPTY;
+
     return this.http.get<Page<User>>(`${this.apiUrl}/users?page=${page}&size=${size}`)
 
   }

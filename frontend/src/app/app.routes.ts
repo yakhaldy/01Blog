@@ -20,6 +20,8 @@ export const routes: Routes = [
    { path: 'post/:id', component: SingalPost, canActivate: [authGuard] }, 
   {path: 'dashboard', component: Dashboard, canActivate: [AdminGuard]},
 
-
+  { path: '404', component: Error404 },
+  
+  // Wildcard must be last
   { path: '**', component: Error404 }
 ];

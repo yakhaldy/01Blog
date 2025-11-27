@@ -6,9 +6,9 @@
   <div class="input-container">
     <mat-form-field class="form-field" appearance="outline">
       <mat-label>Username</mat-label>
-      <input matInput [(ngModel)]="profileUpdate.username" name="username" placeholder="Enter username" maxlength="30"
-        required aria-label="Username" [class.error]="isUsernameLimitExceeded">
-      <mat-hint [class.error-hint]="isUsernameLimitExceeded">{{ profileUpdate.username.length || 0 }}/30</mat-hint>
+      <input matInput [ngModel]="profileUpdate().username" (ngModelChange)="updateUsername($event)" name="username" placeholder="Enter username" maxlength="30"
+        required aria-label="Username" [class.error]="isUsernameLimitExceeded()">
+      <mat-hint [class.error-hint]="isUsernameLimitExceeded()">{{ profileUpdate().username.length || 0 }}/30</mat-hint>
     </mat-form-field>
   </div>
 
@@ -16,10 +16,10 @@
   <div class="input-container">
     <mat-form-field class="bio-textarea" appearance="outline">
       <mat-label>Bio</mat-label>
-      <textarea matInput [(ngModel)]="profileUpdate.bio" name="bio" rows="3"
+      <textarea matInput [ngModel]="profileUpdate().bio" (ngModelChange)="updateBio($event)" name="bio" rows="3"
         placeholder="Write something about yourself" maxlength="200" aria-label="Bio"
-        [class.error]="isBioLimitExceeded"></textarea>
-      <mat-hint [class.error-hint]="isBioLimitExceeded">{{ profileUpdate.bio.length || 0 }}/200</mat-hint>
+        [class.error]="isBioLimitExceeded()"></textarea>
+      <mat-hint [class.error-hint]="isBioLimitExceeded()">{{ profileUpdate().bio.length || 0 }}/200</mat-hint>
     </mat-form-field>
 
     <!-- Avatar Upload Section -->
@@ -35,7 +35,7 @@
   <div *ngIf="hasCurrentAvatar() && !hasNewFile()" class="current-media">
     <p class="media-label">Current avatar:</p>
     <div class="current-image-container">
-      <img [src]="getImage(currentAvatarUrl)" alt="Current avatar" class="current-image" loading="lazy">
+      <img [src]="getImage(currentAvatarUrl())" alt="Current avatar" class="current-image" loading="lazy">
       <button type="button" class="remove-current-btn" (click)="removeCurrentAvatar()" mat-icon-button
         matTooltip="Remove current avatar">
         <mat-icon>delete</mat-icon>
@@ -47,7 +47,7 @@
   <div *ngIf="hasNewFile()" class="file-preview">
     <div class="file-info">
       <mat-icon>attach_file</mat-icon>
-      <span class="file-name">{{ selectedFileName }}</span>
+      <span class="file-name">{{ selectedFileName() }}</span>
     </div>
     <button type="button" class="remove-file-btn" (click)="removeAvatarFile()" mat-icon-button matTooltip="Remove file">
       <mat-icon>close</mat-icon>
@@ -55,16 +55,16 @@
   </div>
 
   <!-- Validation Messages -->
-  <div *ngIf="profileUpdate.username.trim().length === 0" class="validation-message error">
+  <div *ngIf="profileUpdate().username.trim().length === 0" class="validation-message error">
     Username cannot be empty
   </div>
-  <div *ngIf="isUsernameLimitExceeded" class="validation-message error">
+  <div *ngIf="isUsernameLimitExceeded()" class="validation-message error">
     Username exceeds maximum character limit
   </div>
-  <div *ngIf="isError" class="validation-message error">
-    {{ errorback }}
+  <div *ngIf="isError()" class="validation-message error">
+    {{ errorback() }}
   </div>
-  <div *ngIf="isBioLimitExceeded" class="validation-message error">
+  <div *ngIf="isBioLimitExceeded()" class="validation-message error">
     Bio exceeds maximum character limit
   </div>
 
@@ -72,7 +72,7 @@
 
 <mat-dialog-actions align="end" class="footer">
   <button mat-button (click)="cancel()" type="button">Cancel</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="!isProfileValid" type="button">
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="!isProfileValid()" type="button">
     Save Changes
   </button>
 </mat-dialog-actions>

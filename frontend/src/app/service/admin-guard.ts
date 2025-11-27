@@ -1,27 +1,40 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { Auth } from './auth';
-import { Observable, of } from 'rxjs';
+import { Error403 } from '../components/error-403/error-403';
+import { of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
-@Injectable({ providedIn: 'root' })
-export class AdminGuard implements CanActivate {
-  constructor(private Auth: Auth, private router: Router) {}
+export const AdminGuard: CanActivateFn = (route, state) => {
 
-  canActivate(): Observable<boolean> {
-    return this.Auth.getCurrentUser().pipe(
-      map(user => {        
-        if (user && user.role === 'ROLE_ADMIN') {
-          return true;
-        } else {
-          this.router.navigate(['/']);
-          return false;
-        }
-      }),
-      catchError(() => {
-        this.router.navigate(['/login']);
-        return of(false);
-      })
-    );
-  }
-}
+  const auth = inject(Auth);
+  const dialog = inject(MatDialog);
+  const router = inject(Router);
+
+  return auth.getCurrentUser().pipe(
+    map(user => {
+
+      if (user && user.role === 'ROLE_ADMIN') {
+        return true;
+      }
+      if (dialog.openDialogs.length === 0) {
+        dialog.open(Error403, {
+          width: '100vw',
+          height: '100vh',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          disableClose: true,
+          panelClass: 'full-screen-dialog'
+        });
+      }
+
+      return false;
+    }),
+
+    catchError(() => {
+      router.navigate(['/login']);
+      return of(false);
+    })
+  );
+};

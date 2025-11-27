@@ -80,7 +80,6 @@ public class JwtFilter extends OncePerRequestFilter {
             sendUnauthorized(response, "Token processing error: " + e.getMessage());
             return;
         }
-
         filterChain.doFilter(request, response);
     }
 

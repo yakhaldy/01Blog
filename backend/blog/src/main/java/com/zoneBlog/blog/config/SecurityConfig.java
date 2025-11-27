@@ -9,6 +9,7 @@ import com.zoneBlog.blog.security.RateLimiter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,8 +24,10 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final UserRepository userRepository;
 
     public SecurityConfig(UserRepository userRepository, JwtFilter jwtFilter, RateLimitFilter rateLimitFilter) {
+        this.userRepository = userRepository;
         this.jwtFilter = jwtFilter;
         this.rateLimitFilter = rateLimitFilter;
     }
@@ -33,8 +36,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource,
             UserDetailsService userDetailsService, JwtUtil jwtUtil, RateLimiter rateLimiter) throws Exception {
         System.out.println("🔧 Configuring Security Filter Chain...");
-        // JwtFilter jwtFilter = new JwtFilter(jwtUtil, userDetailsService);
-        // RateLimitFilter rateLimitFilter = new RateLimitFilter(rateLimiter);
 
         http
                 .cors(cors -> {
@@ -48,6 +49,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers("/api/login", "/api/register", "/uploads/**").permitAll()
+                            .requestMatchers("/**").access((authentication,
+                                    context) -> {
+                                String userEmail = authentication.get().getName();
+                                Boolean isBanned = userRepository.findByEmail(userEmail)
+                                        .map(user -> user.getIsBanned())
+                                        .orElse(false);
+                                return new AuthorizationDecision(!isBanned);
+                            })
                             .requestMatchers("/api/notifications/stream").permitAll()
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             .anyRequest().authenticated();
@@ -69,10 +78,10 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authManager(HttpSecurity http, PasswordEncoder passwordEncoder,
             UserDetailsService userDetailsService) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder)
-                .and()
-                .build();
+        AuthenticationManagerBuilder authenticationManagerBuilder = http
+                .getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
+        return authenticationManagerBuilder.build();
     }
 }

@@ -122,18 +122,22 @@
 
   <!-- Posts Feed -->
   <!-- <section class="posts-container" role="region" aria-label="Posts feed"> -->
-    <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
+  <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
     [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
-    
+
     <div *ngIf="isLoadingPost" class="loading-container">
       <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
       <p class="loading-text">Loading...</p>
     </div>
     <!-- Posts will be dynamically added here -->
-    <div *ngIf="posts.length === 0 && !isLoadingPost" class="empty-feed">
+    @if (posts.length === 0 && !isLoadingPost) {
+    <div class="empty-feed">
       <p class="empty-message">No posts yet. Be the first to share something!</p>
     </div>
-    <div class="posts-list" *ngIf="posts.length > 0">
+    }
+    @if (posts.length > 0) {
+
+    <div class="posts-list">
       <article *ngFor="let post of posts; trackBy: trackByPostId " class="post-card" role="article"
         [attr.aria-label]="'Post by ' + post.user.username">
 
@@ -219,6 +223,8 @@
         </footer>
       </article>
     </div>
+    }
+
 
     <div class="door-backdrop" *ngIf="showModal" (click)="close()">
       <div class="door" (click)="$event.stopPropagation()">

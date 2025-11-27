@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -49,53 +49,60 @@ interface Comment {
     InfiniteScrollModule
   ],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./dashboard.css']
 })
 export class Dashboard implements OnInit {
-  // Data
-  users: User[] = [];
-  posts: Post[] = [];
-  reports: Report[] = [];
-  stats: DashboardStats = {
+  // Data signals
+  users = signal<User[]>([]);
+  posts = signal<Post[]>([]);
+  reports = signal<Report[]>([]);
+  stats = signal<DashboardStats>({
     totalUsers: 0,
     totalPosts: 0,
     totalReports: 0,
     bannedUsers: 0,
     activeReports: 0,
-  };
+  });
 
   // Loading states
-  isLoadingUsers = true;
-  isLoadingPosts = false;
-  isLoadingReports = true;
-  isLoadingStats = true;
+  isLoadingUsers = signal(true);
+  isLoadingPosts = signal(false);
+  isLoadingReports = signal(true);
+  isLoadingStats = signal(true);
 
   // Filters
-  searchTerm = '';
-  selectedTab = 0;
+  searchTerm = signal('');
+  selectedTab = signal(0);
+
+  // Helper methods for ngModel
+  updateSearchTerm(value: string): void {
+    this.searchTerm.set(value);
+  }
+
+  updateSelectedTab(value: number): void {
+    this.selectedTab.set(value);
+  }
 
   // Modal states
-  showDeleteModal = false;
-  showBanModal = false;
-  isModalOpen = false;
-  selectedUser?: User;
-  selectedPost?: Post;
-  selectedReport?: Report;
-  actionType: 'delete' | 'ban' | 'remove' = 'delete';
-  showUserDetailsModal = false;
-  isUserDetailsModalOpen = false;
-  selectedReportedUser?: User;
-  userPosts: Post[] = [];
-  userComments: Comment[] = [];
+  showDeleteModal = signal(false);
+  showBanModal = signal(false);
+  isModalOpen = signal(false);
+  selectedUser = signal<User | undefined>(undefined);
+  selectedPost = signal<Post | undefined>(undefined);
+  selectedReport = signal<Report | undefined>(undefined);
+  actionType = signal<'delete' | 'ban' | 'remove'>('delete');
+  showUserDetailsModal = signal(false);
+  isUserDetailsModalOpen = signal(false);
+  selectedReportedUser = signal<User | undefined>(undefined);
+  userPosts = signal<Post[]>([]);
+  userComments = signal<Comment[]>([]);
 
-  hasMoreUsersResults = true;
-  currentUsersPage = 0;
+  hasMoreUsersResults = signal(true);
+  currentUsersPage = signal(0);
   usersPageSize = 6;
 
   constructor(
     private auth: Auth,
-    private cdr: ChangeDetectorRef,
     private router: Router,
     private toastService: ToastService,
     private errorHandler: ErrorHandlerService
@@ -113,32 +120,29 @@ export class Dashboard implements OnInit {
   }
 
   loadUsers(): void {
-    this.isLoadingUsers = true;
-    this.isLoadingUsers = true;
-    this.currentUsersPage++;
-    this.auth.getAllUsers(this.currentUsersPage, this.usersPageSize).subscribe({
+    this.isLoadingUsers.set(true);
+    this.auth.getAllUsers(this.currentUsersPage(), this.usersPageSize).subscribe({
       next: (response) => {
         // Append new results to existing ones
-        this.users.push(...response.content);
-        this.hasMoreUsersResults = this.currentUsersPage + 1 < response.totalPages;
-        this.isLoadingUsers = false;
-        console.table(this.users);
-        console.log(this.isLoadingUsers);
-
-
-        this.cdr.detectChanges();
+        console.log("User ==========>",response);
+        
+        this.users.update(users => [...users, ...response.content]);
+        this.hasMoreUsersResults.set(this.currentUsersPage() + 1 < response.totalPages);
+        this.isLoadingUsers.set(false);
+        this.currentUsersPage.update(page => page + 1);
+        // console.table(this.users());
+        // console.log(this.isLoadingUsers());
       },
       error: (error: HttpErrorResponse) => {
-        this.currentUsersPage--;
-        this.isLoadingUsers = false;
+        this.currentUsersPage.update(page => page - 1);
+        this.isLoadingUsers.set(false);
         this.errorHandler.handle(error, 'Failed to load more results', false);
-        this.cdr.markForCheck();
       }
     });
   }
 
   showMoreUsers(): void {
-    if (!this.hasMoreUsersResults) {
+    if (!this.hasMoreUsersResults()) {
       return;
     }
     this.loadUsers();
@@ -146,36 +150,34 @@ export class Dashboard implements OnInit {
 
 
 
-  hasMorePosts = true;
-  currentPage = 0;
+  hasMorePosts = signal(true);
+  currentPage = signal(0);
   pageSize = 10;
   scrollDistance = 2;
+  isLoadingMoreForFilter = signal(false);
+  minFilteredResults = 10;
 
   loadPosts(): void {
-    if (!this.hasMorePosts) return;
+    if (!this.hasMorePosts()) return;
 
-
-    this.auth.getAllPosts(this.currentPage, this.pageSize).subscribe({
+    this.auth.getAllPosts(this.currentPage(), this.pageSize).subscribe({
       next: (postsPage) => {
-        // this.posts = posts;
         if (postsPage && postsPage.content.length > 0) {
-          this.posts.push(...postsPage.content);
-          this.currentPage++;
-          if (this.currentPage >= postsPage.totalPages) {
-            this.hasMorePosts = false;
+          this.posts.update(posts => [...posts, ...postsPage.content]);
+          this.currentPage.update(page => page + 1);
+          if (this.currentPage() >= postsPage.totalPages) {
+            this.hasMorePosts.set(false);
           }
         } else {
-          this.hasMorePosts = false;
+          this.hasMorePosts.set(false);
         }
         console.log("ana hna", postsPage.size);
 
-        this.isLoadingPosts = false;
-        this.cdr.markForCheck();
+        this.isLoadingPosts.set(false);
       },
       error: (error) => {
         console.error('Failed to load posts:', error);
-        this.isLoadingPosts = false;
-        this.cdr.markForCheck();
+        this.isLoadingPosts.set(false);
       },
     });
   }
@@ -187,120 +189,118 @@ export class Dashboard implements OnInit {
   }
 
   loadReports(): void {
-    this.isLoadingReports = true;
+    this.isLoadingReports.set(true);
 
     this.auth.getAllReports().subscribe({
       next: (reports) => {
-        this.reports = reports;
-        this.isLoadingReports = false;
-        this.cdr.markForCheck();
+        this.reports.set(reports);
+        this.isLoadingReports.set(false);
       },
       error: (error) => {
         console.error('Failed to load reports:', error);
-        this.isLoadingReports = false;
-        this.cdr.markForCheck();
+        this.isLoadingReports.set(false);
       },
     });
   }
 
   loadStats(): void {
-    this.isLoadingStats = true;
+    this.isLoadingStats.set(true);
 
     this.auth.getDashboardStats().subscribe({
       next: (stats) => {
-        this.stats = stats;
-        this.isLoadingStats = false;
-        this.cdr.markForCheck();
+        this.stats.set(stats);
+        this.isLoadingStats.set(false);
       },
       error: (error) => {
         console.error('Failed to load stats:', error);
-        this.isLoadingStats = false;
-        this.cdr.markForCheck();
+        this.isLoadingStats.set(false);
       },
     });
   }
 
   // User Actions
   openDeleteUserModal(user: User): void {
-    this.selectedUser = user;
-    this.actionType = 'delete';
+    this.selectedUser.set(user);
+    this.actionType.set('delete');
     this.openModal();
   }
 
   openBanUserModal(user: User): void {
-    this.selectedUser = user;
-    this.actionType = 'ban';
+    this.selectedUser.set(user);
+    this.actionType.set('ban');
     this.openModal();
   }
 
   confirmDeleteUser(): void {
-    if (!this.selectedUser) return;
+    const user = this.selectedUser();
+    if (!user) return;
 
-    this.auth.deleteUser(this.selectedUser.id).subscribe({
+    this.auth.deleteUser(user.id).subscribe({
       next: () => {
-        this.users = this.users.filter(u => u.id !== this.selectedUser!.id);
+        this.users.update(users => users.filter(u => u.id !== user.id));
         this.closeModal();
-        if (this.selectedReport) {
-          this.deletReport(this.selectedReport?.id);
+        const report = this.selectedReport();
+        if (report) {
+          this.deletReport(report.id);
         }
-        this.toastService.show("delete user successfully", "success")
-        this.cdr.markForCheck();
+        this.toastService.show("delete user successfully", "success");
       },
       error: (error) => {
         this.toastService.show("Failed to delete user", "error");
-        this.cdr.markForCheck();
       },
     });
   }
 
   confirmBanUser(): void {
-    if (!this.selectedUser) return;
+    const selectedU = this.selectedUser();
+    if (!selectedU) return;
 
-    this.auth.banUser(this.selectedUser.id).subscribe({
+    this.auth.banUser(selectedU.id).subscribe({
       next: (userBand) => {
-        const user = this.users.find(u => u.id === this.selectedUser!.id);
-        if (user) {
-          if (this.selectedReport) {
-            this.deletReport(this.selectedReport?.id);
+        this.users.update(users => {
+          const user = users.find(u => u.id === selectedU.id);
+          if (user) {
+            const report = this.selectedReport();
+            if (report) {
+              this.deletReport(report.id);
+            }
+            user.isBanned = userBand.isBanned;
+            
+            const reportedUser = this.selectedReportedUser();
+            if (reportedUser) {
+              reportedUser.isBanned = userBand.isBanned;
+            }
           }
-
-          user.isBanned = userBand.isBanned;
-          if (this.selectedReportedUser) {
-            this.selectedReportedUser.isBanned = userBand.isBanned;
-          }
-        }
+          return users;
+        });
         this.closeModal();
-        this.toastService.show("ban user successfully", "success")
-
-        this.cdr.markForCheck();
+        this.toastService.show("ban user successfully", "success");
       },
       error: (error) => {
         this.toastService.show("Failed to ban user", "error");
-        this.cdr.markForCheck();
       },
     });
   }
 
   // Post Actions
   openDeletePostModal(post: Post): void {
-    this.selectedPost = post;
-    this.actionType = 'remove';
+    this.selectedPost.set(post);
+    this.actionType.set('remove');
     this.openModal();
   }
 
   confirmDeletePost(): void {
-    if (!this.selectedPost) return;
+    const post = this.selectedPost();
+    if (!post) return;
 
-    this.auth.deletePost(this.selectedPost.id).subscribe({
+    this.auth.deletePost(post.id).subscribe({
       next: () => {
-        this.posts = this.posts.filter(p => p.id !== this.selectedPost!.id);
+        this.posts.update(posts => posts.filter(p => p.id !== post.id));
         this.closeModal();
-        this.toastService.show("delete post successfully", "success")
-        this.cdr.markForCheck();
+        this.toastService.show("delete post successfully", "success");
       },
       error: (error) => {
         this.toastService.show("Failed to delete post", "error");
-        this.cdr.markForCheck();
       },
     });
   }
@@ -308,32 +308,32 @@ export class Dashboard implements OnInit {
 
   // Report Actions
   openResolveReport(report: Report): void {
-    this.selectedReportedUser = report.reportedUser;
-    this.userPosts = this.posts.filter(p => p.user.username == report.reportedUser.username);
-    this.userComments = [];
-    this.selectedReport = report;
+    this.selectedReportedUser.set(report.reportedUser);
+    this.userPosts.set(this.posts().filter(p => p.user.username == report.reportedUser.username));
+    this.userComments.set([]);
+    this.selectedReport.set(report);
     this.openUserDetailsModal();
   }
 
   openUserDetailsModal(): void {
-    this.showUserDetailsModal = true;
-    this.isUserDetailsModalOpen = true;
+    this.showUserDetailsModal.set(true);
+    this.isUserDetailsModalOpen.set(true);
   }
 
   dismissCurrentReport() {
     console.log("dismiss Current Report");
-    if (!this.selectedReport) return;
-    this.deletReport(this.selectedReport?.id);
-
+    const report = this.selectedReport();
+    if (!report) return;
+    this.deletReport(report.id);
   }
   deletReport(id: string) {
     this.auth.deleteReports(id).subscribe({
       next: () => {
-        if (this.selectedReport) {
-          this.reports = this.reports.filter(r => r.id !== this.selectedReport?.id)
+        const report = this.selectedReport();
+        if (report) {
+          this.reports.update(reports => reports.filter(r => r.id !== report.id));
         }
-        this.closeUserDetailsModal()
-        this.cdr.markForCheck();
+        this.closeUserDetailsModal();
       },
       error: (error) => {
         console.error('Failed to resolve report:', error);
@@ -342,7 +342,7 @@ export class Dashboard implements OnInit {
   }
 
   viewReportedUser(userId: string): void {
-    const user = this.users.find(u => u.id === userId);
+    const user = this.users().find(u => u.id === userId);
     if (user) {
       this.router.navigate(['/profile', user.username]);
     }
@@ -350,40 +350,40 @@ export class Dashboard implements OnInit {
 
   // Modal Controls
   openModal(): void {
-    if (this.showUserDetailsModal) {
-      this.showDeleteModal = true;
-      this.isModalOpen = true;
+    if (this.showUserDetailsModal()) {
+      this.showDeleteModal.set(true);
+      this.isModalOpen.set(true);
     } else {
-      this.showDeleteModal = true;
+      this.showDeleteModal.set(true);
       setTimeout(() => {
-        this.isModalOpen = true;
+        this.isModalOpen.set(true);
       }, 10);
     }
   }
 
   closeModal(): void {
-    this.isModalOpen = false;
-    this.showDeleteModal = false;
-    this.selectedUser = undefined;
-    this.selectedPost = undefined;
-    this.selectedReport = undefined;
-    this.showUserDetailsModal = false;
+    this.isModalOpen.set(false);
+    this.showDeleteModal.set(false);
+    this.selectedUser.set(undefined);
+    this.selectedPost.set(undefined);
+    this.selectedReport.set(undefined);
+    this.showUserDetailsModal.set(false);
   }
 
   confirmAction(): void {
-    if (this.actionType === 'delete' && this.selectedUser) {
+    if (this.actionType() === 'delete' && this.selectedUser()) {
       this.confirmDeleteUser();
-    } else if (this.actionType === 'ban' && this.selectedUser) {
+    } else if (this.actionType() === 'ban' && this.selectedUser()) {
       this.confirmBanUser();
-    } else if (this.actionType === 'remove' && this.selectedPost) {
+    } else if (this.actionType() === 'remove' && this.selectedPost()) {
       this.confirmDeletePost();
     }
   }
 
   closeUserDetailsModal(): void {
-    this.isUserDetailsModalOpen = false;
-    this.showUserDetailsModal = false;
-    this.selectedReport = undefined;
+    this.isUserDetailsModalOpen.set(false);
+    this.showUserDetailsModal.set(false);
+    this.selectedReport.set(undefined);
   }
 
   // Utility
@@ -392,40 +392,35 @@ export class Dashboard implements OnInit {
   }
 
   getFilteredUsers(): User[] {
-    if (!this.searchTerm) return this.users;
-    const term = this.searchTerm.toLowerCase();
-    return this.users.filter(
+    if (!this.searchTerm()) return this.users();
+    const term = this.searchTerm().toLowerCase();
+    return this.users().filter(
       u => u.username.toLowerCase().includes(term) ||
         u.email.toLowerCase().includes(term)
     );
   }
 
-
   getFilteredReports(): Report[] {
-    if (!this.searchTerm) return this.reports;
-    const term = this.searchTerm.toLowerCase();
-    return this.reports.filter(
+    if (!this.searchTerm()) return this.reports();
+    const term = this.searchTerm().toLowerCase();
+    return this.reports().filter(
       r => r.reportedUser?.username.toLowerCase().includes(term)
     );
   }
 
-  private isLoadingMoreForFilter = false;
-  private minFilteredResults = 10;
-
   getFilteredPosts(): Post[] {
-    if (!this.searchTerm) return this.posts;
+    if (!this.searchTerm()) return this.posts();
 
-    const term = this.searchTerm.toLowerCase();
-    const filteredPosts = this.posts.filter(
-      p =>
-        p.user.username.toLowerCase().includes(term)
+    const term = this.searchTerm().toLowerCase();
+    const filteredPosts = this.posts().filter(
+      p => p.user.username.toLowerCase().includes(term)
     );
 
     if (filteredPosts.length < this.minFilteredResults &&
-      this.hasMorePosts &&
-      !this.isLoadingPosts &&
-      !this.isLoadingMoreForFilter) {
-      this.isLoadingMoreForFilter = true;
+      this.hasMorePosts() &&
+      !this.isLoadingPosts() &&
+      !this.isLoadingMoreForFilter()) {
+      this.isLoadingMoreForFilter.set(true);
       this.loadMorePostsForFilter();
     }
 
@@ -433,46 +428,42 @@ export class Dashboard implements OnInit {
   }
 
   private loadMorePostsForFilter(): void {
-    this.auth.getAllPosts(this.currentPage, this.pageSize).subscribe({
+    this.auth.getAllPosts(this.currentPage(), this.pageSize).subscribe({
       next: (postsPage) => {
         if (postsPage && postsPage.content.length > 0) {
-          this.posts.push(...postsPage.content);
-          this.currentPage++;
+          this.posts.update(posts => [...posts, ...postsPage.content]);
+          this.currentPage.update(page => page + 1);
 
-          if (this.currentPage >= postsPage.totalPages) {
-            this.hasMorePosts = false;
+          if (this.currentPage() >= postsPage.totalPages) {
+            this.hasMorePosts.set(false);
           }
 
-          this.isLoadingMoreForFilter = false;
-          this.cdr.markForCheck();
+          this.isLoadingMoreForFilter.set(false);
 
           // Check again if we need more posts
           const filteredCount = this.getFilteredPostsCount();
-          if (filteredCount < this.minFilteredResults && this.hasMorePosts) {
+          if (filteredCount < this.minFilteredResults && this.hasMorePosts()) {
             this.loadMorePostsForFilter();
           }
         } else {
-          this.hasMorePosts = false;
-          this.isLoadingMoreForFilter = false;
-          this.cdr.markForCheck();
+          this.hasMorePosts.set(false);
+          this.isLoadingMoreForFilter.set(false);
         }
       },
       error: (error) => {
         console.error('Failed to load posts for filter:', error);
-        this.isLoadingMoreForFilter = false;
-        this.cdr.markForCheck();
+        this.isLoadingMoreForFilter.set(false);
       },
     });
   }
 
   // Helper method to count filtered posts without triggering another load
   private getFilteredPostsCount(): number {
-    if (!this.searchTerm) return this.posts.length;
+    if (!this.searchTerm()) return this.posts().length;
 
-    const term = this.searchTerm.toLowerCase();
-    return this.posts.filter(
-      p =>
-        p.user.username.toLowerCase().includes(term)
+    const term = this.searchTerm().toLowerCase();
+    return this.posts().filter(
+      p => p.user.username.toLowerCase().includes(term)
     ).length;
   }
 }

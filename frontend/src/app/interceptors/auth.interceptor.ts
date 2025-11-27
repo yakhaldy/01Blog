@@ -87,7 +87,9 @@ export class AuthInterceptor implements HttpInterceptor {
             case 500:
                 this.handleServerError();
                 break;
-
+            case 0:
+                this.handleServerError();
+                break;
             default:
                 console.error('HTTP Error:', error);
         }
@@ -104,6 +106,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
  
     private handleForbidden(): void {
+        this.removeToken();
         //dialog
         if (this.dialog.openDialogs.length === 0) {
             this.dialog.open(Error403, {

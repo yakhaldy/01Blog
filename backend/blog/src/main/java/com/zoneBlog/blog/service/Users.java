@@ -59,7 +59,7 @@ public class Users {
             page = 0;
         if (size < 0 || size > 50)
             size = 7;
-
+        System.out.println("Page: " + page + ", Size: " + size);
         Pageable pageable = PageRequest.of(page, size);
 
         Page<User> users = userRepository.findByUsernameNot(currentUser.getUsername(), pageable);

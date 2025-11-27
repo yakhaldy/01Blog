@@ -20,7 +20,7 @@ export class Error403 {
     this.dialogRef.close(); 
     setTimeout(() => {
       this.router.navigate(['/']);
-      // window.location.reload();
+      window.location.reload();
     }, 100); 
   }
 

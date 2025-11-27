@@ -49,11 +49,11 @@ export class Navbar implements OnInit {
       this.cdr.markForCheck();
     });
 
-    this.notifications.getNotificationCountStream().subscribe(count => {
-      console.log("1 ======>",count);
-      this.notificationCount = count;
-      this.cdr.markForCheck(); 
-    });
+    // this.notifications.getNotificationCountStream().subscribe(count => {
+    //   console.log("1 ======>",count);
+    //   this.notificationCount = count;
+    //   this.cdr.markForCheck(); 
+    // });
   }
 
 

@@ -1,4 +1,4 @@
-import { Component, Inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -39,53 +39,54 @@ interface ProfileUpdate {
     MatTooltipModule
   ],
   templateUrl: './edit-profile.html',
-  styleUrl: './edit-profile.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './edit-profile.css'
 })
 export class EditProfile {
-  profileUpdate: ProfileUpdate = {
+  profileUpdate = signal<ProfileUpdate>({
     username: '',
     bio: '',
     avatarFile: undefined
-  };
-  isError: boolean = false;
-  errorback: string = "";
-  selectedFileName: string = '';
-  currentAvatarUrl: string = '';
+  });
+  isError = signal(false);
+  errorback = signal("");
+  selectedFileName = signal('');
+  currentAvatarUrl = signal('');
 
   constructor(
     private auth: Auth,
     public dialogRef: MatDialogRef<EditProfile>,
     @Inject(MAT_DIALOG_DATA) public data: UpdateProfileData,
-    private cdr: ChangeDetectorRef,
     private errorHandler: ErrorHandlerService,
     private toastService: ToastService
   ) {
-    this.profileUpdate.username = this.data.username || '';
-    this.profileUpdate.bio = this.data.bio || '';
-    this.currentAvatarUrl = this.data.AvatarUrl || '';
+    this.profileUpdate.set({
+      username: this.data.username || '',
+      bio: this.data.bio || '',
+      avatarFile: undefined
+    });
+    this.currentAvatarUrl.set(this.data.AvatarUrl || '');
   }
 
   save() {
-    if (!this.isProfileValid) {
+    if (!this.isProfileValid()) {
       return;
     }
-    if (!/^[A-Za-z_]+$/.test(this.profileUpdate.username)) {
-      this.errorback = 'Username must contain only letters A–Z and underscores.';
-      this.isError = true;
-      this.cdr.markForCheck();
+    const profile = this.profileUpdate();
+    if (!/^[A-Za-z_]+$/.test(profile.username)) {
+      this.errorback.set('Username must contain only letters A–Z and underscores.');
+      this.isError.set(true);
       return;
     }
 
     const result = {
       user: null,
-      avatarFile: this.profileUpdate.avatarFile,
+      avatarFile: profile.avatarFile,
       removeCurrentImage: this.shouldRemoveCurrentAvatar()
     };
 
     const updateData = new FormData();
-    updateData.append('username', this.profileUpdate.username.trim());
-    updateData.append('bio', this.profileUpdate.bio);
+    updateData.append('username', profile.username.trim());
+    updateData.append('bio', profile.bio);
 
     if (result.avatarFile) {
       updateData.append('avatarFile', result.avatarFile);
@@ -98,14 +99,13 @@ export class EditProfile {
     this.auth.updateProfile(updateData).subscribe({
       next: (updateProfile) => {
         result.user = updateProfile;
-        this.toastService.show('Profile updated successfully!', 'success');
+        // this.toastService.show('Profile updated successfully!', 'success');
         this.dialogRef.close(result);
       },
       error: (error: HttpErrorResponse) => {
-        this.isError = true;
+        this.isError.set(true);
         this.errorHandler.handle(error, 'Failed to update profile');
-        this.errorback = getErrorMessage(error);
-        this.cdr.markForCheck();
+        this.errorback.set(getErrorMessage(error));
       }
     });
 
@@ -115,22 +115,23 @@ export class EditProfile {
     this.dialogRef.close();
   }
 
-  get isProfileValid(): boolean {
-    return this.profileUpdate.username.trim().length > 0 &&
-      this.profileUpdate.username.length <= 30 &&
-      this.profileUpdate.bio.length <= 200;
+  isProfileValid(): boolean {
+    const profile = this.profileUpdate();
+    return profile.username.trim().length > 0 &&
+      profile.username.length <= 30 &&
+      profile.bio.length <= 200;
   }
 
-  get isUsernameLimitExceeded(): boolean {
-    return this.profileUpdate.username.length > 30;
+  isUsernameLimitExceeded(): boolean {
+    return this.profileUpdate().username.length > 30;
   }
 
-  get isBioLimitExceeded(): boolean {
-    return this.profileUpdate.bio.length > 200;
+  isBioLimitExceeded(): boolean {
+    return this.profileUpdate().bio.length > 200;
   }
 
   private shouldRemoveCurrentAvatar(): boolean {
-    return this.currentAvatarUrl === '' && this.selectedFileName === '';
+    return this.currentAvatarUrl() === '' && this.selectedFileName() === '';
   }
 
   onAvatarSelected(event: any): void {
@@ -146,14 +147,14 @@ export class EditProfile {
         return;
       }
 
-      this.profileUpdate.avatarFile = file;
-      this.selectedFileName = file.name;
+      this.profileUpdate.update(profile => ({ ...profile, avatarFile: file }));
+      this.selectedFileName.set(file.name);
     }
   }
 
   removeAvatarFile(): void {
-    this.profileUpdate.avatarFile = undefined;
-    this.selectedFileName = '';
+    this.profileUpdate.update(profile => ({ ...profile, avatarFile: undefined }));
+    this.selectedFileName.set('');
 
     // Clear the file input
     const fileInput = document.getElementById('avatarInput') as HTMLInputElement;
@@ -163,17 +164,27 @@ export class EditProfile {
   }
 
   removeCurrentAvatar(): void {
-    this.currentAvatarUrl = '';
+    this.currentAvatarUrl.set('');
     console.log('Current avatar removed');
   }
 
   hasCurrentAvatar(): boolean {
-    return !!this.currentAvatarUrl && this.currentAvatarUrl.length > 0;
+    return !!this.currentAvatarUrl() && this.currentAvatarUrl().length > 0;
   }
 
   hasNewFile(): boolean {
-    return !!this.selectedFileName && this.selectedFileName.length > 0;
+    return !!this.selectedFileName() && this.selectedFileName().length > 0;
   }
+  
+  // Helper methods for ngModel binding
+  updateUsername(value: string): void {
+    this.profileUpdate.update(profile => ({ ...profile, username: value }));
+  }
+  
+  updateBio(value: string): void {
+    this.profileUpdate.update(profile => ({ ...profile, bio: value }));
+  }
+  
   getImage(path: string | undefined): string | undefined {
     return this.auth.getImage(path)
   }

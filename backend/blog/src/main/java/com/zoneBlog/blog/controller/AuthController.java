@@ -68,6 +68,7 @@ public class AuthController {
             Authentication authentication,
             @Valid @RequestPart("post") PostRequest request,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
+        System.out.println("📄 Creating post for user: " + authentication.getName()+ "++"+mediaFile);
 
         Post post = postsService.createPost(authentication, request, mediaFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(post);

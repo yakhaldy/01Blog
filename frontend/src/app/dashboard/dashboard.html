@@ -18,13 +18,13 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="stats-grid" *ngIf="!isLoadingStats">
+    <div class="stats-grid" *ngIf="!isLoadingStats()">
       <div class="stat-card">
         <div class="stat-icon users">
           <mat-icon>people</mat-icon>
         </div>
         <div class="stat-info">
-          <span class="stat-number">{{ stats.totalUsers }}</span>
+          <span class="stat-number">{{ stats().totalUsers }}</span>
           <span class="stat-label">Total Users</span>
         </div>
       </div>
@@ -34,7 +34,7 @@
           <mat-icon>article</mat-icon>
         </div>
         <div class="stat-info">
-          <span class="stat-number">{{ stats.totalPosts }}</span>
+          <span class="stat-number">{{ stats().totalPosts }}</span>
           <span class="stat-label">Total Posts</span>
         </div>
       </div>
@@ -44,7 +44,7 @@
           <mat-icon>report</mat-icon>
         </div>
         <div class="stat-info">
-          <span class="stat-number">{{ stats.activeReports }}</span>
+          <span class="stat-number">{{ stats().activeReports }}</span>
           <span class="stat-label">Active Reports</span>
         </div>
       </div>
@@ -54,14 +54,14 @@
           <mat-icon>block</mat-icon>
         </div>
         <div class="stat-info">
-          <span class="stat-number">{{ stats.bannedUsers }}</span>
+          <span class="stat-number">{{ stats().bannedUsers }}</span>
           <span class="stat-label">Banned Users</span>
         </div>
       </div>
     </div>
 
     <!-- Loading Stats -->
-    <div class="loading-container" *ngIf="isLoadingStats">
+    <div class="loading-container" *ngIf="isLoadingStats()">
       <mat-spinner diameter="40"></mat-spinner>
       <p class="loading-text">Loading statistics...</p>
     </div>
@@ -73,12 +73,12 @@
     <div class="search-section">
       <mat-form-field class="search-field" appearance="outline">
         <mat-icon matPrefix>search</mat-icon>
-        <input matInput placeholder="Search..." [(ngModel)]="searchTerm">
+        <input matInput placeholder="Search..." [ngModel]="searchTerm()" (ngModelChange)="updateSearchTerm($event)">
       </mat-form-field>
     </div>
 
     <!-- Tabs -->
-    <mat-tab-group class="admin-tabs" [(selectedIndex)]="selectedTab">
+    <mat-tab-group class="admin-tabs" [selectedIndex]="selectedTab()" (selectedIndexChange)="updateSelectedTab($event)">
       <!-- Users Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
@@ -88,17 +88,17 @@
 
 
         <div class="tab-content">
-          <div *ngIf="isLoadingUsers" class="loading-container">
+          <div *ngIf="isLoadingUsers()" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
             <p class="loading-text">Loading users...</p>
           </div>
 
-          <div *ngIf="!isLoadingUsers && getFilteredUsers().length === 0" class="empty-state">
+          <div *ngIf="!isLoadingUsers() && getFilteredUsers().length === 0" class="empty-state">
             <mat-icon>people_outline</mat-icon>
             <p>No users found</p>
           </div>
 
-          <div class="data-grid" *ngIf="!isLoadingUsers && getFilteredUsers().length > 0">
+          <div class="data-grid" *ngIf="!isLoadingUsers() && getFilteredUsers().length > 0">
             <div class="data-card" *ngFor="let user of getFilteredUsers()">
               <div class="card-header">
                 <div class="user-info">
@@ -156,12 +156,12 @@
         </ng-template>
 
         <div class="tab-content" infiniteScroll [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
-          <div *ngIf="isLoadingPosts" class="loading-container">
+          <div *ngIf="isLoadingPosts()" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
             <p class="loading-text">Loading posts...</p>
           </div>
 
-          <div *ngIf="!isLoadingPosts && getFilteredPosts().length === 0" class="empty-state">
+          <div *ngIf="!isLoadingPosts() && getFilteredPosts().length === 0" class="empty-state">
             <mat-icon>article</mat-icon>
             <p>No posts found</p>
           </div>
@@ -218,17 +218,17 @@
         </ng-template>
 
         <div class="tab-content">
-          <div *ngIf="isLoadingReports" class="loading-container">
+          <div *ngIf="isLoadingReports()" class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
             <p class="loading-text">Loading reports...</p>
           </div>
 
-          <div *ngIf="!isLoadingReports && getFilteredReports().length === 0" class="empty-state">
+          <div *ngIf="!isLoadingReports() && getFilteredReports().length === 0" class="empty-state">
             <mat-icon>report</mat-icon>
             <p>No reports found</p>
           </div>
 
-          <div class="reports-list" *ngIf="!isLoadingReports && getFilteredReports().length > 0">
+          <div class="reports-list" *ngIf="!isLoadingReports() && getFilteredReports().length > 0">
             <div class="report-card" *ngFor="let report of getFilteredReports()">
               <div class="report-header">
                 <div class="report-info">
@@ -281,23 +281,23 @@
   </section>
 
   <!-- Confirmation Modal -->
-  <div class="door-backdrop" *ngIf="showDeleteModal" (click)="closeModal()">
+  <div class="door-backdrop" *ngIf="showDeleteModal()" (click)="closeModal()">
     <div class="door" (click)="$event.stopPropagation()">
-      <div class="door-panel" [class.open]="isModalOpen">
+      <div class="door-panel" [class.open]="isModalOpen()">
         <div class="door-message">
           <mat-icon class="warning-icon">warning</mat-icon>
-          <h3 *ngIf="actionType === 'delete' && selectedUser">Delete User</h3>
-          <h3 *ngIf="actionType === 'ban' && selectedUser">{{ selectedUser.isBanned ? 'Unban' : 'Ban' }} User</h3>
-          <h3 *ngIf="actionType === 'remove' && selectedPost">Delete Post</h3>
+          <h3 *ngIf="actionType() === 'delete' && selectedUser()">Delete User</h3>
+          <h3 *ngIf="actionType() === 'ban' && selectedUser()">{{ selectedUser()!.isBanned ? 'Unban' : 'Ban' }} User</h3>
+          <h3 *ngIf="actionType() === 'remove' && selectedPost()">Delete Post</h3>
 
-          <p *ngIf="actionType === 'delete' && selectedUser">
-            Are you sure you want to permanently delete <strong>{{ selectedUser.username }}</strong>?
+          <p *ngIf="actionType() === 'delete' && selectedUser()">
+            Are you sure you want to permanently delete <strong>{{ selectedUser()!.username }}</strong>?
           </p>
-          <p *ngIf="actionType === 'ban' && selectedUser">
-            Are you sure you want to {{ selectedUser.isBanned ? 'unban' : 'ban' }} <strong>{{ selectedUser.username
+          <p *ngIf="actionType() === 'ban' && selectedUser()">
+            Are you sure you want to {{ selectedUser()!.isBanned ? 'unban' : 'ban' }} <strong>{{ selectedUser()!.username
               }}</strong>?
           </p>
-          <p *ngIf="actionType === 'remove' && selectedPost">
+          <p *ngIf="actionType() === 'remove' && selectedPost()">
             Are you sure you want to delete this post?
           </p>
         </div>
@@ -311,28 +311,28 @@
 
   <!-- ============================================== -->
 
-  <div class="door-backdrop-UserDetails" *ngIf="showUserDetailsModal" (click)="closeUserDetailsModal()">
-    <div class="user-details-modal" [class.open]="isUserDetailsModalOpen" (click)="$event.stopPropagation()">
+  <div class="door-backdrop-UserDetails" *ngIf="showUserDetailsModal()" (click)="closeUserDetailsModal()">
+    <div class="user-details-modal" [class.open]="isUserDetailsModalOpen()" (click)="$event.stopPropagation()">
       <!-- Header -->
       <div class="modal-header">
-        <div class="modal-user-info" *ngIf="selectedReportedUser">
-          <img [src]="getImage(selectedReportedUser.avatar) || 'assets/img/default-avatar.png'"
-            [alt]="selectedReportedUser.username" class="modal-avatar">
+        <div class="modal-user-info" *ngIf="selectedReportedUser()">
+          <img [src]="getImage(selectedReportedUser()!.avatar) || 'assets/img/default-avatar.png'"
+            [alt]="selectedReportedUser()!.username" class="modal-avatar">
           <div class="modal-user-details">
-            <h2 class="modal-username">{{ selectedReportedUser.username }}</h2>
-            <p class="modal-email">{{ selectedReportedUser.email }}</p>
+            <h2 class="modal-username">{{ selectedReportedUser()!.username }}</h2>
+            <p class="modal-email">{{ selectedReportedUser()!.email }}</p>
             <div class="modal-stats">
               <div class="modal-stat">
                 <mat-icon>article</mat-icon>
-                <span>{{ userPosts.length }} posts</span>
+                <span>{{ userPosts().length }} posts</span>
               </div>
               <div class="modal-stat">
                 <mat-icon>comment</mat-icon>
-                <span>{{ userComments.length }} comments</span>
+                <span>{{ userComments().length }} comments</span>
               </div>
               <div class="modal-stat">
                 <mat-icon>people</mat-icon>
-                <span>{{ selectedReportedUser.followersCount || 0 }} followers</span>
+                <span>{{ selectedReportedUser()!.followersCount || 0 }} followers</span>
               </div>
               <!-- <div class="modal-stat">
                 <mat-icon>report</mat-icon>
@@ -349,13 +349,13 @@
       <!-- Body -->
       <div class="modal-body">
         <!-- Posts Section -->
-        <div class="section" *ngIf="userPosts.length > 0">
+        <div class="section" *ngIf="userPosts().length > 0">
           <h3 class="section-title">
             <mat-icon>article</mat-icon>
             User Posts
           </h3>
           <div class="posts-grid">
-            <div class="modal-post-card" *ngFor="let post of userPosts">
+            <div class="modal-post-card" *ngFor="let post of userPosts()">
               <p class="modal-post-date">{{ post.createdAt | date:'medium' }}</p>
               <p class="modal-post-title">{{ post.title }}</p>
               <img *ngIf="post.mediaUrl" [src]="getImage(post.mediaUrl)" [alt]="post.title" class="modal-post-image">
@@ -374,18 +374,18 @@
         </div>
 
         <!-- Comments Section -->
-        <div class="section" *ngIf="userComments.length > 0">
+        <div class="section" *ngIf="userComments().length > 0">
           <h3 class="section-title">
             <mat-icon>comment</mat-icon>
             User Comments
           </h3>
           <div class="comments-list">
-            <div class="comment-card" *ngFor="let comment of userComments">
+            <div class="comment-card" *ngFor="let comment of userComments()">
               <div class="comment-header">
-                <img [src]="getImage(selectedReportedUser?.avatar) || 'assets/img/default-avatar.png'"
-                  [alt]="selectedReportedUser?.username" class="comment-avatar">
+                <img [src]="getImage(selectedReportedUser()?.avatar) || 'assets/img/default-avatar.png'"
+                  [alt]="selectedReportedUser()?.username" class="comment-avatar">
                 <div class="comment-info">
-                  <p class="comment-author">{{ selectedReportedUser?.username }}</p>
+                  <p class="comment-author">{{ selectedReportedUser()?.username }}</p>
                   <p class="comment-date">{{ comment.createdAt | date:'medium' }}</p>
                 </div>
               </div>
@@ -413,10 +413,10 @@
           Ban User
         </button> -->
 
-        <button mat-raised-button *ngIf="selectedReportedUser" class="modal-action-btn ban-btn"
-          (click)="openBanUserModal(selectedReportedUser)">
+        <button mat-raised-button *ngIf="selectedReportedUser()" class="modal-action-btn ban-btn"
+          (click)="openBanUserModal(selectedReportedUser()!)">
           <mat-icon>block</mat-icon>
-          <span>{{ selectedReportedUser.isBanned ? 'Unban' : 'Ban' }} User</span>
+          <span>{{ selectedReportedUser()!.isBanned ? 'Unban' : 'Ban' }} User</span>
         </button>
 
         <!-- <button mat-raised-button class="modal-action-btn delete-btn" (click)="deleteReportedUser()">
@@ -424,8 +424,8 @@
           Delete User
         </button> -->
 
-        <button mat-raised-button *ngIf="selectedReportedUser" class="modal-action-btn delete-btn"
-          (click)="openDeleteUserModal(selectedReportedUser)">
+        <button mat-raised-button *ngIf="selectedReportedUser()" class="modal-action-btn delete-btn"
+          (click)="openDeleteUserModal(selectedReportedUser()!)">
           <mat-icon>delete</mat-icon>
           <span>Delete User</span>
         </button>
