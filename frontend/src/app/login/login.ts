@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../service/auth';
-import { ChangeDetectorRef } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ToastService } from '../service/toast-service';
 import { getErrorMessage } from '../model/error-response.model';
@@ -17,12 +16,12 @@ import { getErrorMessage } from '../model/error-response.model';
 })
 
 export class Login implements OnInit {
-  user = { email: '', password: '' };
-  errorMessage: string | null = null;
+  user = signal({ email: '', password: '' });
+  errorMessage = signal<string | null>(null);
+  
   constructor(
     private auth: Auth,
     private router: Router,
-    private cdr: ChangeDetectorRef,
     private toastService: ToastService
   ) { }
 
@@ -34,35 +33,49 @@ export class Login implements OnInit {
   }
 
   login() {
-    if (this.user.email === '') {
-      this.errorMessage = "Email is required";
-      this.cdr.detectChanges();
+    const currentUser = this.user();
+    if (currentUser.email === '') {
+      this.errorMessage.set("Email is required");
       return
     }
-    if (this.user.password === '') {
-      this.errorMessage = "Password is required";
-      this.cdr.detectChanges();
+    if (currentUser.password === '') {
+      this.errorMessage.set("Password is required");
       return
     }
-    this.auth.login(this.user).subscribe({
+    this.auth.login(currentUser).subscribe({
       next: (res) => {
-        this.errorMessage = null;
+        this.errorMessage.set(null);
         localStorage.setItem('token', res.token);
         this.toastService.show('Login successful!', 'success');
         this.router.navigate(['/']);
       },
       error: (error: HttpErrorResponse) => {
         if (error.status === 400 || error.status === 401 || error.status === 409) {
-          this.errorMessage = getErrorMessage(error);
+          this.errorMessage.set(getErrorMessage(error));
         } else {
-          this.errorMessage = 'An unexpected error occurred. Please try again later.';
+          this.errorMessage.set('An unexpected error occurred. Please try again later.');
         }
-        this.cdr.markForCheck();
-
       }
     });
   }
   goToRegister() {
     this.router.navigate(["register"]);
+  }
+
+  // Helper methods pour ngModel avec signals
+  getEmail(): string {
+    return this.user().email;
+  }
+
+  setEmail(value: string): void {
+    this.user.update(u => ({ ...u, email: value }));
+  }
+
+  getPassword(): string {
+    return this.user().password;
+  }
+
+  setPassword(value: string): void {
+    this.user.update(u => ({ ...u, password: value }));
   }
 }

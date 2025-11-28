@@ -381,6 +381,9 @@ export class SingalPost implements OnInit {
     return this.auth.getImage(path)
   }
 
+  backToHome(): void {
+    this.router.navigate([`/`]);
+  }
 
 
   // --- Message Utilities ---

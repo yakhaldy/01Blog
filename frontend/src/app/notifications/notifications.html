@@ -9,16 +9,16 @@
     <app-navbar></app-navbar>
 
     <div class="notifications-wrapper">
-      <div class="empty-notifications" *ngIf="!loading && notifications.length === 0" >
+      <div class="empty-notifications" *ngIf="!loading() && notifications().length === 0" >
         <p>No notifications to display.</p>
       </div>
-      <div class="mark-all-container" *ngIf="!loading && notifications.length > 0">
+      <div class="mark-all-container" *ngIf="!loading() && notifications().length > 0">
         <button mat-raised-button color="primary" (click)="markAllAsRead()" >
           Mark All as Read
         </button>
       </div>
 
-      <mat-card *ngFor="let notification of notifications" class="notification-card"
+      <mat-card *ngFor="let notification of notifications()" class="notification-card"
         [ngClass]="{'unread': !notification.read}">
         <mat-card-header>
           <img [src]="getImage( notification.sender.avatar) || 'assets/img/default-avatar.png'"
@@ -57,7 +57,7 @@
       </mat-card>
     </div>
 
-    <div *ngIf="loading" class="loading-state">
+    <div *ngIf="loading()" class="loading-state">
       <mat-spinner diameter="40"></mat-spinner>
     </div>
   </div>

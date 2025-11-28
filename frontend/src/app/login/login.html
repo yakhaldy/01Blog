@@ -33,13 +33,13 @@
       <form (ngSubmit)="login()">
         <div class="form-group">
           <label for="email">E-mail</label>
-          <input type="email" id="email" [(ngModel)]="user.email" name="email" placeholder="Enter your email" required>
+          <input type="email" id="email" [ngModel]="getEmail()" (ngModelChange)="setEmail($event)" name="email" placeholder="Enter your email" required>
           <div class="input-glow"></div>
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" [(ngModel)]="user.password" name="password"
+          <input type="password" id="password" [ngModel]="getPassword()" (ngModelChange)="setPassword($event)" name="password"
             placeholder="Enter your password" required>
           <div class="input-glow"></div>
         </div>
@@ -49,9 +49,9 @@
           <div class="btn-ripple"></div>
         </button>
       </form>
-      <p *ngIf="errorMessage" class="error-message creative-message">
+      <p *ngIf="errorMessage()" class="error-message creative-message">
         <span class="message-icon">⚠</span>
-        {{ errorMessage }}
+        {{ errorMessage() }}
       </p>
       <div class="signUp creative-link-section">
         <p>Don't have an account?
@@ -65,5 +65,3 @@
   </div>
 </div>
 
-
-<!-- *ngIf="errorMessage" -->

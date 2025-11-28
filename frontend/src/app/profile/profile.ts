@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,35 +30,35 @@ import { ErrorHandlerService } from '../helper/handleError';
     MatInputModule, InfiniteScrollModule],
   templateUrl: './profile.html',
   styleUrls: [ '../home/home.css','./profile.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Profile implements OnInit {
-  profileUser: User | null = null;
-  currentUser: User | null = null;
+  profileUser = signal<User | null>(null);
+  currentUser = signal<User | null>(null);
 
-  isOwnProfile: boolean = false;
-  postsCount: number = 0;
-  isLoading: boolean = true;
-  isLoadingPost: boolean = true;
-  PostToDelete?: Post;
-  posts: Post[] = [];
+  isOwnProfile = signal(false);
+  postsCount = signal(0);
+  isLoading = signal(true);
+  isLoadingPost = signal(true);
+  PostToDelete = signal<Post | undefined>(undefined);
+  posts = signal<Post[]>([]);
 
-  showReportPopup = false;
-  reportReason = '';
-  errorReport = '';
-  isErrorReport = false;
+  showReportPopup = signal(false);
+  reportReason = signal('');
+  errorReport = signal('');
+  isErrorReport = signal(false);
 
-  hasMorePosts = true;
-  currentPage = 0;
+  hasMorePosts = signal(true);
+  currentPage = signal(0);
   pageSize = 10;
   scrollDistance = 2;
 
+  showModal = signal(false);
+  isOpen = signal(false);
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private auth: Auth,
-    private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
     private toastService: ToastService,
     private errorHandler: ErrorHandlerService
@@ -71,20 +71,18 @@ export class Profile implements OnInit {
       if (paramUsername) {
         this.auth.getCurrentUser().subscribe({
           next: (currentUser) => {
-            this.currentUser = currentUser;
+            this.currentUser.set(currentUser);
 
             if (paramUsername === currentUser.username) {
-              this.isOwnProfile = true;
+              this.isOwnProfile.set(true);
               this.loadCurrentUserProfile();
               this.loadCurrentUserPosts();
             } else {
               // Viewing someone else's profile
-              this.isOwnProfile = false;
+              this.isOwnProfile.set(false);
               this.loadUserProfile(paramUsername);
               this.loadUserPosts(paramUsername);
             }
-
-            this.cdr.markForCheck();
           },
           error: (err) => {
             console.error('Failed to fetch current user:', err);
@@ -92,7 +90,7 @@ export class Profile implements OnInit {
         });
       } else {
         // No username param – current user's profile
-        this.isOwnProfile = true;
+        this.isOwnProfile.set(true);
         this.loadCurrentUserProfile();
         this.loadCurrentUserPosts();
       }
@@ -102,89 +100,76 @@ export class Profile implements OnInit {
   }
 
   loadUserProfile(username: string) {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.auth.getInfoUser(username).subscribe({
       next: (user) => {
-        this.profileUser = user;
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.profileUser.set(user);
+        this.isLoading.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.errorHandler.handle(error, 'Failed to load user profile');
-        this.cdr.markForCheck();
       },
     });
-    this.cdr.markForCheck();
   }
   loadUserPosts(username: string) {
-    if (!this.hasMorePosts) return;
+    if (!this.hasMorePosts()) return;
 
-    this.auth.getPostsUser(username, this.currentPage, this.pageSize).subscribe({
+    this.auth.getPostsUser(username, this.currentPage(), this.pageSize).subscribe({
       next: (postsPage) => {
-        // this.posts = posts
-
         if (postsPage && postsPage.content.length > 0) {
-          this.posts.push(...postsPage.content);
-          this.currentPage++;
-          if (this.currentPage >= postsPage.totalPages) {
-            this.hasMorePosts = false;
+          this.posts.update(posts => [...posts, ...postsPage.content]);
+          this.currentPage.update(page => page + 1);
+          if (this.currentPage() >= postsPage.totalPages) {
+            this.hasMorePosts.set(false);
           }
         } else {
-          this.hasMorePosts = false;
+          this.hasMorePosts.set(false);
         }
-        this.isLoadingPost = false;
-        this.cdr.markForCheck();
+        this.isLoadingPost.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoadingPost = false;
+        this.isLoadingPost.set(false);
         this.errorHandler.handle(error, 'Failed to load user posts', false);
-        this.cdr.markForCheck();
       },
     });
-    this.cdr.markForCheck();
   }
   loadCurrentUserProfile() {
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     this.auth.getCurrentUser().subscribe({
       next: (user) => {
-        this.currentUser = user;
-        this.profileUser = user;
-        this.isLoading = false;
-        this.cdr.markForCheck();
+        this.currentUser.set(user);
+        this.profileUser.set(user);
+        this.isLoading.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.errorHandler.handle(error, 'Failed to load current user profile');
-        this.cdr.markForCheck();
       },
     });
   }
   loadCurrentUserPosts() {
-    if (!this.hasMorePosts) return;
+    if (!this.hasMorePosts()) return;
 
-    this.auth.getMyPosts(this.currentPage, this.pageSize).subscribe({
+    this.auth.getMyPosts(this.currentPage(), this.pageSize).subscribe({
       next: (postsPage) => {
         if (postsPage && postsPage.content.length > 0) {
-          this.posts.push(...postsPage.content);
-          this.currentPage++;
-          if (this.currentPage >= postsPage.totalPages) {
-            this.hasMorePosts = false;
+          this.posts.update(posts => [...posts, ...postsPage.content]);
+          this.currentPage.update(page => page + 1);
+          if (this.currentPage() >= postsPage.totalPages) {
+            this.hasMorePosts.set(false);
           }
         } else {
-          this.hasMorePosts = false;
+          this.hasMorePosts.set(false);
         }
-        this.isLoadingPost = false;
-        this.cdr.markForCheck();
+        this.isLoadingPost.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        this.isLoadingPost = false;
+        this.isLoadingPost.set(false);
         this.errorHandler.handle(error, 'Failed to load posts', false);
-        this.cdr.markForCheck();
       },
     });
-    this.cdr.markForCheck();
   }
 
   trackByPostId(index: number, post: any): number {
@@ -193,54 +178,63 @@ export class Profile implements OnInit {
 
 
   onScroll(): void {
-    if (this.isOwnProfile) {
+    if (this.isOwnProfile()) {
       this.loadCurrentUserPosts();
     } else {
-      if (this.profileUser)
-        this.loadUserPosts(this.profileUser.username)
+      const profile = this.profileUser();
+      if (profile)
+        this.loadUserPosts(profile.username)
     }
   }
 
   followUser() {
-    this.auth.follow(this.profileUser?.id as string).subscribe({
+    const profile = this.profileUser();
+    this.auth.follow(profile?.id as string).subscribe({
       next: (res) => {
-        if (this.profileUser) {
-          this.profileUser.isfollowing = !this.profileUser.isfollowing;
-        }
-        this.cdr.markForCheck();
+        this.profileUser.update(user => {
+          if (user) {
+            return { ...user, isfollowing: !user.isfollowing };
+          }
+          return user;
+        });
       },
       error: (error: HttpErrorResponse) => {
         this.errorHandler.handle(error, 'Failed to follow user', false);
-        this.cdr.markForCheck();
       }
     });
   }
 
   editProfile() {
+    const currentUserData = this.currentUser();
     const dialogRef = this.dialog.open(EditProfile, {
       width: '700px',
       maxWidth: '90vw',
       data: {
-        username: this.currentUser?.username,
-        bio: this.currentUser?.bio,
-        AvatarUrl: this.currentUser?.avatar,
+        username: currentUserData?.username,
+        bio: currentUserData?.bio,
+        AvatarUrl: currentUserData?.avatar,
       },
       disableClose: false,
       autoFocus: true
     });
 
     dialogRef.afterClosed().subscribe((result: UpdateProfileResult) => {
-      if (result?.error) {
+     if (result == undefined) return;
+      if (result?.error) {   
         this.toastService.show("Failed to edit profile", "error");
-        this.cdr.markForCheck();
         return;
       }
-      if (this.profileUser) {
-        this.profileUser.avatar = result.user.avatar;
-        this.profileUser.bio = result.user.bio;
-        this.profileUser.username = result.user.username
-        this.cdr.markForCheck();
-      }
+      this.profileUser.update(user => {
+        if (user) {
+          return {
+            ...user,
+            avatar: result.user.avatar,
+            bio: result.user.bio,
+            username: result.user.username
+          };
+        }
+        return user;
+      });
       this.toastService.show("edit profile successfully", "success")
 
     });
@@ -251,79 +245,78 @@ export class Profile implements OnInit {
   }
 
   likePoste(id: number): void {
-    const post = this.posts.find(p => p.id === id);
+    const post = this.posts().find(p => p.id === id);
     if (post) {
       // Optimistic update
       const originalIsLiked = post.isLiked;
       const originalLikesCount = post.likesCount;
 
-      post.isLiked = !post.isLiked;
-      post.likesCount += post.isLiked ? 1 : -1;
-
-      this.cdr.markForCheck();
+      this.posts.update(posts => 
+        posts.map(p => 
+          p.id === id 
+            ? { ...p, isLiked: !p.isLiked, likesCount: p.likesCount + (p.isLiked ? -1 : 1) }
+            : p
+        )
+      );
 
       this.auth.likePost(id).subscribe({
         next: (updatedPost) => {
-          const index = this.posts.findIndex(p => p.id === post.id);
-          if (index !== -1) {
-            this.posts[index].likesCount = updatedPost.likesCount;
-          }
-          this.cdr.markForCheck();
+          this.posts.update(posts => 
+            posts.map(p => 
+              p.id === id ? { ...p, likesCount: updatedPost.likesCount } : p
+            )
+          );
         },
         error: (error: HttpErrorResponse) => {
           // Revert optimistic update on error
-          post.isLiked = originalIsLiked;
-          post.likesCount = originalLikesCount;
+          this.posts.update(posts => 
+            posts.map(p => 
+              p.id === id 
+                ? { ...p, isLiked: originalIsLiked, likesCount: originalLikesCount }
+                : p
+            )
+          );
           this.errorHandler.handle(error, 'Failed to like post', false);
-          this.cdr.markForCheck();
         }
       });
     }
   }
 
-  showModal = false;
-  isOpen = false;
-
-
   deletePost(post: Post): void {
-    this.PostToDelete = post;
+    this.PostToDelete.set(post);
     this.open();
   }
 
   open() {
-    this.showModal = true;
-    this.isOpen = false;
+    this.showModal.set(true);
+    this.isOpen.set(false);
 
     setTimeout(() => {
-      this.isOpen = true;
+      this.isOpen.set(true);
     }, 10);
 
   }
 
   close() {
-    this.isOpen = false;
-
-    this.showModal = false;
-    this.PostToDelete = undefined;
-
+    this.isOpen.set(false);
+    this.showModal.set(false);
+    this.PostToDelete.set(undefined);
   }
 
 
   confirm() {
-    if (!this.PostToDelete) return;
-    this.isOpen = false;
-    this.showModal = false;
+    const postToDelete = this.PostToDelete();
+    if (!postToDelete) return;
+    this.isOpen.set(false);
+    this.showModal.set(false);
 
-    this.auth.deletePost(this.PostToDelete.id).subscribe({
+    this.auth.deletePost(postToDelete.id).subscribe({
       next: () => {
-
-        this.posts = this.posts.filter(p => this.PostToDelete?.id !== p.id);
+        this.posts.update(posts => posts.filter(p => postToDelete.id !== p.id));
         this.toastService.show("Post deleted successfully", "success")
-        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.errorHandler.handle(error, 'Failed to delete post');
-        this.cdr.markForCheck();
       }
     });
   }
@@ -360,16 +353,13 @@ export class Profile implements OnInit {
           next: (updatedPost) => {
             console.log("updatePost :", updatedPost);
 
-            const index = this.posts.findIndex(p => p.id === post.id);
-            if (index !== -1) {
-              this.posts[index] = updatedPost;
-            }
+            this.posts.update(posts => 
+              posts.map(p => p.id === post.id ? updatedPost : p)
+            );
             this.toastService.show("Post update successfully", "success")
-            this.cdr.markForCheck();
           },
           error: (error: HttpErrorResponse) => {
             this.errorHandler.handle(error, 'Failed to update post');
-            this.cdr.markForCheck();
           }
         });
       }
@@ -377,7 +367,7 @@ export class Profile implements OnInit {
   }
 
   isMyPost(post: Post): boolean {
-    return post.user?.username === this.currentUser?.username;
+    return post.user?.username === this.currentUser()?.username;
   }
   getImage(path: string | undefined): string | undefined {
     return this.auth.getImage(path)
@@ -387,34 +377,32 @@ export class Profile implements OnInit {
   }
 
   openReportPopup() {
-    this.showReportPopup = true;
+    this.showReportPopup.set(true);
   }
 
   cancelReport() {
-    this.showReportPopup = false;
-    this.reportReason = '';
+    this.showReportPopup.set(false);
+    this.reportReason.set('');
   }
 
   submitReport() {
-    console.log('Report submitted:', this.reportReason, this.profileUser?.id);
+    const profile = this.profileUser();
+    const reason = this.reportReason();
+    console.log('Report submitted:', reason, profile?.id);
     this.auth.Report({
-      reportedUserId: this.profileUser?.id,
-      reportReason: this.reportReason
+      reportedUserId: profile?.id,
+      reportReason: reason
     }).subscribe({
       next: () => {
         console.log('Report successfully sent');
-        this.isErrorReport = false;
-
-        this.showReportPopup = false;
-        this.reportReason = '';
+        this.isErrorReport.set(false);
+        this.showReportPopup.set(false);
+        this.reportReason.set('');
         this.toastService.show("Report submitted successfully", "success")
-        this.cdr.markForCheck();
-
       },
       error: (error: HttpErrorResponse) => {
-        this.isErrorReport = true;
+        this.isErrorReport.set(true);
         this.errorHandler.handle(error, 'Failed to submit report');
-        this.cdr.markForCheck();
       }
     });
   }

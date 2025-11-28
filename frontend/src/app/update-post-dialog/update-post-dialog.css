@@ -355,6 +355,13 @@
     animation: slideInDialog 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+.post-image{
+    border-radius: 12px;
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
 @keyframes slideInDialog {
     from {
         opacity: 0;

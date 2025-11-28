@@ -340,7 +340,7 @@ label {
 input[type="text"],
 input[type="email"],
 input[type="password"] {
-  width: 100%;
+  width: 93%;
   padding: 12px 14px;
   border: none;
   border-radius: 4px;
@@ -379,7 +379,7 @@ input[type="password"]:focus {
 
 /* Enhanced button */
 .creative-btn {
-  width: 107%;
+  width: 100%;
   padding: 14px;
   border: none;
   border-radius: 4px;
@@ -513,8 +513,9 @@ input[type="password"]:focus {
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .register-container {
+  .login-container {
     padding: 10px;
+    min-height: 100vh;
   }
   
   .container {
@@ -522,14 +523,17 @@ input[type="password"]:focus {
     height: auto;
     width: 95%;
     max-width: 500px;
+    margin: 10px auto;
   }
 
   .left {
     height: 200px;
+    min-height: 200px;
   }
   
   .welcome-text {
     font-size: 1.6rem;
+    margin-bottom: 20px;
   }
   
   .brand-name {
@@ -537,7 +541,12 @@ input[type="password"]:focus {
   }
 
   .right {
-    padding: 30px 20px;
+    padding: 30px 25px;
+  }
+  
+  .creative-title {
+    font-size: 24px;
+    padding: 10px;
   }
   
   .form-row {
@@ -548,33 +557,150 @@ input[type="password"]:focus {
   .form-group.half {
     margin-bottom: 20px;
   }
+  
+  .creative-btn {
+    width: 100%;
+  }
+  
+  /* Ajuster les éléments flottants pour mobile */
+  .floating-circle {
+    opacity: 0.5;
+  }
+  
+  .circle-1 {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .circle-2 {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .circle-3 {
+    width: 50px;
+    height: 50px;
+  }
 }
 
 @media (max-width: 480px) {
+  .login-container {
+    padding: 5px;
+  }
+  
+  .container {
+    width: 98%;
+    max-width: none;
+    margin: 5px;
+  }
+  
+  .left {
+    height: 150px;
+    min-height: 150px;
+  }
+  
   .right {
     padding: 20px 15px;
   }
   
   .welcome-text {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
   }
   
   .brand-name {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+  
+  .decorative-line {
+    width: 40px;
+  }
+  
+  .tagline {
+    font-size: 0.85rem;
   }
   
   .creative-title {
-    font-size: 24px;
+    font-size: 22px;
+    padding: 5px;
+  }
+  
+  .creative-subtitle {
+    font-size: 13px;
+    margin-bottom: 20px;
   }
   
   input[type="text"],
   input[type="email"],
   input[type="password"] {
     padding: 10px 12px;
+    font-size: 13px;
   }
   
   .creative-btn {
     padding: 12px;
+    font-size: 15px;
+    width: 100%;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    font-size: 13px;
+  }
+  
+  .creative-link-section {
+    font-size: 13px;
+  }
+  
+  /* Réduire les éléments flottants sur très petit écran */
+  .floating-circle,
+  .floating-triangle,
+  .floating-square {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .container {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .left {
+    height: 120px;
+    min-height: 120px;
+  }
+  
+  .right {
+    padding: 15px 12px;
+  }
+  
+  .welcome-text {
+    font-size: 1.1rem;
+  }
+  
+  .brand-name {
+    font-size: 1.5rem;
+  }
+  
+  .creative-title {
+    font-size: 20px;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+  
+  .creative-btn {
+    padding: 11px;
+    font-size: 14px;
   }
 }
   /* top: 0;

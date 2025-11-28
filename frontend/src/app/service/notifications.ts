@@ -39,7 +39,7 @@ export class Notifications implements OnDestroy {
       return this.notificationSubject.asObservable();
     }
 
-    // this.connect();
+    this.connect();
 
     return this.notificationSubject.asObservable();
   }

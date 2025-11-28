@@ -14,7 +14,7 @@ export class ErrorHandlerService {
   constructor(private toastService: ToastService) {}
 
   handle(error: HttpErrorResponse, defaultMessage = 'An error occurred', showToast = true): void {
-    console.error('Error:', error.error);
+    // console.error('Error:', error.error);
 
     let errorMessage = defaultMessage;
 

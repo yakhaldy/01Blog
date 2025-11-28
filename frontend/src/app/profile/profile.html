@@ -10,13 +10,13 @@
   <section class="profile-hero">
     <div class="hero-content">
       <!-- Loading State -->
-      <div *ngIf="isLoading" class="hero-loading">
+      <div *ngIf="isLoading()" class="hero-loading">
         <mat-spinner diameter="40" aria-label="Loading profile"></mat-spinner>
         <p class="loading-text">Loading profile...</p>
       </div>
 
       <!-- Profile Hero Content -->
-      <div *ngIf="profileUser && !isLoading" class="hero-main">
+      <div *ngIf="profileUser() && !isLoading()" class="hero-main">
         <div class="profile-banner">
           <div class="banner-gradient">
             <img [src]="'assets/img/banner.png'" class="banner-image" loading="lazy">
@@ -24,23 +24,23 @@
           <div class="profile-main">
             <div class="avatar-section">
               <div class="avatar-container">
-                <img [src]="getImage(profileUser.avatar) || 'assets/img/default-avatar.png'"
-                  [alt]="profileUser.username + ' avatar'" class="profile-avatar" loading="lazy">
+                <img [src]="getImage(profileUser()?.avatar) || 'assets/img/default-avatar.png'"
+                  [alt]="profileUser()?.username + ' avatar'" class="profile-avatar" loading="lazy">
                 <div class="avatar-ring"></div>
               </div>
 
               <!-- Quick Stats Floating Cards -->
               <div class="quick-stats">
                 <div class="stat-card">
-                  <span class="stat-number">{{ profileUser.followersCount || 0 }}</span>
+                  <span class="stat-number">{{ profileUser()?.followersCount || 0 }}</span>
                   <span class="stat-label">Followers</span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-number">{{ profileUser.followingCount || 0 }}</span>
+                  <span class="stat-number">{{ profileUser()?.followingCount || 0 }}</span>
                   <span class="stat-label">Following</span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-number">{{ postsCount || 0 }}</span>
+                  <span class="stat-number">{{ postsCount() || 0 }}</span>
                   <span class="stat-label">Posts</span>
                 </div>
               </div>
@@ -48,33 +48,33 @@
 
             <div class="profile-info-section">
               <div class="user-identity">
-                <h1 class="display-name">{{ profileUser.username }}</h1>
-                <p class="user-email">{{ profileUser.email }}</p>
-                <div class="user-badge" *ngIf="profileUser.role">
+                <h1 class="display-name">{{ profileUser()?.username }}</h1>
+                <p class="user-email">{{ profileUser()?.email }}</p>
+                <div class="user-badge" *ngIf="profileUser()?.role">
                   <mat-icon>verified</mat-icon>
-                  <span>{{ profileUser.role.replace('ROLE_', '') | titlecase }}</span>
+                  <span>{{ profileUser()!.role.replace('ROLE_', '') | titlecase }}</span>
                 </div>
               </div>
 
-              <div class="bio-section" *ngIf="profileUser.bio">
-                <p class="user-bio">{{ profileUser.bio }}</p>
+              <div class="bio-section" *ngIf="profileUser()?.bio">
+                <p class="user-bio">{{ profileUser()?.bio }}</p>
               </div>
 
               <div class="action-buttons">
                 <!-- Own Profile Actions -->
-                <button *ngIf="isOwnProfile" mat-raised-button class="primary-btn edit-btn" (click)="editProfile()">
+                <button *ngIf="isOwnProfile()" mat-raised-button class="primary-btn edit-btn" (click)="editProfile()">
                   <mat-icon>edit</mat-icon>
                   Edit Profile
                 </button>
 
                 <!-- Other User Actions -->
-                <div *ngIf="!isOwnProfile" class="external-actions">
-                  <button *ngIf="!profileUser.isfollowing" mat-raised-button class="primary-btn follow-btn"
+                <div *ngIf="!isOwnProfile()" class="external-actions">
+                  <button *ngIf="!profileUser()?.isfollowing" mat-raised-button class="primary-btn follow-btn"
                     (click)="followUser()">
                     <mat-icon>person_add</mat-icon>
                     Follow
                   </button>
-                  <button *ngIf="profileUser.isfollowing" mat-raised-button class="secondary-btn unfollow-btn"
+                  <button *ngIf="profileUser()?.isfollowing" mat-raised-button class="secondary-btn unfollow-btn"
                     (click)="followUser()">
                     <mat-icon>person_remove</mat-icon>
                     Unfollow
@@ -100,21 +100,21 @@
     </div>
   </section>
 
-  <div *ngIf="showReportPopup" class="report-popup-backdrop">
+  <div *ngIf="showReportPopup()" class="report-popup-backdrop">
     <div class="report-popup">
       <h2 class="report-title">Report Profile</h2>
 
       <mat-form-field class="content-textarea" appearance="fill">
         <mat-label>Reason for reporting</mat-label>
-        <textarea class="report-textarea" matInput rows="5" [(ngModel)]="reportReason"></textarea>
+        <textarea class="report-textarea" matInput rows="5" [ngModel]="reportReason()" (ngModelChange)="reportReason.set($event)"></textarea>
       </mat-form-field>
 
       <div class="report-actions">
         <button mat-button (click)="cancelReport()">Cancel</button>
         <button mat-raised-button color="warn" (click)="submitReport()">Submit</button>
       </div>
-      <div *ngIf="isErrorReport" class="validation-message error">
-        {{ errorReport }}
+      <div *ngIf="isErrorReport()" class="validation-message error">
+        {{ errorReport() }}
       </div>
     </div>
   </div>
@@ -125,28 +125,28 @@
   <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
     [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
 
-    <div *ngIf="isLoadingPost" class="loading-container">
+    <div *ngIf="isLoadingPost()" class="loading-container">
       <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
       <p class="loading-text">Loading...</p>
     </div>
     <!-- Posts will be dynamically added here -->
-    @if (posts.length === 0 && !isLoadingPost) {
+    @if (posts().length === 0 && !isLoadingPost()) {
     <div class="empty-feed">
       <p class="empty-message">No posts yet. Be the first to share something!</p>
     </div>
     }
-    @if (posts.length > 0) {
+    @if (posts().length > 0) {
 
     <div class="posts-list">
-      <article *ngFor="let post of posts; trackBy: trackByPostId " class="post-card" role="article"
+      <article *ngFor="let post of posts(); trackBy: trackByPostId " class="post-card" role="article"
         [attr.aria-label]="'Post by ' + post.user.username">
 
         <!-- Post Header -->
         <header class="post-header">
           <div class="post-author-info">
             <div class="author-avatar">
-              <img [src]="getImage(profileUser?.avatar) || 'assets/img/default-avatar.png'"
-                [alt]="profileUser?.username + ' profile picture'" class="avatar-icon" loading="lazy">
+              <img [src]="getImage(profileUser()?.avatar) || 'assets/img/default-avatar.png'"
+                [alt]="profileUser()?.username + ' profile picture'" class="avatar-icon" loading="lazy">
             </div>
             <div class="author-details">
               <h4 class="author-name">{{ post.user.username }}</h4>
@@ -226,9 +226,9 @@
     }
 
 
-    <div class="door-backdrop" *ngIf="showModal" (click)="close()">
+    <div class="door-backdrop" *ngIf="showModal()" (click)="close()">
       <div class="door" (click)="$event.stopPropagation()">
-        <div class="door-panel" [class.open]="isOpen">
+        <div class="door-panel" [class.open]="isOpen()">
           <div class="door-message">
             <mat-icon class="warning-icon">warning</mat-icon>
             <h3>Are you sure you want to delete this post?</h3>

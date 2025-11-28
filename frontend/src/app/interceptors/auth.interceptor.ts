@@ -91,7 +91,7 @@ export class AuthInterceptor implements HttpInterceptor {
                 this.handleServerError();
                 break;
             default:
-                console.error('HTTP Error:', error);
+                // console.error('HTTP Error:', error);
         }
     }
 

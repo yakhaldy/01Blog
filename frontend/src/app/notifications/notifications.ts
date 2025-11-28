@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { Navbar } from '../components/navbar/navbar';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,14 +20,13 @@ import { ToastService } from '../service/toast-service';
   styleUrl: './notifications.css'
 })
 export class Notifications implements OnInit {
-  loading = false;
-  notifications: Notification[] = [];
+  loading = signal(false);
+  notifications = signal<Notification[]>([]);
 
 
   constructor(
     private auth: Auth,
     private router: Router,
-    private cdr: ChangeDetectorRef,
     private ErrorHandlerService: ErrorHandlerService,
     private toastService: ToastService
   ) { }
@@ -36,19 +35,17 @@ export class Notifications implements OnInit {
   }
 
   loadNotifications(): void {
-    this.loading = true;
+    this.loading.set(true);
     this.auth.getNotifications().subscribe({
       next: (notifications) => {
         console.log("==================>", notifications);
 
-        this.notifications = notifications;
-        this.loading = false;
-        this.cdr.markForCheck();
+        this.notifications.set(notifications);
+        this.loading.set(false);
       },
       error: (error: HttpErrorResponse) => {
-        this.loading = false;
+        this.loading.set(false);
         this.ErrorHandlerService.handle(error, 'Failed to load notifications');
-        this.cdr.markForCheck();
       }
     });
   }
@@ -66,17 +63,16 @@ export class Notifications implements OnInit {
     this.auth.markNotificationAsRead([id]).subscribe({
       next: () => {
         this.toastService.show('Notification marked as read', 'success');
-        this.cdr.markForCheck();
       },
       error: (error) => {
         this.ErrorHandlerService.handle(error, 'Failed to mark notification as read');
-        this.cdr.markForCheck();
       }
     });
     this.router.navigate([link]);
   }
   markAllAsRead(): void {
-    const unreadNotificationIds = this.notifications
+    const currentNotifications = this.notifications();
+    const unreadNotificationIds = currentNotifications
       .filter(notification => !notification.read)
       .map(notification => notification.id);
 
@@ -87,15 +83,16 @@ export class Notifications implements OnInit {
 
     this.auth.markNotificationAsRead(unreadNotificationIds).subscribe({
       next: () => {
-        this.notifications.forEach(notification => {
-          notification.read = true;
-        });
+        this.notifications.update(notifications => 
+          notifications.map(notification => ({
+            ...notification,
+            read: true
+          }))
+        );
         this.toastService.show('All notifications marked as read', 'success');
-        this.cdr.markForCheck();
       },
       error: (error) => {
         this.ErrorHandlerService.handle(error, 'Failed to mark all notifications as read');
-        this.cdr.markForCheck();
       }
     });
   }

@@ -37,7 +37,8 @@
             <input 
               type="text" 
               id="username" 
-              [(ngModel)]="user.username" 
+              [ngModel]="getUsername()" 
+              (ngModelChange)="setUsername($event)" 
               name="username" 
               placeholder="Enter your first name" 
               required>
@@ -50,7 +51,8 @@
           <input 
             type="email" 
             id="email" 
-            [(ngModel)]="user.email" 
+            [ngModel]="getEmail()" 
+            (ngModelChange)="setEmail($event)" 
             name="email" 
             placeholder="Enter your email" 
             required>
@@ -62,7 +64,8 @@
           <input 
             type="password" 
             id="password" 
-            [(ngModel)]="user.password" 
+            [ngModel]="getPassword()" 
+            (ngModelChange)="setPassword($event)" 
             name="password" 
             placeholder="Enter your password" 
             required>
@@ -74,7 +77,8 @@
           <input 
             type="password" 
             id="confirmPassword" 
-            [(ngModel)]="user.confirmPassword" 
+            [ngModel]="getConfirmPassword()" 
+            (ngModelChange)="setConfirmPassword($event)" 
             name="confirmPassword" 
             placeholder="Confirm your password" 
             required>
@@ -87,14 +91,14 @@
         </button>
       </form>
 
-      <p *ngIf="errorMessage" class="error-message creative-message">
+      <p *ngIf="errorMessage()" class="error-message creative-message">
         <span class="message-icon">⚠</span>
-        {{ errorMessage }}
+        {{ errorMessage() }}
       </p>
       
-      <p *ngIf="successMessage" class="success-message creative-message">
+      <p *ngIf="successMessage()" class="success-message creative-message">
         <span class="message-icon">✓</span>
-        {{ successMessage }}
+        {{ successMessage() }}
       </p>
       
       <div class="signIn creative-link-section">

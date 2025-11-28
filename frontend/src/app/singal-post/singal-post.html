@@ -201,7 +201,7 @@
             <mat-icon class="error-icon">error_outline</mat-icon>
             <h2 class="error-title">Post Not Found</h2>
             <p class="error-message">{{ error }}</p>
-            <button mat-raised-button class="back-btn" routerLink="/home">
+            <button mat-raised-button class="back-btn" (click)="backToHome()">
                 <mat-icon>arrow_back</mat-icon>
                 Back to Home
             </button>

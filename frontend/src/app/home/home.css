@@ -109,7 +109,7 @@
     max-height: calc(100vh - 120px);
     overflow-y: auto;
     width: 18%;
-      right: 21px;
+    right: 21px;
 }
 
 /* Card Base Styles */
@@ -210,6 +210,9 @@
     line-height: 20px;
     font-weight: 400;
     margin: 0;
+   word-wrap: break-word;       
+    word-break: break-word;      
+    white-space: normal;  
 }
 
 .profile-stats {
@@ -277,6 +280,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -302,6 +306,7 @@
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -736,13 +741,16 @@
 
 /* Post Content */
 .post-content {
-  margin-bottom: 12px;
-  cursor: pointer;
+    margin-bottom: 12px;
+    cursor: pointer;
 
-  display: flex;
-  flex-direction: column;     /* make sure it's a row */
-  justify-content: flex-start; /* start from left */
-  align-items: center;     /* align items vertically */
+    display: flex;
+    flex-direction: column;
+    /* make sure it's a row */
+    justify-content: flex-start;
+    /* start from left */
+    align-items: center;
+    /* align items vertically */
 }
 
 
@@ -1001,25 +1009,31 @@
 }
 
 .crown-icon {
-  position: absolute;
-  top: -14px;        /* Ajuste la hauteur */
-  right: -6px;       /* Ajuste la position */
-  width: 22px;       /* Taille de la couronne */
-  fill: gold;        /* Couleur de la couronne */
-  stroke: #b8860b;   /* Contour */
-  stroke-width: 2px;
-  pointer-events: none;
-   transform: rotate(33deg);
+    position: absolute;
+    top: -14px;
+    /* Ajuste la hauteur */
+    right: -6px;
+    /* Ajuste la position */
+    width: 22px;
+    /* Taille de la couronne */
+    fill: gold;
+    /* Couleur de la couronne */
+    stroke: #b8860b;
+    /* Contour */
+    stroke-width: 2px;
+    pointer-events: none;
+    transform: rotate(33deg);
 }
+
 .crown-container {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 .avatar-user-img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
 }
 
 
@@ -1436,7 +1450,7 @@
 
     .profile-card {
         top: 250px;
-        width: max-content;
+        /* width: max-content; */
     }
 
     .posts-container {
@@ -1586,6 +1600,7 @@
     .users-list {
         max-height: calc(100vh - 220px);
     }
+
     .posts-container {
         margin-top: 35px;
     }
