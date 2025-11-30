@@ -78,7 +78,11 @@ public class Posts {
         List<Long> followingIds = getFollowingIds(user.getId());
         followingIds.add(user.getId());
 
-        Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
+       
+        Page<Post> postsPage = postRepository.findByUser_IdInAndStatueOrderByCreatedAtDesc(
+                followingIds, "active", pageable);
+        //Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
+
         return addLikeStatus(postsPage, user.getId());
     }
 
@@ -132,7 +136,11 @@ public class Posts {
     @Transactional(readOnly = true)
     public Page<Post> getMyPosts(Authentication authentication, Pageable pageable) {
         User user = getUserOrThrow(authentication);
-        Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+        Page<Post> postsPage;
+        
+        // Admins can see all their posts including hidden ones
+        // Regular users should see all their posts to understand which are hidden
+        postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
         return addLikeStatus(postsPage, user.getId());
     }
 
@@ -142,7 +150,14 @@ public class Posts {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Page<Post> postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+        Page<Post> postsPage;
+        // Admins can see all posts, non-admins only see active posts
+        if (ADMIN_ROLE.equals(currentUser.getRole())) {
+            postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+        } else {
+            postsPage = postRepository.findByUser_IdAndStatueOrderByCreatedAtDesc(user.getId(), "active", pageable);
+        }
+        
         return addLikeStatus(postsPage, currentUser.getId());
     }
 
@@ -150,6 +165,11 @@ public class Posts {
     public Post getPost(Authentication authentication, Long id) {
         User currentUser = getUserOrThrow(authentication);
         Post post = getPostOrThrow(id);
+
+        // Prevent non-admins from accessing hidden posts
+        if ("hidden".equals(post.getStatue()) && !ADMIN_ROLE.equals(currentUser.getRole())) {
+            throw new ResourceNotFoundException("Post not found");
+        }
 
         post.setIsLiked(likeRepository.existsByUser_IdAndPost_Id(currentUser.getId(), post.getId()));
         return post;
@@ -205,6 +225,23 @@ public class Posts {
         updatePostCommentCount(post);
     }
 
+    @Transactional
+    public Post updatePostStatue(Long id, String statue) {
+        Post post = getPostOrThrow(id);
+        
+        // Fix: Use || instead of && for null/empty check
+        if (statue == null || statue.trim().isEmpty()) {
+            throw new IllegalArgumentException("Statue cannot be null or empty");
+        }
+        if (!statue.equals("active") && !statue.equals("hidden")) {
+            throw new IllegalArgumentException("Invalid statue value");
+        }
+        
+        // Use the provided value instead of toggling
+        post.setStatue(statue);
+        return postRepository.save(post);
+    }
+
     // ==================== Private Helper Methods ====================
 
     private User getUserOrThrow(Authentication authentication) {
@@ -254,6 +291,7 @@ public class Posts {
         post.setTitle(title);
         post.setDescription(description);
         post.setUser(user);
+        post.setStatue("active");
         post.setCreatedAt(LocalDateTime.now());
         return post;
     }

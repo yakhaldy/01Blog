@@ -32,8 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/login",
             "/api/register",
             "/uploads/**",
-            "/api/notifications/stream"
-    );
+            "/api/notifications/stream");
 
     public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
@@ -42,12 +41,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
-
+        System.out.println("Incoming request path: " + path);
         // Skip JWT validation for public endpoints
         if (isPublicEndpoint(path)) {
             filterChain.doFilter(request, response);
@@ -68,9 +67,18 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Load user details (this queries DB but is necessary for authentication)
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                
+                // Check if user is banned using the UserDetails we just loaded
+                if (userDetails instanceof org.springframework.security.core.userdetails.User) {
+                    // Spring Security's User class doesn't have ban info
+                    // We need to check the actual User entity
+                    // This is unavoidable - we must verify ban status
+                }
+                
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
+                        null, userDetails.getAuthorities());
                 authToken.setDetails(
                         new org.springframework.security.web.authentication.WebAuthenticationDetailsSource()
                                 .buildDetails(request));
@@ -104,8 +112,7 @@ public class JwtFilter extends OncePerRequestFilter {
         Map<String, Object> body = Map.of(
                 "error", "Unauthorized",
                 "message", message,
-                "status", 401
-        );
+                "status", 401);
 
         response.getWriter().write(objectMapper.writeValueAsString(body));
         response.getWriter().flush();

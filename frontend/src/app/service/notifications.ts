@@ -14,6 +14,11 @@ export class Notifications implements OnDestroy {
 
   private notificationSubject = new BehaviorSubject<number>(0);
   private isConnected = false;
+  private connectionId: string = '';
+  private reconnectAttempts = 0;
+  private readonly MAX_RECONNECT_ATTEMPTS = 10;
+  private readonly BASE_DELAY = 3000; // 3 seconds
+  private readonly MAX_DELAY = 60000; // 60 seconds
 
   constructor(
     private zone: NgZone, 
@@ -21,6 +26,16 @@ export class Notifications implements OnDestroy {
     private http: HttpClient
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Generate or retrieve connection ID for this tab
+    if (this.isBrowser) {
+      let connectionId = sessionStorage.getItem('sse-connection-id');
+      if (!connectionId) {
+        connectionId = this.generateUUID();
+        sessionStorage.setItem('sse-connection-id', connectionId);
+      }
+      this.connectionId = connectionId;
+    }
   }
 
   public getToken(): string | null {
@@ -28,6 +43,14 @@ export class Notifications implements OnDestroy {
       return localStorage.getItem('token');
     }
     return null;
+  }
+
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 
   /**
@@ -63,13 +86,13 @@ export class Notifications implements OnDestroy {
     console.log('🔌 Creating new SSE connection...');
 
     this.eventSource = new EventSource(
-      `http://localhost:8080/api/notifications/stream?token=${jwt}`,
-
+      `http://localhost:8080/api/notifications/stream?token=${jwt}&connectionId=${this.connectionId}`
     );
 
     this.eventSource.onopen = (event) => {
       console.log('✅ SSE Connection opened', event);
       this.isConnected = true;
+      this.reconnectAttempts = 0; // Reset on successful connection
     };
 
     this.eventSource.addEventListener('unreadCount', (event: MessageEvent) => {
@@ -88,11 +111,25 @@ export class Notifications implements OnDestroy {
       if (this.eventSource?.readyState === EventSource.CLOSED) {
         console.log('🔴 SSE connection closed by server');
         
-        // Attempt to reconnect after 3 seconds (for timeout or server restart)
+        this.reconnectAttempts++;
+        
+        if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
+          console.error('❌ Max reconnection attempts reached');
+          return;
+        }
+        
+        // Exponential backoff: 3s, 6s, 12s, 24s, 48s, 60s (max)
+        const delay = Math.min(
+          this.BASE_DELAY * Math.pow(2, this.reconnectAttempts - 1),
+          this.MAX_DELAY
+        );
+        
+        console.log(`🔄 Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`);
+        
+        // Attempt to reconnect after delay
         setTimeout(() => {
-          console.log('🔄 Attempting to reconnect...');
           this.connect();
-        }, 3000);
+        }, delay);
       }
       // For network errors, EventSource will auto-reconnect
     };

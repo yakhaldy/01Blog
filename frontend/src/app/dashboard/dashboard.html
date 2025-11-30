@@ -143,9 +143,9 @@
             </div>
           </div>
         </div>
-         <div class="show-more-btn">
-              <button class="button-show-more" (click)="showMoreUsers()">show more</button>
-            </div>
+        <div class="show-more-btn">
+          <button class="button-show-more" (click)="showMoreUsers()">show more</button>
+        </div>
       </mat-tab>
 
       <!-- Posts Tab -->
@@ -185,6 +185,20 @@
                     <mat-icon>delete</mat-icon>
                     <span>Delete Post</span>
                   </button>
+                  <button mat-menu-item (click)="hidePost(post)">
+                    @if (post.statue === 'active') {
+                    <ng-container>
+                      <mat-icon matMenuItemIcon>visibility</mat-icon>
+                      <span>Hide Post</span>
+                    </ng-container>
+                    } @else {
+                    <ng-container>
+                      <mat-icon matMenuItemIcon>visibility_off</mat-icon>
+                      <span>Unhide Post</span>
+                    </ng-container>
+                    }
+                  </button>
+
                 </mat-menu>
               </div>
 
@@ -204,6 +218,7 @@
                   <mat-icon>comment</mat-icon>
                   <span>{{ post.commentsCount || 0 }}</span>
                 </div>
+                <span *ngIf="post.statue === 'hidden'" class="status-chip hidden">Hidden</span>
               </div>
             </div>
           </div>
@@ -287,18 +302,24 @@
         <div class="door-message">
           <mat-icon class="warning-icon">warning</mat-icon>
           <h3 *ngIf="actionType() === 'delete' && selectedUser()">Delete User</h3>
-          <h3 *ngIf="actionType() === 'ban' && selectedUser()">{{ selectedUser()!.isBanned ? 'Unban' : 'Ban' }} User</h3>
+          <h3 *ngIf="actionType() === 'ban' && selectedUser()">{{ selectedUser()!.isBanned ? 'Unban' : 'Ban' }} User
+          </h3>
           <h3 *ngIf="actionType() === 'remove' && selectedPost()">Delete Post</h3>
+          <h3 *ngIf="actionType() === 'hide' && selectedPost()">{{ selectedPost()!.statue === 'active' ? 'Hide' : 'Unhide' }} Post</h3>
 
           <p *ngIf="actionType() === 'delete' && selectedUser()">
             Are you sure you want to permanently delete <strong>{{ selectedUser()!.username }}</strong>?
           </p>
           <p *ngIf="actionType() === 'ban' && selectedUser()">
-            Are you sure you want to {{ selectedUser()!.isBanned ? 'unban' : 'ban' }} <strong>{{ selectedUser()!.username
+            Are you sure you want to {{ selectedUser()!.isBanned ? 'unban' : 'ban' }} <strong>{{
+              selectedUser()!.username
               }}</strong>?
           </p>
           <p *ngIf="actionType() === 'remove' && selectedPost()">
             Are you sure you want to delete this post?
+          </p>
+          <p *ngIf="actionType() === 'hide' && selectedPost()">
+            Are you sure you want to {{ selectedPost()!.statue === 'active' ? 'hide' : 'unhide' }} this post?
           </p>
         </div>
         <div class="door-buttons">

@@ -57,22 +57,22 @@ public class RateLimiter {
             info.requestCount = 1;
             info.lastRequestTime = now;
             clientMap.put(clientIp, info);
-            System.out.println("✅ [" + type + "] New window for " + clientIp + " - Count: 1/" + maxRequests);
+            // System.out.println("✅ [" + type + "] New window for " + clientIp + " - Count: 1/" + maxRequests);
             return true;
         }
 
         // Check if limit exceeded
         if (info.requestCount >= maxRequests) {
-            System.out.println("🚫 [" + type + "] Rate limit exceeded for " + clientIp + " - " + 
-                             info.requestCount + "/" + maxRequests);
+            // System.out.println("🚫 [" + type + "] Rate limit exceeded for " + clientIp + " - " + 
+                            //  info.requestCount + "/" + maxRequests);
             return false;
         }
 
         // Increment counter
         info.requestCount++;
         clientMap.put(clientIp, info);
-        System.out.println("✅ [" + type + "] Request allowed for " + clientIp + " - Count: " + 
-                         info.requestCount + "/" + maxRequests);
+        // System.out.println("✅ [" + type + "] Request allowed for " + clientIp + " - Count: " + 
+                        //  info.requestCount + "/" + maxRequests);
         return true;
     }
 

@@ -68,7 +68,7 @@ public class AuthController {
             Authentication authentication,
             @Valid @RequestPart("post") PostRequest request,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
-        System.out.println("📄 Creating post for user: " + authentication.getName()+ "++"+mediaFile);
+        System.out.println("📄 Creating post for user: " + authentication.getName() + "++" + mediaFile);
 
         Post post = postsService.createPost(authentication, request, mediaFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(post);
@@ -268,5 +268,16 @@ public class AuthController {
         List<Long> ids = payload.get("ids");
         notificationService.markNotificationsAsRead(authentication, ids);
         return ResponseEntity.ok(Map.of("message", "Notifications marked as read"));
+    }
+
+    @PatchMapping("/admin/updateStatusP/{id}")
+    public ResponseEntity<Post> updatePostStatue(
+            Authentication authentication,
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload) {
+
+        String statue = payload.get("statue");
+        Post post = postsService.updatePostStatue(id, statue);
+        return ResponseEntity.ok(post);
     }
 }

@@ -50,9 +50,9 @@ public class Post {
     @Column(name = "comments_count", columnDefinition = "bigint default 0")
     private Long commentsCount = 0L;
 
-    // @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval =
-    // true)
-    // private List<Like> likes;
+    @Column(name = "statue", length = 50, nullable = false)
+    private String statue; 
+
     @Transient
     private Boolean isLiked = false;
 

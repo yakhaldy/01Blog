@@ -90,7 +90,7 @@ export class Dashboard implements OnInit {
   selectedUser = signal<User | undefined>(undefined);
   selectedPost = signal<Post | undefined>(undefined);
   selectedReport = signal<Report | undefined>(undefined);
-  actionType = signal<'delete' | 'ban' | 'remove'>('delete');
+  actionType = signal<'delete' | 'ban' | 'remove' | 'hide'>('delete');
   showUserDetailsModal = signal(false);
   isUserDetailsModalOpen = signal(false);
   selectedReportedUser = signal<User | undefined>(undefined);
@@ -175,8 +175,8 @@ export class Dashboard implements OnInit {
 
         this.isLoadingPosts.set(false);
       },
-      error: (error) => {
-        console.error('Failed to load posts:', error);
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to load posts');
         this.isLoadingPosts.set(false);
       },
     });
@@ -196,8 +196,8 @@ export class Dashboard implements OnInit {
         this.reports.set(reports);
         this.isLoadingReports.set(false);
       },
-      error: (error) => {
-        console.error('Failed to load reports:', error);
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to load reports');
         this.isLoadingReports.set(false);
       },
     });
@@ -211,8 +211,8 @@ export class Dashboard implements OnInit {
         this.stats.set(stats);
         this.isLoadingStats.set(false);
       },
-      error: (error) => {
-        console.error('Failed to load stats:', error);
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to load stats');
         this.isLoadingStats.set(false);
       },
     });
@@ -245,8 +245,8 @@ export class Dashboard implements OnInit {
         }
         this.toastService.show("delete user successfully", "success");
       },
-      error: (error) => {
-        this.toastService.show("Failed to delete user", "error");
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to delete user');
       },
     });
   }
@@ -276,8 +276,8 @@ export class Dashboard implements OnInit {
         this.closeModal();
         this.toastService.show("ban user successfully", "success");
       },
-      error: (error) => {
-        this.toastService.show("Failed to ban user", "error");
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to ban user');
       },
     });
   }
@@ -286,6 +286,12 @@ export class Dashboard implements OnInit {
   openDeletePostModal(post: Post): void {
     this.selectedPost.set(post);
     this.actionType.set('remove');
+    this.openModal();
+  }
+
+  openHidePostModal(post: Post): void {
+    this.selectedPost.set(post);
+    this.actionType.set('hide');
     this.openModal();
   }
 
@@ -299,8 +305,28 @@ export class Dashboard implements OnInit {
         this.closeModal();
         this.toastService.show("delete post successfully", "success");
       },
-      error: (error) => {
-        this.toastService.show("Failed to delete post", "error");
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to delete post');
+      },
+    });
+  }
+
+  confirmHidePost(): void {
+    const post = this.selectedPost();
+    if (!post) return;
+
+    // Determine the new statue value (opposite of current)
+    const newStatue = post.statue === 'active' ? 'hidden' : 'active';
+
+    this.auth.updatePostStatue(post.id, newStatue).subscribe({
+      next: (resp) => {
+        this.posts.update(posts => posts.map(p => p.id === resp.id ? resp : p));
+        this.closeModal();
+        const action = resp.statue === 'hidden' ? 'hidden' : 'unhidden';
+        this.toastService.show(`Post ${action} successfully`, "success");
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to update post');
       },
     });
   }
@@ -335,8 +361,8 @@ export class Dashboard implements OnInit {
         }
         this.closeUserDetailsModal();
       },
-      error: (error) => {
-        console.error('Failed to resolve report:', error);
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to resolve report');
       }
     })
   }
@@ -377,6 +403,8 @@ export class Dashboard implements OnInit {
       this.confirmBanUser();
     } else if (this.actionType() === 'remove' && this.selectedPost()) {
       this.confirmDeletePost();
+    } else if (this.actionType() === 'hide' && this.selectedPost()) {
+      this.confirmHidePost();
     }
   }
 
@@ -450,8 +478,8 @@ export class Dashboard implements OnInit {
           this.isLoadingMoreForFilter.set(false);
         }
       },
-      error: (error) => {
-        console.error('Failed to load posts for filter:', error);
+      error: (error: HttpErrorResponse) => {
+        this.errorHandler.handle(error, 'Failed to load posts for filter');
         this.isLoadingMoreForFilter.set(false);
       },
     });
@@ -465,5 +493,9 @@ export class Dashboard implements OnInit {
     return this.posts().filter(
       p => p.user.username.toLowerCase().includes(term)
     ).length;
+  }
+
+  hidePost(post: Post): void {
+    this.openHidePostModal(post);
   }
 }

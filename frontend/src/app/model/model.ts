@@ -50,6 +50,7 @@ export interface Post {
   updatedAt: Date;
   likesCount: number;
   commentsCount: number;
+  statue: string;
 }
 
 export interface Comment {

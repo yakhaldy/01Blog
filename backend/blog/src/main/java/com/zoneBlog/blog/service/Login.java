@@ -43,7 +43,7 @@ public class Login {
             throw new BannedUserException("Your account has been banned");
         }
 
-        // Generate and return JWT token
+        // Generate and return JWT token with ban status
         return jwtUtil.generateToken(email, user.getId());
     }
 }

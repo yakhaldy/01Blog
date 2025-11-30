@@ -38,8 +38,6 @@ export class Notifications implements OnInit {
     this.loading.set(true);
     this.auth.getNotifications().subscribe({
       next: (notifications) => {
-        console.log("==================>", notifications);
-
         this.notifications.set(notifications);
         this.loading.set(false);
       },

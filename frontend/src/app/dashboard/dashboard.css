@@ -463,6 +463,12 @@
     color: rgba(156, 163, 175, 1);
 }
 
+.status-chip.hidden {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: rgba(239, 68, 68, 1);
+}
+
 /* Post Card */
 .post-card .post-content {
     margin-bottom: 16px;

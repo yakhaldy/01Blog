@@ -60,6 +60,7 @@ public class Admin {
         return dashboardStats;
     }
 
+    
     public void deleteUser(Authentication authentication, Long id) {
         validateAdminAccess(authentication);
 
@@ -101,6 +102,8 @@ public class Admin {
 
         reportRepository.delete(report);
     }
+
+    
 
     private void validateAdminAccess(Authentication authentication) {
         User user = helper.getCurrentUser(authentication);

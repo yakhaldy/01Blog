@@ -48,18 +48,32 @@ public class JwtUtil {
         }
     }
     public Long extractUserId(String token) {
-    try {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("userId", Long.class);
-    } catch (Exception e) {
-        System.err.println("Error extracting userId from token: " + e.getMessage());
-        return null;
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.get("userId", Long.class);
+        } catch (Exception e) {
+            System.err.println("Error extracting userId from token: " + e.getMessage());
+            return null;
+        }
     }
-}
+
+    public Boolean extractIsBanned(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.get("isBanned", Boolean.class);
+        } catch (Exception e) {
+            System.err.println("Error extracting isBanned from token: " + e.getMessage());
+            return false;
+        }
+    }
 
 
     public boolean validateToken(String token, String username) {

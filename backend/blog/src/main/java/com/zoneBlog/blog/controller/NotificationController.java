@@ -1,18 +1,18 @@
 package com.zoneBlog.blog.controller;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.zoneBlog.blog.event.NotificationCountEvent;
 import com.zoneBlog.blog.exception.UnauthorizedException;
-import com.zoneBlog.blog.repository.NotificationRepository;
 import com.zoneBlog.blog.security.JwtUtil;
+import com.zoneBlog.blog.service.NotificationService;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -20,17 +20,17 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class NotificationController {
 
     private final JwtUtil jwtUtil;
-    private final NotificationRepository notificationRepository;
-    // Map<userId, Set<SseEmitter>> to support multiple devices per user
-    private final Map<Long, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
+    private final NotificationService notificationService;
+    // Map<userId, Map<connectionId, SseEmitter>> to support multiple devices per user
+    private final Map<Long, Map<String, SseEmitter>> emitters = new ConcurrentHashMap<>();
 
-    NotificationController(NotificationRepository notificationRepository, JwtUtil jwtUtil) {
+    NotificationController(JwtUtil jwtUtil, NotificationService notificationService) {
         this.jwtUtil = jwtUtil;
-        this.notificationRepository = notificationRepository;
+        this.notificationService = notificationService;
     }
 
     @GetMapping(value = "/stream", produces = "text/event-stream")
-    public SseEmitter streamNotifications(Authentication authentication, @RequestParam("token") String token) {
+    public SseEmitter streamNotifications(Authentication authentication, @RequestParam("token") String token, @RequestParam("connectionId") String connectionId) {
 
         if (!jwtUtil.validateToken(token, jwtUtil.extractUsername(token))) {
             throw new UnauthorizedException("Invalid or expired token");
@@ -43,79 +43,88 @@ public class NotificationController {
       
         SseEmitter emitter = new SseEmitter(30 * 60 * 1000L); // 30 minutes in milliseconds
         
-        // Get or create the set of emitters for this user
-        Set<SseEmitter> userEmitters = emitters.computeIfAbsent(userId, k -> new CopyOnWriteArraySet<>());
-        userEmitters.add(emitter);
+        // Get or create the map of connections for this user
+        Map<String, SseEmitter> userConnections = emitters.computeIfAbsent(userId, k -> java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>()));
         
-        System.out.println("🔌 New SSE connection for user: " + userId + " (Total connections: " + userEmitters.size() + ")");
+        // If connectionId exists, close old emitter (same tab refresh)
+        SseEmitter oldEmitter = userConnections.get(connectionId);
+        if (oldEmitter != null) {
+            try {
+                oldEmitter.complete();
+            } catch (Exception e) {
+                // Ignore - already closed
+            }
+        }
+        
+        // Limit connections per user to prevent pool exhaustion
+        final int MAX_CONNECTIONS_PER_USER = 3;
+        if (userConnections.size() >= MAX_CONNECTIONS_PER_USER) {
+            // Remove oldest connection by arbitrary key (first in iteration)
+            String oldestKey = userConnections.keySet().iterator().next();
+            SseEmitter oldest = userConnections.remove(oldestKey);
+            if (oldest != null) {
+                oldest.complete();
+            }
+        }
+        
+        userConnections.put(connectionId, emitter);
 
         emitter.onCompletion(() -> {
-            System.out.println("✅ SSE completed for user: " + userId);
-            userEmitters.remove(emitter);
-            if (userEmitters.isEmpty()) {
+            userConnections.remove(connectionId);
+            if (userConnections.isEmpty()) {
                 emitters.remove(userId);
-                System.out.println("🧹 No more connections for user: " + userId);
             }
         });
 
         emitter.onTimeout(() -> {
-            System.out.println("⏱️ SSE timeout (30min) for user: " + userId + " - Client will reconnect with fresh token");
-            userEmitters.remove(emitter);
-            if (userEmitters.isEmpty()) {
+            userConnections.remove(connectionId);
+            if (userConnections.isEmpty()) {
                 emitters.remove(userId);
             }
         });
 
         emitter.onError(e -> {
-            System.err.println("❌ SSE error for user: " + userId + " - " + e.getMessage());
-            userEmitters.remove(emitter);
-            if (userEmitters.isEmpty()) {
+            userConnections.remove(connectionId);
+            if (userConnections.isEmpty()) {
                 emitters.remove(userId);
             }
         });
 
-        // Send initial count asynchronously to avoid blocking
-        // new Thread(() -> {
-            try {
-                Long initialCount = notificationRepository.countByRecipient_IdAndIsReadFalse(userId);
-                emitter.send(SseEmitter.event()
-                        .name("unreadCount")
-                        .data(initialCount != null ? initialCount : 0L));
-                System.out.println("📤 Sent initial count (" + initialCount + ") to user: " + userId);
-            } catch (IOException e) {
-                System.err.println("Failed to send initial count to user " + userId + ": " + e.getMessage());
-                emitter.completeWithError(e);
-                userEmitters.remove(emitter);
-                if (userEmitters.isEmpty()) {
-                    emitters.remove(userId);
+        // Send initial count asynchronously using Spring managed executor
+        notificationService.getUnreadCountAsync(userId)
+            .thenAccept(count -> {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .name("unreadCount")
+                            .data(count));
+                } catch (IOException e) {
+                    // Failed to send initial count - client will not receive it
                 }
-            }
-        // }).start();
+            })
+            .exceptionally(ex -> {
+                // Error fetching unread count - client will not receive initial count
+                return null;
+            });
 
         return emitter;
     }
 
     public void sendNotificationCount(Long userId, Long count) {
-        Set<SseEmitter> userEmitters = emitters.get(userId);
-        if (userEmitters != null && !userEmitters.isEmpty()) {
-            System.out.println("📤 Broadcasting notification count (" + count + ") to " + userEmitters.size() + " device(s) for user: " + userId);
-            
+        Map<String, SseEmitter> userConnections = emitters.get(userId);
+        if (userConnections != null && !userConnections.isEmpty()) {
             // Send to all active connections for this user
-            userEmitters.forEach(emitter -> {
+            userConnections.forEach((connectionId, emitter) -> {
                 try {
                     emitter.send(SseEmitter.event()
                             .name("unreadCount")
                             .data(count != null ? count : 0L));
                 } catch (IOException e) {
-                    System.err.println("Failed to send notification to one device of user " + userId + ": " + e.getMessage());
-                    userEmitters.remove(emitter);
-                    if (userEmitters.isEmpty()) {
+                    userConnections.remove(connectionId);
+                    if (userConnections.isEmpty()) {
                         emitters.remove(userId);
                     }
                 }
             });
-        } else {
-            System.out.println("⚠️ No active SSE connections for user: " + userId);
         }
     }
 
@@ -134,29 +143,24 @@ public class NotificationController {
             throw new UnauthorizedException("Invalid token: missing userId");
         }
 
-        Set<SseEmitter> userEmitters = emitters.get(userId);
+        Map<String, SseEmitter> userConnections = emitters.get(userId);
         int disconnectedCount = 0;
         
-        if (userEmitters != null && !userEmitters.isEmpty()) {
-            disconnectedCount = userEmitters.size();
-            System.out.println("🔌 Disconnecting " + disconnectedCount + " SSE connection(s) for user: " + userId);
+        if (userConnections != null && !userConnections.isEmpty()) {
+            disconnectedCount = userConnections.size();
             
             // Complete all emitters for this user
-            userEmitters.forEach(emitter -> {
+            userConnections.forEach((connectionId, emitter) -> {
                 try {
                     emitter.complete();
                 } catch (Exception e) {
-                    System.err.println("Error completing emitter: " + e.getMessage());
+                    // Ignore - emitter already closed
                 }
             });
             
-            // Clear the set and remove from map
-            userEmitters.clear();
+            // Clear the map and remove from parent map
+            userConnections.clear();
             emitters.remove(userId);
-            
-            System.out.println("✅ All SSE connections closed for user: " + userId);
-        } else {
-            System.out.println("⚠️ No active SSE connections found for user: " + userId);
         }
         
         return Map.of(
@@ -164,6 +168,15 @@ public class NotificationController {
             "userId", userId,
             "disconnectedConnections", disconnectedCount
         );
+    }
+
+    /**
+     * Event listener for notification count updates
+     * Handles broadcasting notification counts to all connected SSE clients
+     */
+    @EventListener
+    public void handleNotificationCountEvent(NotificationCountEvent event) {
+        sendNotificationCount(event.getUserId(), event.getCount());
     }
 
 }

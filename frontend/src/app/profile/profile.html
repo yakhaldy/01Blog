@@ -106,7 +106,8 @@
 
       <mat-form-field class="content-textarea" appearance="fill">
         <mat-label>Reason for reporting</mat-label>
-        <textarea class="report-textarea" matInput rows="5" [ngModel]="reportReason()" (ngModelChange)="reportReason.set($event)"></textarea>
+        <textarea class="report-textarea" matInput rows="5" [ngModel]="reportReason()"
+          (ngModelChange)="reportReason.set($event)"></textarea>
       </mat-form-field>
 
       <div class="report-actions">
@@ -177,7 +178,7 @@
         </header>
 
         <!-- Post Content -->
-        <div class="post-content" (click)="goToPost(post.id!)">
+        <div class="post-content" (click)="goToPost(post)">
           <p class="post-description">{{ post.title }}</p>
 
           <!-- Media Content -->
@@ -196,17 +197,6 @@
 
         <!-- Post Footer -->
         <footer class="post-footer">
-          <!-- <div class="post-stats">
-                <span class="stat-item">
-                  <mat-icon>favorite_border</mat-icon>
-                  <span class="stat-count">{{ post.likesCount || 0 }}</span>
-                </span>
-                <span class="stat-item">
-                  <mat-icon>comment</mat-icon>
-                  <span class="stat-count">{{ post.commentsCount || 0 }}</span>
-                </span>
-              </div> -->
-
           <div class="post-interactions">
             <button mat-icon-button class="interaction-btn" matTooltip="Like" (click)="likePoste(post.id!)">
               <mat-icon [ngClass]="{ 'liked': post.isLiked }">
@@ -215,10 +205,14 @@
             </button>
             <span class="stat-count">{{ post.likesCount || 0 }}</span>
 
-            <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="goToPost(post.id!)">
+            <button mat-icon-button matTooltip="Comment" class="interaction-btn" (click)="goToPost(post)">
               <mat-icon>comment</mat-icon>
             </button>
             <span class="stat-count">{{ post.commentsCount || 0 }}</span>
+
+          </div>
+          <div *ngIf="post.statue === 'hidden'" class="status-chip hidden">
+            Hidden
           </div>
         </footer>
       </article>

@@ -372,8 +372,9 @@ export class Profile implements OnInit {
   getImage(path: string | undefined): string | undefined {
     return this.auth.getImage(path)
   }
-  goToPost(id: number): void {
-    this.router.navigate([`post/${id}`]);
+  goToPost(post: Post): void {
+    if (!post.id || post.statue === "hidden") return;
+    this.router.navigate([`post/${post.id}`]);
   }
 
   openReportPopup() {

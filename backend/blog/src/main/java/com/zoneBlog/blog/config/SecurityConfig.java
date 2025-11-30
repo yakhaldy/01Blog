@@ -26,10 +26,10 @@ public class SecurityConfig {
     private final RateLimitFilter rateLimitFilter;
     private final UserRepository userRepository;
 
-    public SecurityConfig(UserRepository userRepository, JwtFilter jwtFilter, RateLimitFilter rateLimitFilter) {
-        this.userRepository = userRepository;
+    public SecurityConfig(JwtFilter jwtFilter, RateLimitFilter rateLimitFilter, UserRepository userRepository) {
         this.jwtFilter = jwtFilter;
         this.rateLimitFilter = rateLimitFilter;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -49,15 +49,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers("/api/login", "/api/register", "/uploads/**").permitAll()
-                            .requestMatchers("/**").access((authentication,
-                                    context) -> {
+                            // SSE endpoint: permit all (ban check done in controller with async query)
+                            .requestMatchers("/api/notifications/stream").permitAll()
+                            // All other authenticated requests: check ban status
+                            .requestMatchers("/**").access((authentication, context) -> {
                                 String userEmail = authentication.get().getName();
                                 Boolean isBanned = userRepository.findByEmail(userEmail)
                                         .map(user -> user.getIsBanned())
                                         .orElse(false);
                                 return new AuthorizationDecision(!isBanned);
                             })
-                            .requestMatchers("/api/notifications/stream").permitAll()
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             .anyRequest().authenticated();
                 });

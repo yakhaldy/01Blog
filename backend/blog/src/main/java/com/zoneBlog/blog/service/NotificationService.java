@@ -2,13 +2,15 @@ package com.zoneBlog.blog.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.zoneBlog.blog.controller.NotificationController;
+import com.zoneBlog.blog.event.NotificationCountEvent;
 import com.zoneBlog.blog.exception.ResourceNotFoundException;
 import com.zoneBlog.blog.model.Comment;
 import com.zoneBlog.blog.model.Notification;
@@ -21,14 +23,14 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final Helper helper;
-    private final NotificationController notificationController;
+    private final ApplicationEventPublisher eventPublisher;
 
     public NotificationService(NotificationRepository notificationRepository,
             Helper helper,
-            NotificationController notificationController) {
+            ApplicationEventPublisher eventPublisher) {
         this.notificationRepository = notificationRepository;
         this.helper = helper;
-        this.notificationController = notificationController;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -106,10 +108,17 @@ public class NotificationService {
     // @Async
     private void sendNotificationCountAsync(Long userId, Long count) {
         try {
-            notificationController.sendNotificationCount(userId, count);
+            eventPublisher.publishEvent(new NotificationCountEvent(userId, count));
         } catch (Exception e) {
             // Log error but don't throw - async notification delivery is non-critical
         }
+    }
+
+    @Async("sseTaskExecutor")
+    @Transactional(readOnly = true)
+    public CompletableFuture<Long> getUnreadCountAsync(Long userId) {
+        Long count = notificationRepository.countByRecipient_IdAndIsReadFalse(userId);
+        return CompletableFuture.completedFuture(count != null ? count : 0L);
     }
 
     @Transactional
