@@ -68,7 +68,6 @@ public class AuthController {
             Authentication authentication,
             @Valid @RequestPart("post") PostRequest request,
             @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
-        System.out.println("📄 Creating post for user: " + authentication.getName() + "++" + mediaFile);
 
         Post post = postsService.createPost(authentication, request, mediaFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(post);
@@ -220,6 +219,7 @@ public class AuthController {
 
     @GetMapping("/post/{id}")
     public ResponseEntity<Post> getPost(Authentication authentication, @PathVariable Long id) {
+        System.out.println("📄 Fetching post with ID: " + id + " for user: " + authentication.getName());
         Post post = postsService.getPost(authentication, id);
         return ResponseEntity.ok(post);
     }
@@ -279,5 +279,11 @@ public class AuthController {
         String statue = payload.get("statue");
         Post post = postsService.updatePostStatue(id, statue);
         return ResponseEntity.ok(post);
+    }
+
+    @PostMapping("/posts/report")
+    public ResponseEntity<?> reportPost(Authentication authentication, @Valid @RequestBody ReportRequest request) {
+        postsService.reportPost(authentication, request);
+        return ResponseEntity.ok(Map.of("message", "Post reported successfully"));
     }
 }

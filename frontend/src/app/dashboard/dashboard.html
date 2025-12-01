@@ -253,9 +253,6 @@
                     <p class="report-date">{{ report.reportedAt | date:'medium' }}</p>
                   </div>
                 </div>
-                <!-- <mat-chip [class]="'status-chip ' + report.status">
-                  {{ report.status }}
-                </mat-chip> -->
               </div>
 
               <div class="report-body">
@@ -268,6 +265,12 @@
                     <span class="label">Reported User:</span>
                     <span class="value clickable" (click)="viewReportedUser(report.reportedUser.id)">
                       {{ report.reportedUser.username || 'Unknown' }}
+                    </span>
+                  </div>
+                  <div class="report-user" *ngIf="report.reportedPost">
+                    <span class="label">Reported Post:</span>
+                    <span class="value clickable" (click)="viewReportedPost(report.reportedPost.id)">
+                      {{ report.reportedPost.title || 'Unknown' }}
                     </span>
                   </div>
                 </div>
@@ -305,7 +308,8 @@
           <h3 *ngIf="actionType() === 'ban' && selectedUser()">{{ selectedUser()!.isBanned ? 'Unban' : 'Ban' }} User
           </h3>
           <h3 *ngIf="actionType() === 'remove' && selectedPost()">Delete Post</h3>
-          <h3 *ngIf="actionType() === 'hide' && selectedPost()">{{ selectedPost()!.statue === 'active' ? 'Hide' : 'Unhide' }} Post</h3>
+          <h3 *ngIf="actionType() === 'hide' && selectedPost()">{{ selectedPost()!.statue === 'active' ? 'Hide' :
+            'Unhide' }} Post</h3>
 
           <p *ngIf="actionType() === 'delete' && selectedUser()">
             Are you sure you want to permanently delete <strong>{{ selectedUser()!.username }}</strong>?
@@ -375,51 +379,46 @@
             <mat-icon>article</mat-icon>
             User Posts
           </h3>
-          <div class="posts-grid">
+          <div class="posts-grid ">
             <div class="modal-post-card" *ngFor="let post of userPosts()">
-              <p class="modal-post-date">{{ post.createdAt | date:'medium' }}</p>
-              <p class="modal-post-title">{{ post.title }}</p>
-              <img *ngIf="post.mediaUrl" [src]="getImage(post.mediaUrl)" [alt]="post.title" class="modal-post-image">
-              <div class="modal-post-meta">
-                <div class="meta-item">
-                  <mat-icon>favorite</mat-icon>
-                  <span>{{ post.likesCount || 0 }}</span>
+              <div class="modal-post-content" [class.reported-post]="selectedReport()?.reportedPost?.id === post.id">
+                <div class="modal-post-header">
+                  <p class="modal-post-date">{{ post.createdAt | date:'medium' }}</p>
+                  <button mat-icon-button [matMenuTriggerFor]="modalPostMenu" class="modal-post-more-btn">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #modalPostMenu="matMenu">
+                    <button mat-menu-item (click)="hidePost(post)">
+                      <mat-icon>{{ post.statue === 'active' ? 'visibility_off' : 'visibility' }}</mat-icon>
+                      <span>{{ post.statue === 'active' ? 'Hide' : 'Unhide' }} Post</span>
+                    </button>
+                    <button mat-menu-item (click)="openDeletePostModal(post)">
+                      <mat-icon>delete</mat-icon>
+                      <span>Delete Post</span>
+                    </button>
+                  </mat-menu>
                 </div>
-                <div class="meta-item">
-                  <mat-icon>comment</mat-icon>
-                  <span>{{ post.commentsCount || 0 }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Comments Section -->
-        <div class="section" *ngIf="userComments().length > 0">
-          <h3 class="section-title">
-            <mat-icon>comment</mat-icon>
-            User Comments
-          </h3>
-          <div class="comments-list">
-            <div class="comment-card" *ngFor="let comment of userComments()">
-              <div class="comment-header">
-                <img [src]="getImage(selectedReportedUser()?.avatar) || 'assets/img/default-avatar.png'"
-                  [alt]="selectedReportedUser()?.username" class="comment-avatar">
-                <div class="comment-info">
-                  <p class="comment-author">{{ selectedReportedUser()?.username }}</p>
-                  <p class="comment-date">{{ comment.createdAt | date:'medium' }}</p>
+                <p class="modal-post-title">{{ post.title }}</p>
+                <div class="modal-post-meta">
+                  <div class="meta-item">
+                    <mat-icon>favorite</mat-icon>
+                    <span>{{ post.likesCount || 0 }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <mat-icon>comment</mat-icon>
+                    <span>{{ post.commentsCount || 0 }}</span>
+                  </div>
+                  <span *ngIf="post.statue === 'hidden'" class="status-chip hidden">Hidden</span>
                 </div>
               </div>
-              <p class="comment-content">{{ comment.content }}</p>
-              <p class="comment-post-title">On post: {{ comment.post?.title || 'Unknown post' }}</p>
             </div>
           </div>
         </div>
 
         <!-- Empty State -->
-        <div class="empty-state" *ngIf="userPosts.length === 0 && userComments.length === 0">
+        <div class="empty-state" *ngIf="userPosts().length === 0">
           <mat-icon>inbox</mat-icon>
-          <p>No content found for this user</p>
+          <p>No posts found for this user</p>
         </div>
       </div>
 

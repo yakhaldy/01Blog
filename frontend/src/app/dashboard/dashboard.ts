@@ -373,6 +373,9 @@ export class Dashboard implements OnInit {
       this.router.navigate(['/profile', user.username]);
     }
   }
+  viewReportedPost(postId: number): void {
+    this.router.navigate(['/post', postId]);
+  }
 
   // Modal Controls
   openModal(): void {

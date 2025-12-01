@@ -66,8 +66,9 @@ export interface Comment {
 export interface Report {
   id: string;
   reportedUser: User;
-  reportedBy?: User;
+  reportedBy: User;
   reportReason: string;
+  reportedPost?: Post;
   reportedAt: string;
   status: 'pending' | 'resolved' ;
 }

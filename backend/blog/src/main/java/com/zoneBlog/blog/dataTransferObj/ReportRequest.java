@@ -12,14 +12,14 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ReportRequest {
     @NotNull(message = "Reported user ID is required")
-    private Long reportedUserId;
+    private Long reportedId;
 
     @NotBlank(message = "Report reason is required")
     private String reportReason;
 
     // Getters and setters
-    public Long getReportedUserId() { return reportedUserId; }
-    public void setReportedUserId(Long reportedUserId) { this.reportedUserId = reportedUserId; }
+    public Long getReportedId() { return reportedId; }
+    public void setReportedId(Long reportedUserId) { this.reportedId = reportedUserId; }
     public String getReportReason() { return reportReason; }
     public void setReportReason(String reportReason) { this.reportReason = reportReason; }
 }

@@ -23,6 +23,11 @@ public class Report {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User reportedUser;
 
+    @ManyToOne
+    @JoinColumn(name = "reported_post_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Post reportedPost;
+
     private String reportReason;
 
     // Reporter
@@ -34,4 +39,5 @@ public class Report {
     private LocalDateTime reportedAt = LocalDateTime.now();
 
     private String status;
+
 }

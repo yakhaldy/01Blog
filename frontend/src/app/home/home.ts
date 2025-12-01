@@ -27,6 +27,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Navbar } from '../components/navbar/navbar';
 import { UpdatePostDialog } from '../update-post-dialog/update-post-dialog';
+import { ReportDialog } from '../components/report-dialog/report-dialog';
 
 import { User, UpdatePostResult, NewPost, Post } from '../model/model';
 
@@ -541,6 +542,25 @@ export class Home implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.isLoadingSearch.set(false);
         this.errorHandler.handle(error, 'Failed to search users', false);
+      }
+    });
+  }
+  reportPost(postId: number): void {
+    const dialogRef = this.dialog.open(ReportDialog, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: {
+        type: 'post',
+        targetId: postId
+      },
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        // Report was successfully submitted, toast is already shown by the dialog
+        console.log('Post reported successfully');
       }
     });
   }

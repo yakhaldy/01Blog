@@ -25,6 +25,7 @@ public class Register {
 
     @Transactional
     public User register(RegisterRequest request) {
+        // Values already trimmed in setters, but keep for safety
         String email = request.getEmail().trim();
         String username = request.getUsername().trim();
 

@@ -104,7 +104,9 @@ export class Auth {
     }
     return undefined;
   }
-  getPost(id: number): Observable<Post> {
+  getPost(id: string): Observable<Post> {
+    console.log({id});
+    
     if (!this.isBrowser) return EMPTY;
     return this.http.get<Post>(`${this.apiUrl}/post/${id}`)
   }
@@ -119,7 +121,7 @@ export class Auth {
     return this.http.post(`${this.apiUrl}/posts/comment`, data)
   }
 
-  getPostComments(postId: number): Observable<Comment[]> {
+  getPostComments(postId: string): Observable<Comment[]> {
     if (!this.isBrowser) return EMPTY;
     return this.http.get<Comment[]>(`${this.apiUrl}/posts/getComment/${postId}`,)
   }
@@ -179,5 +181,10 @@ export class Auth {
   updatePostStatue(id: number, statue: string): Observable<Post> {
     if (!this.isBrowser) return EMPTY;
     return this.http.patch<Post>(`${this.apiUrl}/admin/updateStatusP/${id}`, { statue: statue })
+  }
+
+  ReportPost(data: any) {
+    if (!this.isBrowser) return EMPTY;
+    return this.http.post(`${this.apiUrl}/posts/report`, data)  
   }
 }

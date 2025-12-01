@@ -28,7 +28,8 @@ public class RegisterRequest {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        // Trim before setting to ensure validation runs on clean data
+        this.email = email != null ? email.trim() : null;
     }
 
     public String getUsername() {
@@ -36,7 +37,8 @@ public class RegisterRequest {
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        // Trim before setting to ensure validation runs on clean data
+        this.username = username != null ? username.trim() : null;
     }
 
     public String getPassword() {

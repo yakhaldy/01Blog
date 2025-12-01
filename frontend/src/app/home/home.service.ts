@@ -48,4 +48,8 @@ export class HomeService {
   searchUsers(searchTerm: string): Observable<User[]> {
    return this.auth.searchUsers(searchTerm);
   }
+
+  reportPost(postId: number): Observable<any> {
+    return this.auth.Report({ reportedPostId: postId, reportReason: 'Post reported' });
+  }
 }

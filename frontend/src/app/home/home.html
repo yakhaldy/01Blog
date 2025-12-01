@@ -189,6 +189,9 @@
                   <mat-icon>comment</mat-icon>
                 </button>
                 <span class="stat-count">{{ post.commentsCount || 0 }}</span>
+                <button mat-icon-button matTooltip="report" class="interaction-btn" (click)="reportPost(post.id!)" *ngIf="!isMyPost(post)">
+                  <mat-icon>report</mat-icon>
+                </button>
               </div>
             </footer>
           </article>

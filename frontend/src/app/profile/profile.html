@@ -84,14 +84,6 @@
                     <mat-icon>report</mat-icon>
                   </button>
                 </div>
-
-                <!-- Trigger Button -->
-                <!-- <button mat-raised-button color="warn" (click)="openReportPopup()">Report Profile</button> -->
-
-                <!-- Report Popup -->
-
-
-
               </div>
             </div>
           </div>
@@ -99,26 +91,6 @@
       </div>
     </div>
   </section>
-
-  <div *ngIf="showReportPopup()" class="report-popup-backdrop">
-    <div class="report-popup">
-      <h2 class="report-title">Report Profile</h2>
-
-      <mat-form-field class="content-textarea" appearance="fill">
-        <mat-label>Reason for reporting</mat-label>
-        <textarea class="report-textarea" matInput rows="5" [ngModel]="reportReason()"
-          (ngModelChange)="reportReason.set($event)"></textarea>
-      </mat-form-field>
-
-      <div class="report-actions">
-        <button mat-button (click)="cancelReport()">Cancel</button>
-        <button mat-raised-button color="warn" (click)="submitReport()">Submit</button>
-      </div>
-      <div *ngIf="isErrorReport()" class="validation-message error">
-        {{ errorReport() }}
-      </div>
-    </div>
-  </div>
 
 
   <!-- Posts Feed -->
@@ -209,6 +181,10 @@
               <mat-icon>comment</mat-icon>
             </button>
             <span class="stat-count">{{ post.commentsCount || 0 }}</span>
+
+            <button mat-icon-button matTooltip="Report" class="interaction-btn" (click)="reportPost(post)" *ngIf="!isMyPost(post)">
+              <mat-icon>report</mat-icon>
+            </button>
 
           </div>
           <div *ngIf="post.statue === 'hidden'" class="status-chip hidden">

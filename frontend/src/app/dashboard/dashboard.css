@@ -1061,6 +1061,57 @@
     transform: translateY(-2px);
 }
 
+.modal-post-content {
+    transition: all 0.3s ease;
+}
+
+.modal-post-content.reported-post {
+    border: 2px solid #ef4444;
+    border-radius: 8px;
+    padding: 12px;
+    background: rgba(239, 68, 68, 0.05);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+    animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+    }
+}
+
+.modal-post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.modal-post-more-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8b98a5;
+    transition: all 0.2s ease;
+}
+
+.modal-post-more-btn:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-post-more-btn mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
 .modal-post-title {
     font-size: 14px;
     color: #ffffff;
@@ -1071,7 +1122,7 @@
 .modal-post-date {
     font-size: 12px;
     color: #8b98a5;
-    margin: 0 0 12px 0;
+    margin: 0;
 }
 
 .modal-post-image {
@@ -1087,12 +1138,18 @@
     gap: 16px;
     font-size: 13px;
     color: #8b98a5;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .modal-post-meta .meta-item {
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+.modal-post-meta .status-chip {
+    margin-left: auto;
 }
 
 .comments-list {

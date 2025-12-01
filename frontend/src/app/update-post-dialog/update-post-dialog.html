@@ -4,21 +4,21 @@
     <div class="imput-continer">
        
          <mat-form-field class="post-textarea" appearance="outline">
-             <textarea matInput [(ngModel)]="postUpdate.title" name="postTitle" rows="4"
+             <textarea matInput [ngModel]="getTitle()" (ngModelChange)="setTitle($event)" name="postTitle" rows="4"
                 placeholder="What's happening?" maxlength="280" aria-label="Post title"
-                [class.error]="isCharacterTitleLimitExceeded">
+                [class.error]="isCharacterTitleLimitExceeded()">
         </textarea>
-            <mat-hint [class.error-hint]="isCharacterLimitExceeded">
-                {{ postTitleCharacterCount }}/280
+            <mat-hint [class.error-hint]="isCharacterLimitExceeded()">
+                {{ postTitleCharacterCount() }}/280
             </mat-hint>
         </mat-form-field>
         <mat-form-field class="post-textarea" appearance="outline">
-            <textarea matInput [(ngModel)]="postUpdate.description" name="postDescription" rows="4"
+            <textarea matInput [ngModel]="getDescription()" (ngModelChange)="setDescription($event)" name="postDescription" rows="4"
                 placeholder="What's happening?" maxlength="5000" aria-label="Post content"
-                [class.error]="isCharacterLimitExceeded">
+                [class.error]="isCharacterLimitExceeded()">
         </textarea>
-            <mat-hint [class.error-hint]="isCharacterLimitExceeded">
-                {{ postCharacterCount }}/1000
+            <mat-hint [class.error-hint]="isCharacterLimitExceeded()">
+                {{ postCharacterCount() }}/1000
             </mat-hint>
         </mat-form-field>
 
@@ -35,9 +35,9 @@
     <div *ngIf="hasCurrentImage() && !hasNewFile()" class="current-media">
         <p class="media-label">Current image:</p>
         <div class="current-image-container">
-                <img *ngIf="isImage(currentImageUrl)" [src]="getImage(currentImageUrl)" class="current-image"
+                <img *ngIf="isImage(currentImageUrl())" [src]="getImage(currentImageUrl())" class="current-image"
                    class="post-image" loading="lazy">
-                <video *ngIf="isVideo(currentImageUrl)" [src]="getImage(currentImageUrl)" controls class="post-video" class="current-image"
+                <video *ngIf="isVideo(currentImageUrl())" [src]="getImage(currentImageUrl())" controls class="post-video" class="current-image"
                   preload="metadata">
                   Your browser does not support the video tag.
                 </video>
@@ -48,25 +48,24 @@
         </div>
     </div>
 
-
-
-    <!-- New File Preview -->
-    <div *ngIf="hasNewFile() " class="file-preview">
-        <div class="file-info">
-            <mat-icon>attach_file</mat-icon>
-            <span class="file-name">{{ selectedFileName }}</span>
+    <!-- New File Preview with Image/Video Display -->
+    <div *ngIf="hasNewFile()" class="file-preview-container">
+        <div class="file-preview">
+            <img *ngIf="isImageFile(selectedFileName())" [src]="filePreviewUrl()" alt="Selected image preview"
+                class="file-preview-image" loading="lazy">
+            <video *ngIf="isVideoFile(selectedFileName())" [src]="filePreviewUrl()" controls class="file-preview-video"
+                preload="metadata">Your browser does not support the video tag.</video>
+            <button type="button" class="remove-file-btn" (click)="removeMediaFile()" aria-label="Remove file">
+                <mat-icon>close</mat-icon>
+            </button>
         </div>
-        <button type="button" class="remove-file-btn" (click)="removeMediaFile()" mat-icon-button
-            matTooltip="Remove file">
-            <mat-icon>close</mat-icon>
-        </button>
     </div>
 
     <!-- Validation Messages -->
-    <div *ngIf="postUpdate.description.trim().length === 0" class="validation-message error">
+    <div *ngIf="getDescription().trim().length === 0" class="validation-message error">
         Post content cannot be empty
     </div>
-    <div *ngIf="isCharacterLimitExceeded" class="validation-message error">
+    <div *ngIf="isCharacterLimitExceeded()" class="validation-message error">
         Post exceeds maximum character limit
     </div>
 </mat-dialog-content>
@@ -75,7 +74,7 @@
     <button mat-button (click)="cancel()" type="button">
         Cancel
     </button>
-    <button mat-raised-button color="primary" (click)="save()" [disabled]="!isPostValid" type="button">
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="!isPostValid()" type="button">
         Update Post
     </button>
 </mat-dialog-actions>

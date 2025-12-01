@@ -70,7 +70,7 @@ public class Profile {
 
     public void report(Authentication authentication, ReportRequest request) {
         User currentUser = getUserOrThrow(authentication);
-        User reportedUser = userRepository.findById(request.getReportedUserId())
+        User reportedUser = userRepository.findById(request.getReportedId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reported user not found"));
 
         validateReport(currentUser, reportedUser);

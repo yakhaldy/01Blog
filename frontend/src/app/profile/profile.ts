@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { EditProfile } from '../components/edit-profile/edit-profile'
+import { ReportDialog } from '../components/report-dialog/report-dialog';
 import { Navbar } from '../components/navbar/navbar';
 import { User, Post, UpdatePostResult, UpdateProfileResult } from '../model/model'
 import { Auth } from '../service/auth'
@@ -41,11 +42,6 @@ export class Profile implements OnInit {
   isLoadingPost = signal(true);
   PostToDelete = signal<Post | undefined>(undefined);
   posts = signal<Post[]>([]);
-
-  showReportPopup = signal(false);
-  reportReason = signal('');
-  errorReport = signal('');
-  isErrorReport = signal(false);
 
   hasMorePosts = signal(true);
   currentPage = signal(0);
@@ -378,32 +374,46 @@ export class Profile implements OnInit {
   }
 
   openReportPopup() {
-    this.showReportPopup.set(true);
-  }
-
-  cancelReport() {
-    this.showReportPopup.set(false);
-    this.reportReason.set('');
-  }
-
-  submitReport() {
     const profile = this.profileUser();
-    const reason = this.reportReason();
-    console.log('Report submitted:', reason, profile?.id);
-    this.auth.Report({
-      reportedUserId: profile?.id,
-      reportReason: reason
-    }).subscribe({
-      next: () => {
-        console.log('Report successfully sent');
-        this.isErrorReport.set(false);
-        this.showReportPopup.set(false);
-        this.reportReason.set('');
-        this.toastService.show("Report submitted successfully", "success")
+    if (!profile) return;
+
+    const dialogRef = this.dialog.open(ReportDialog, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: {
+        type: 'user',
+        targetId: profile.id,
+        targetName: profile.username
       },
-      error: (error: HttpErrorResponse) => {
-        this.isErrorReport.set(true);
-        this.errorHandler.handle(error, 'Failed to submit report');
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        // Report was successfully submitted, toast is already shown by the dialog
+        console.log('Report submitted successfully');
+      }
+    });
+  }
+
+  reportPost(post: Post): void {
+    if (!post.id) return;
+
+    const dialogRef = this.dialog.open(ReportDialog, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: {
+        type: 'post',
+        targetId: post.id
+      },
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        console.log('Post reported successfully');
       }
     });
   }

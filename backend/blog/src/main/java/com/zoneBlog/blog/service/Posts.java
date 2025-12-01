@@ -2,6 +2,8 @@ package com.zoneBlog.blog.service;
 
 import com.zoneBlog.blog.dataTransferObj.CommentRequest;
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
+import com.zoneBlog.blog.exception.BusinessException;
+import com.zoneBlog.blog.exception.DuplicateResourceException;
 import com.zoneBlog.blog.exception.ResourceNotFoundException;
 import com.zoneBlog.blog.exception.UnauthorizedException;
 import com.zoneBlog.blog.model.*;
@@ -34,11 +36,13 @@ public class Posts {
     private final NotificationRepository notificationRepository;
     private final Helper helper;
     private final NotificationService notificationService;
+    private final ReportRepository reportRepository;
+    private static final String PENDING_STATUS = "pending";
 
     public Posts(PostRepository postRepository, LikeRepository likeRepository,
             UserRepository userRepository, CommentRepository commentRepository,
             FollowRepository followRepository, NotificationRepository notificationRepository,
-            Helper helper, NotificationService notificationService) {
+            Helper helper, NotificationService notificationService, ReportRepository reportRepository) {
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
@@ -47,6 +51,7 @@ public class Posts {
         this.notificationRepository = notificationRepository;
         this.helper = helper;
         this.notificationService = notificationService;
+        this.reportRepository = reportRepository;
     }
 
     @Transactional
@@ -78,10 +83,10 @@ public class Posts {
         List<Long> followingIds = getFollowingIds(user.getId());
         followingIds.add(user.getId());
 
-       
         Page<Post> postsPage = postRepository.findByUser_IdInAndStatueOrderByCreatedAtDesc(
                 followingIds, "active", pageable);
-        //Page<Post> postsPage = postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
+        // Page<Post> postsPage =
+        // postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
 
         return addLikeStatus(postsPage, user.getId());
     }
@@ -137,7 +142,7 @@ public class Posts {
     public Page<Post> getMyPosts(Authentication authentication, Pageable pageable) {
         User user = getUserOrThrow(authentication);
         Page<Post> postsPage;
-        
+
         // Admins can see all their posts including hidden ones
         // Regular users should see all their posts to understand which are hidden
         postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
@@ -157,7 +162,7 @@ public class Posts {
         } else {
             postsPage = postRepository.findByUser_IdAndStatueOrderByCreatedAtDesc(user.getId(), "active", pageable);
         }
-        
+
         return addLikeStatus(postsPage, currentUser.getId());
     }
 
@@ -228,7 +233,7 @@ public class Posts {
     @Transactional
     public Post updatePostStatue(Long id, String statue) {
         Post post = getPostOrThrow(id);
-        
+
         // Fix: Use || instead of && for null/empty check
         if (statue == null || statue.trim().isEmpty()) {
             throw new IllegalArgumentException("Statue cannot be null or empty");
@@ -236,13 +241,42 @@ public class Posts {
         if (!statue.equals("active") && !statue.equals("hidden")) {
             throw new IllegalArgumentException("Invalid statue value");
         }
-        
+
         // Use the provided value instead of toggling
         post.setStatue(statue);
         return postRepository.save(post);
     }
 
+    @Transactional
+    public void reportPost(Authentication authentication, com.zoneBlog.blog.dataTransferObj.ReportRequest request) {
+        User currentUser = getUserOrThrow(authentication);
+        Post post = getPostOrThrow(request.getReportedId());
+        String reason = request.getReportReason().trim();
+        validateReport(currentUser, post);
+        Report report = createReport(currentUser, post, reason);
+        reportRepository.save(report);
+    }
+
     // ==================== Private Helper Methods ====================
+    private void validateReport(User reporter, Post reportedPost) {
+        if (reporter.getId().equals(reportedPost.getUser().getId())) {
+            throw new BusinessException("You cannot report yourself");
+        }
+
+        if (reportRepository.existsByReportedBy_IdAndReportedPostId(reporter.getId(), reportedPost.getId())) {
+            throw new DuplicateResourceException("You have already reported this post");
+        }
+    }
+
+    private Report createReport(User reporter, Post post, String reason) {
+        Report report = new Report();
+        report.setReportedUser(post.getUser());
+        report.setReportedPost(post);
+        report.setReportedBy(reporter);
+        report.setReportReason(reason);
+        report.setStatus(PENDING_STATUS);
+        return report;
+    }
 
     private User getUserOrThrow(Authentication authentication) {
         User user = helper.getCurrentUser(authentication);

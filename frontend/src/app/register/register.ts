@@ -67,6 +67,8 @@ export class Register implements OnInit {
     }
 
     if (!/^[A-Za-z_]+$/.test(currentUser.username)) {
+      console.log(currentUser.username);
+      
       this.errorMessage.set('Username must contain only letters (A–Z) and underscore (_).');
       return;
     }
@@ -105,7 +107,8 @@ export class Register implements OnInit {
   }
 
   setUsername(value: string): void {
-    this.user.update(u => ({ ...u, username: value }));
+    const trimmedValue = value.trim();
+    this.user.update(u => ({ ...u, username: trimmedValue }));
   }
 
   getEmail(): string {
@@ -113,7 +116,8 @@ export class Register implements OnInit {
   }
 
   setEmail(value: string): void {
-    this.user.update(u => ({ ...u, email: value }));
+    const trimmedValue = value.trim();
+    this.user.update(u => ({ ...u, email: trimmedValue }));
   }
 
   getPassword(): string {

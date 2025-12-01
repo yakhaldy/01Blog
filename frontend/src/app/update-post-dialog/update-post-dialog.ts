@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, signal, computed } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -39,13 +39,14 @@ interface PostUpdate {
   styleUrls: ['./update-post-dialog.css']
 })
 export class UpdatePostDialog {
-  postUpdate: PostUpdate = {
+  postUpdate = signal<PostUpdate>({
     title: '',
     description: '',
     mediaFile: undefined
-  };
-  selectedFileName: string = '';
-  currentImageUrl: string = '';
+  });
+  selectedFileName = signal('');
+  currentImageUrl = signal('');
+  filePreviewUrl = signal<string | null>(null);
 
   constructor(
     public dialogRef: MatDialogRef<UpdatePostDialog>,
@@ -53,23 +54,25 @@ export class UpdatePostDialog {
     private auth: Auth,
     private toastService: ToastService
   ) {
+    this.postUpdate.set({
+      description: this.data.content || '',
+      title: this.data.title || '',
+      mediaFile: undefined
+    });
 
-    this.postUpdate.description = this.data.content || '';
-    this.postUpdate.title = this.data.title || '';
-
-    this.currentImageUrl = this.data.imgUrl || '';
-    
+    this.currentImageUrl.set(this.data.imgUrl || '');
   }
 
   save() {
-    if (!this.isPostValid) {
+    if (!this.isPostValid()) {
       return;
     }
     
+    const currentPost = this.postUpdate();
     const result = {
-      title: this.postUpdate.title.trim(),
-      description: this.postUpdate.description.trim(),
-      mediaFile: this.postUpdate.mediaFile,
+      title: currentPost.title.trim(),
+      description: currentPost.description.trim(),
+      mediaFile: currentPost.mediaFile,
       removeCurrentImage: this.shouldRemoveCurrentImage()
     };
     
@@ -80,27 +83,23 @@ export class UpdatePostDialog {
     this.dialogRef.close();
   }
 
-  get postCharacterCount(): number {
-    return this.postUpdate.description.length;
-  }
-  get postTitleCharacterCount(): number {
-    return this.postUpdate.description.length;
-  }
+  postCharacterCount = computed(() => this.postUpdate().description.length);
+  
+  postTitleCharacterCount = computed(() => this.postUpdate().title.length);
 
-  get isPostValid(): boolean {
-    return this.postUpdate.description.trim().length > 0 && 
-           this.postUpdate.description.length <= 5000 &&  this.postUpdate.title.trim().length > 0 && 
-           this.postUpdate.title.length <= 280;
-  }
+  isPostValid = computed(() => {
+    const post = this.postUpdate();
+    return post.description.trim().length > 0 && 
+           post.description.length <= 5000 && 
+           post.title.trim().length > 0 && 
+           post.title.length <= 280;
+  });
 
-  get isCharacterLimitExceeded(): boolean {
-    return this.postUpdate.description.length > 5000;
-  }
- get isCharacterTitleLimitExceeded(): boolean {
-    return this.postUpdate.title.length > 280;
-  }
+  isCharacterLimitExceeded = computed(() => this.postUpdate().description.length > 5000);
+  
+  isCharacterTitleLimitExceeded = computed(() => this.postUpdate().title.length > 280);
   private shouldRemoveCurrentImage(): boolean {
-    return this.currentImageUrl == '' && this.selectedFileName == '';
+    return this.currentImageUrl() == '' && this.selectedFileName() == '';
   }
 
   onFileSelected(event: any): void {
@@ -116,14 +115,31 @@ export class UpdatePostDialog {
         return;
       }
 
-      this.postUpdate.mediaFile = file;
-      this.selectedFileName = file.name;
+      // Revoke previous URL if exists
+      const prevUrl = this.filePreviewUrl();
+      if (prevUrl) {
+        URL.revokeObjectURL(prevUrl);
+      }
+
+      // Create new preview URL
+      const previewUrl = URL.createObjectURL(file);
+      
+      this.postUpdate.update(post => ({ ...post, mediaFile: file }));
+      this.selectedFileName.set(file.name);
+      this.filePreviewUrl.set(previewUrl);
     }
   }
 
   removeMediaFile(): void {
-    this.postUpdate.mediaFile = undefined;
-    this.selectedFileName = '';
+    // Revoke the blob URL to free memory
+    const prevUrl = this.filePreviewUrl();
+    if (prevUrl) {
+      URL.revokeObjectURL(prevUrl);
+    }
+    
+    this.postUpdate.update(post => ({ ...post, mediaFile: undefined }));
+    this.selectedFileName.set('');
+    this.filePreviewUrl.set(null);
     
     // Clear the file input
     const fileInput = document.getElementById('fileinput') as HTMLInputElement;
@@ -133,26 +149,53 @@ export class UpdatePostDialog {
   }
 
   removeCurrentImage(): void {
-    this.currentImageUrl = '';
+    this.currentImageUrl.set('');
     console.log('Current image removed');
   }
 
   hasCurrentImage(): boolean {
-    return !!this.currentImageUrl && this.currentImageUrl.length > 0;
+    const url = this.currentImageUrl();
+    return !!url && url.length > 0;
   }
 
   hasNewFile(): boolean {
-    return !!this.selectedFileName && this.selectedFileName.length > 0;
+    const fileName = this.selectedFileName();
+    return !!fileName && fileName.length > 0;
   }
-   isImage(url: string | null | undefined): boolean {
-  return !!url && /\.(jpg|jpeg|png|gif)$/i.test(url);
-}
+  isImage(url: string | null | undefined): boolean {
+    return !!url && /\.(jpg|jpeg|png|gif)$/i.test(url);
+  }
 
- isVideo(url: string | null | undefined): boolean {
-  return !!url && /\.(mp4|webm|avi)$/i.test(url);
-}
+  isVideo(url: string | null | undefined): boolean {
+    return !!url && /\.(mp4|webm|avi)$/i.test(url);
+  }
 
-getImage(path: string | undefined): string | undefined {
+  isImageFile(fileName: string | null | undefined): boolean {
+    return !!fileName && /\.(jpg|jpeg|png|gif)$/i.test(fileName);
+  }
+
+  isVideoFile(fileName: string | null | undefined): boolean {
+    return !!fileName && /\.(mp4|webm|avi)$/i.test(fileName);
+  }
+
+  getImage(path: string | undefined): string | undefined {
     return this.auth.getImage(path);
+  }
+
+  // Helper methods for ngModel with signals
+  getTitle(): string {
+    return this.postUpdate().title;
+  }
+
+  setTitle(value: string): void {
+    this.postUpdate.update(post => ({ ...post, title: value }));
+  }
+
+  getDescription(): string {
+    return this.postUpdate().description;
+  }
+
+  setDescription(value: string): void {
+    this.postUpdate.update(post => ({ ...post, description: value }));
   }
 }

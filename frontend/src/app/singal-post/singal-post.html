@@ -8,26 +8,26 @@
     <app-navbar></app-navbar>
 
     <!-- Loading State -->
-    <section *ngIf="isLoading" class="loading-section">
+    <section *ngIf="isLoading()" class="loading-section">
         <mat-spinner diameter="40" aria-label="Loading post"></mat-spinner>
         <p class="loading-text">Loading post...</p>
     </section>
 
     <!-- Post Content -->
-    <article *ngIf="post && !isLoading" class="post-article" role="article">
+    <article *ngIf="post() && !isLoading()" class="post-article" role="article">
         <!-- Post Header -->
         <header class="post-header">
             <!-- Author Info -->
             <div class="author-section">
-                <div class="author-info" matTooltip="go to profile" (click)="goToProfile(post.user.username)">
+                <div class="author-info" matTooltip="go to profile" (click)="goToProfile(post()!.user.username)">
                     <div class="author-avatar">
-                        <img [src]="getImage(post.user.avatar) || 'assets/img/default-avatar.png'"
-                            [alt]="post.user.username + ' profile picture'" class="avatar-image" loading="lazy">
+                        <img [src]="getImage(post()!.user.avatar) || 'assets/img/default-avatar.png'"
+                            [alt]="post()!.user.username + ' profile picture'" class="avatar-image" loading="lazy">
                     </div>
                     <div class="author-details">
-                        <h3 class="author-name">{{ post.user.username }}</h3>
+                        <h3 class="author-name">{{ post()!.user.username }}</h3>
                         <div class="post-metadata">
-                            <p> {{ post.user.bio }}</p>
+                            <p> {{ post()!.user.bio }}</p>
                         </div>
                     </div>
                 </div>
@@ -44,39 +44,40 @@
 
         <div class="post-content">
             <div class="content-body">
-                <h1 class="post-title">{{ post.title }}</h1>
+                <h1 class="post-title">{{ post()!.title }}</h1>
                 <!-- Featured Image -->
-                <div class="featured-media" *ngIf="post.mediaUrl">
-                    <img *ngIf="isImage(post.mediaUrl)" [src]="getImage(post.mediaUrl)"
-                        [alt]="'Featured image for: ' + post.title" class="featured-image" loading="lazy">
+                <div class="featured-media" *ngIf="post()!.mediaUrl">
+                    <img *ngIf="isImage(post()!.mediaUrl)" [src]="getImage(post()!.mediaUrl)"
+                        [alt]="'Featured image for: ' + post()!.title" class="featured-image" loading="lazy">
 
-                    <video *ngIf="isVideo(post.mediaUrl)" [src]="getImage(post.mediaUrl)" controls
+                    <video *ngIf="isVideo(post()!.mediaUrl)" [src]="getImage(post()!.mediaUrl)" controls
                         class="featured-video" preload="metadata">
                         Your browser does not support the video tag.
                     </video>
                 </div>
 
                 <!-- Post Content -->
-                <p class="post-description">{{ post.description }}</p>
+                <p class="post-description">{{ post()!.description }}</p>
 
 
                 <!-- Post Stats and Actions -->
 
                 <div class="post-interactions">
                     <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste()">
-                        <mat-icon [ngClass]="{ 'liked': post.isLiked }">
-                            {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+                        <mat-icon [ngClass]="{ 'liked': post()!.isLiked }">
+                            {{ post()!.isLiked ? 'favorite' : 'favorite_border' }}
                         </mat-icon>
                     </button>
-                    <span class="stat-count">{{ post.likesCount || 0 }}</span>
+                    <span class="stat-count">{{ post()!.likesCount || 0 }}</span>
 
                     <button mat-icon-button matTooltip="Comment" class="interaction-btn">
                         <mat-icon>comment</mat-icon>
                     </button>
-                    <span class="stat-count">{{ post.commentsCount || 0 }}</span>
-                    <!-- <button mat-menu-item (click)="reportPost()" class="interaction-btn">
-                        <mat-icon>flag</mat-icon>
-                    </button> -->
+                    <span class="stat-count">{{ post()!.commentsCount || 0 }}</span>
+                    
+                    <button mat-icon-button matTooltip="Report" class="interaction-btn" (click)="reportPost()" *ngIf="!isMyPost()">
+                        <mat-icon>report</mat-icon>
+                    </button>
                 </div>
             </div>
             <mat-menu #postOptionsMenu="matMenu" class="options-menu">
@@ -95,27 +96,27 @@
         <section class="comments-section" #commentsSection>
             <div class="comments-header">
                 <h2 class="comments-title">
-                    Comments ({{ comments.length }})
+                    Comments ({{ comments().length }})
                 </h2>
             </div>
 
             <!-- Add Comment Form -->
-            <div class="add-comment-form" *ngIf="currentUser">
+            <div class="add-comment-form" *ngIf="currentUser()">
                 <div class="comment-form">
                     <div class="comment-author">
-                        <img [src]="getImage(currentUser.avatar) || 'assets/img/default-avatar.png'"
-                            [alt]="currentUser.username + ' profile picture'" class="comment-avatar" loading="lazy">
+                        <img [src]="getImage(currentUser()!.avatar) || 'assets/img/default-avatar.png'"
+                            [alt]="currentUser()!.username + ' profile picture'" class="comment-avatar" loading="lazy">
                     </div>
                     <div class="comment-input-container">
-                        <textarea [(ngModel)]="newComment" placeholder="Write a comment..." class="comment-textarea"
+                        <textarea [ngModel]="getNewComment()" (ngModelChange)="setNewComment($event)" placeholder="Write a comment..." class="comment-textarea"
                             rows="3" maxlength="500"></textarea>
                         <div class="comment-form-actions">
-                            <span class="character-count">{{ newComment.length }}/500</span>
+                            <span class="character-count">{{ getNewComment().length }}/500</span>
                             <button mat-raised-button class="submit-comment-btn"
-                                [disabled]="!newComment.trim() || isSubmittingComment" (click)="submitComment()">
-                                <mat-icon *ngIf="!isSubmittingComment">send</mat-icon>
-                                <mat-spinner *ngIf="isSubmittingComment" diameter="16"></mat-spinner>
-                                {{ isSubmittingComment ? 'Posting...' : 'Post Comment' }}
+                                [disabled]="!getNewComment().trim() || isSubmittingComment()" (click)="submitComment()">
+                                <mat-icon *ngIf="!isSubmittingComment()">send</mat-icon>
+                                <mat-spinner *ngIf="isSubmittingComment()" diameter="16"></mat-spinner>
+                                {{ isSubmittingComment() ? 'Posting...' : 'Post Comment' }}
                             </button>
                         </div>
                     </div>
@@ -125,19 +126,19 @@
             <!-- Comments List -->
             <div class="comments-list">
                 <!-- Loading Comments -->
-                <div *ngIf="isLoadingComments" class="comments-loading">
+                <div *ngIf="isLoadingComments()" class="comments-loading">
                     <mat-spinner diameter="24"></mat-spinner>
                     <span class="loading-text">Loading comments...</span>
                 </div>
 
                 <!-- No Comments -->
-                <div *ngIf="!isLoadingComments && comments.length === 0" class="no-comments">
+                <div *ngIf="!isLoadingComments() && comments().length === 0" class="no-comments">
                     <mat-icon class="no-comments-icon">comment</mat-icon>
                     <p class="no-comments-text">No comments yet. Be the first to comment!</p>
                 </div>
 
                 <!-- Comments -->
-                <article *ngFor="let comment of comments; " class="comment-item" [attr.id]="'comment-' + comment.id">
+                <article *ngFor="let comment of comments(); " class="comment-item" [attr.id]="'comment-' + comment.id">
                     <div class="comment-header">
                         <div class="comment-author-info" (click)="goToProfile(comment.user.username)">
                             <img [src]="getImage(comment.user.avatar) || 'assets/img/default-avatar.png'"
@@ -173,11 +174,11 @@
                     </div>
 
                     <div class="comment-content">
-                        <ng-container *ngIf="editingCommentId === comment.id; else viewMode">
-                            <textarea [(ngModel)]="editedContent" rows="3" class="comment-edit-input"
+                        <ng-container *ngIf="editingCommentId() === comment.id; else viewMode">
+                            <textarea [ngModel]="getEditedContent()" (ngModelChange)="setEditedContent($event)" rows="3" class="comment-edit-input"
                                 maxlength="500"></textarea>
                             <div class="comment-edit-actions">
-                                <span class="character-count">{{ editedContent.length }}/500</span>
+                                <span class="character-count">{{ getEditedContent().length }}/500</span>
                                 <button mat-button color="primary" (click)="saveEditedComment(comment)">Save</button>
                                 <button mat-button color="warn" (click)="cancelEdit()">Cancel</button>
                             </div>
@@ -196,11 +197,11 @@
     </article>
 
     <!-- Error State -->
-    <section *ngIf="error && !isLoading" class="error-section">
+    <section *ngIf="error() && !isLoading()" class="error-section">
         <div class="error-content">
             <mat-icon class="error-icon">error_outline</mat-icon>
             <h2 class="error-title">Post Not Found</h2>
-            <p class="error-message">{{ error }}</p>
+            <p class="error-message">{{ error() }}</p>
             <button mat-raised-button class="back-btn" (click)="backToHome()">
                 <mat-icon>arrow_back</mat-icon>
                 Back to Home
@@ -225,13 +226,13 @@
     </div> -->
 
 
-    <div class="door-backdrop" *ngIf="showModal" (click)="close()">
+    <div class="door-backdrop" *ngIf="showModal()" (click)="close()">
         <div class="door" (click)="$event.stopPropagation()">
-            <div class="door-panel" [class.open]="isOpen">
+            <div class="door-panel" [class.open]="isOpen()">
                 <div class="door-message">
                     <mat-icon class="warning-icon">warning</mat-icon>
-                    <h3 *ngIf="commentToDelete">Are you sure you want to delete this comment?</h3>
-                    <h3 *ngIf="PostToDelete">Are you sure you want to delete this post?</h3>
+                    <h3 *ngIf="commentToDelete()">Are you sure you want to delete this comment?</h3>
+                    <h3 *ngIf="PostToDelete()">Are you sure you want to delete this post?</h3>
                 </div>
                 <div class="door-buttons">
                     <button class="confirm-btn" (click)="confirm()">Confirm</button>

@@ -1,0 +1,58 @@
+<div class="report-dialog-container">
+  <div class="report-header">
+    <h2 mat-dialog-title class="report-title">
+      <mat-icon>report</mat-icon>
+      {{ getDialogTitle() }}
+    </h2>
+    <button mat-icon-button class="close-btn" (click)="cancel()" [disabled]="isSubmitting()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="report-content">
+    <p class="report-description">{{ getDialogDescription() }}</p>
+
+    <mat-form-field appearance="fill" class="report-textarea-field">
+      <mat-label>Reason for reporting (minimum 10 characters)</mat-label>
+      <textarea 
+        matInput 
+        rows="5" 
+        [ngModel]="getReportReason()"
+        (ngModelChange)="setReportReason($event)"
+        placeholder="Please provide a detailed reason for this report..."
+        [disabled]="isSubmitting()"
+        maxlength="500">
+      </textarea>
+      <mat-hint align="end">
+        <span [class.error]="isCharacterLimitExceeded()">
+          {{ characterCount() }} / 500
+        </span>
+      </mat-hint>
+    </mat-form-field>
+
+    <div class="validation-info" *ngIf="reportReason().trim().length > 0 && !isReasonValid()">
+      <mat-icon class="warning-icon">info</mat-icon>
+      <span>Please provide at least 10 characters</span>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="report-actions">
+    <button 
+      mat-button 
+      (click)="cancel()" 
+      [disabled]="isSubmitting()"
+      class="cancel-btn">
+      Cancel
+    </button>
+    <button 
+      mat-raised-button 
+      color="warn" 
+      (click)="submit()" 
+      [disabled]="!isReasonValid() || isSubmitting()"
+      class="submit-btn">
+      <mat-spinner *ngIf="isSubmitting()" diameter="20" class="btn-spinner"></mat-spinner>
+      <span *ngIf="!isSubmitting()">Submit Report</span>
+      <span *ngIf="isSubmitting()">Submitting...</span>
+    </button>
+  </mat-dialog-actions>
+</div>
