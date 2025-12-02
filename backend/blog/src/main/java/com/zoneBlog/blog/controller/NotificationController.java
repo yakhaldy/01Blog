@@ -1,27 +1,29 @@
 package com.zoneBlog.blog.controller;
 
+import com.zoneBlog.blog.event.NotificationCountEvent;
+import com.zoneBlog.blog.exception.UnauthorizedException;
+import com.zoneBlog.blog.model.Notification;
+import com.zoneBlog.blog.security.JwtUtil;
+import com.zoneBlog.blog.service.NotificationService;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.zoneBlog.blog.event.NotificationCountEvent;
-import com.zoneBlog.blog.exception.UnauthorizedException;
-import com.zoneBlog.blog.security.JwtUtil;
-import com.zoneBlog.blog.service.NotificationService;
-
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 @RestController
 @RequestMapping("/api/notifications")
-@CrossOrigin(origins = "http://localhost:4200")
+// @CrossOrigin(origins = "http://localhost:4200")
 public class NotificationController {
 
     private final JwtUtil jwtUtil;
     private final NotificationService notificationService;
-    // Map<userId, Map<connectionId, SseEmitter>> to support multiple devices per user
     private final Map<Long, Map<String, SseEmitter>> emitters = new ConcurrentHashMap<>();
 
     NotificationController(JwtUtil jwtUtil, NotificationService notificationService) {
@@ -96,7 +98,7 @@ public class NotificationController {
                 try {
                     emitter.send(SseEmitter.event()
                             .name("unreadCount")
-                            .data(count));
+                            .data(count != null ? count : 0L));
                 } catch (IOException e) {
                     // Failed to send initial count - client will not receive it
                 }
@@ -177,6 +179,34 @@ public class NotificationController {
     @EventListener
     public void handleNotificationCountEvent(NotificationCountEvent event) {
         sendNotificationCount(event.getUserId(), event.getCount());
+    }
+
+    /**
+     * Get all notifications for the authenticated user
+     *
+     * @param authentication Spring Security authentication object
+     * @return List of user notifications
+     */
+    @GetMapping
+    public ResponseEntity<List<Notification>> getNotifications(Authentication authentication) {
+        List<Notification> notifications = notificationService.getNotifications(authentication);
+        return ResponseEntity.ok(notifications);
+    }
+
+    /**
+     * Mark multiple notifications as read
+     *
+     * @param authentication Spring Security authentication object
+     * @param payload Request body containing notification IDs to mark as read
+     * @return Success message
+     */
+    @PostMapping("/markAsRead")
+    public ResponseEntity<?> markNotificationsAsRead(
+            Authentication authentication,
+            @RequestBody Map<String, List<Long>> payload) {
+        List<Long> ids = payload.get("ids");
+        notificationService.markNotificationsAsRead(authentication, ids);
+        return ResponseEntity.ok(Map.of("message", "Notifications marked as read"));
     }
 
 }

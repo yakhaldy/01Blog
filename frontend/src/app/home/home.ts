@@ -37,7 +37,7 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 import { Auth } from '../service/auth';
 import { ToastService } from '../service/toast-service';
-import { ErrorHandlerService } from '../helper/handleError'; 
+import { ErrorHandlerService } from '../helper/handleError';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
@@ -92,7 +92,7 @@ export class Home implements OnInit {
   showModal = signal(false);
   isOpen = signal(false);
   PostToDelete = signal<Post | undefined>(undefined);
-  
+
   // Create Post Modal
   showCreatePostModal = signal(false);
 
@@ -113,9 +113,9 @@ export class Home implements OnInit {
       && !this.isCharacterTitleLimitExceeded();
   });
 
-  postCharacterCount = computed(() => this.newPost().description.length);
+  postCharacterCount = computed(() => this.newPost().description.trim().length);
   isCharacterLimitExceeded = computed(() => this.postCharacterCount() > 5000);
-  postTitelCharacterCount = computed(() => this.newPost().title.length);
+  postTitelCharacterCount = computed(() => this.newPost().title.trim().length);
   isCharacterTitleLimitExceeded = computed(() => this.postTitelCharacterCount() > 280);
 
   constructor(
@@ -155,10 +155,10 @@ export class Home implements OnInit {
 
   private loadUsers(): void {
     this.homeService.getAllUsers(this.currentUsersPage(), this.usersPageSize).subscribe({
-      next: (response) => {        
+      next: (response) => {
         this.users.update(users => [...users, ...response.content]);
         console.log(response.content);
-        
+
         this.hasMoreUsersResults.set(this.currentUsersPage() + 1 < response.totalPages);
         this.isLoadingUsers.set(false);
         this.currentUsersPage.update(page => page + 1);
@@ -192,7 +192,7 @@ export class Home implements OnInit {
     this.isLoadingPost.set(true);
     this.homeService.getPosts(this.currentPage(), this.pageSize).subscribe({
       next: (response) => {
-        
+
         if (response && response.content.length > 0) {
           this.posts.update(posts => [...posts, ...response.content]);
           this.currentPage.update(page => page + 1);
@@ -204,7 +204,7 @@ export class Home implements OnInit {
         }
 
         this.isLoadingPost.set(false);
-        
+
       },
       error: (error: HttpErrorResponse) => {
         this.isLoadingPost.set(false);
@@ -224,7 +224,7 @@ export class Home implements OnInit {
     const currentPost = this.newPost();
 
     const postJson = JSON.stringify({
-      title: currentPost.title.trim() + "5444",
+      title: currentPost.title.trim(),
       description: currentPost.description.trim()
     });
 
@@ -384,11 +384,15 @@ export class Home implements OnInit {
 
   // Helper methods for ngModel binding with signals
   updatePostTitle(title: string): void {
-    this.newPost.update(post => ({ ...post, title }));
+    // Trim to match backend validation
+    const trimmedTitle = title.trim();
+    this.newPost.update(post => ({ ...post, title: trimmedTitle }));
   }
 
   updatePostDescription(description: string): void {
-    this.newPost.update(post => ({ ...post, description }));
+    // Trim to match backend validation
+    const trimmedDescription = description.trim();
+    this.newPost.update(post => ({ ...post, description: trimmedDescription }));
   }
 
   updateSearchTerm(term: string): void {
@@ -402,11 +406,13 @@ export class Home implements OnInit {
       const file = input.files[0];
 
       if (!isValidMediaType(file)) {
+        input.value = '';
         this.toastService.show('Please select a valid image or video file (JPEG, PNG, GIF, MP4, AVI, MOV)', 'error');
         return;
       }
 
       if (!isValidMediaSize(file)) {
+        input.value = '';
         this.toastService.show('File size must be less than 10MB', 'error');
         return;
       }
@@ -419,7 +425,7 @@ export class Home implements OnInit {
 
       // Create new preview URL
       const previewUrl = URL.createObjectURL(file);
-      
+
       this.newPost.update(post => ({ ...post, mediaFile: file }));
       this.selectedFileName.set(file.name);
       this.filePreviewUrl.set(previewUrl);
@@ -432,7 +438,7 @@ export class Home implements OnInit {
     if (prevUrl) {
       URL.revokeObjectURL(prevUrl);
     }
-    
+
     this.newPost.update(post => ({ ...post, mediaFile: undefined }));
     this.selectedFileName.set('');
     this.filePreviewUrl.set(null);

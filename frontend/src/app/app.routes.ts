@@ -9,11 +9,12 @@ import { SingalPost } from './singal-post/singal-post'
 import { Dashboard } from './dashboard/dashboard'
 import { authGuard } from './service/auth-guard';
 import { AdminGuard } from './service/admin-guard';
+import { guestGuard } from './service/guest-guard';
 
 export const routes: Routes = [
   { path: '', component: Home, canActivate: [authGuard] },
-  { path: 'login', component: Login },
-  { path: 'register', component: Register },
+  { path: 'login', component: Login, canActivate: [guestGuard] },
+  { path: 'register', component: Register, canActivate: [guestGuard] },
   {path: 'profile', component: Profile, canActivate: [authGuard]},
    { path: 'profile/:username', component: Profile, canActivate: [authGuard] }, 
   {path: 'notifications', component: Notifications, canActivate: [authGuard]},

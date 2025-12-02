@@ -21,11 +21,19 @@ public class PostRequest {
 
     private Long postId; 
 
-    // Getters and setters
+    // Trim and normalize the title before validation
+    public void setTitle(String title) {
+        this.title = title != null ? title.trim() : null;
+    }
+
+    // Trim and normalize the description before validation
+    public void setDescription(String description) {
+        this.description = description != null ? description.trim() : null;
+    }
+
+    // Getters
     public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
     public Long getPostId() { return postId; }
     public void setPostId(Long postId) { this.postId = postId; }
 }

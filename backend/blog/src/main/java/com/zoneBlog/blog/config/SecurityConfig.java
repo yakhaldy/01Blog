@@ -35,38 +35,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource,
             UserDetailsService userDetailsService, JwtUtil jwtUtil, RateLimiter rateLimiter) throws Exception {
-        System.out.println("🔧 Configuring Security Filter Chain...");
 
         http
                 .cors(cors -> {
                     cors.configurationSource(corsConfigurationSource);
-                    System.out.println("✅ CORS configured");
                 })
                 .csrf(csrf -> {
                     csrf.disable();
-                    System.out.println("✅ CSRF disabled");
                 })
                 .authorizeHttpRequests(auth -> {
                     auth
-                            .requestMatchers("/api/login", "/api/register", "/uploads/**").permitAll()
-                            // SSE endpoint: permit all (ban check done in controller with async query)
+                            .requestMatchers("/api/auth/login", "/api/auth/register", "/uploads/**").permitAll()
                             .requestMatchers("/api/notifications/stream").permitAll()
-                            // All other authenticated requests: check ban status
-                            .requestMatchers("/**").access((authentication, context) -> {
+                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                            .anyRequest().access((authentication, context) -> {
                                 String userEmail = authentication.get().getName();
                                 Boolean isBanned = userRepository.findByEmail(userEmail)
                                         .map(user -> user.getIsBanned())
                                         .orElse(false);
                                 return new AuthorizationDecision(!isBanned);
-                            })
-                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                            .anyRequest().authenticated();
+                            });
                 });
 
         http.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        System.out.println("✅ JWT Filter added before UsernamePasswordAuthenticationFilter");
 
         return http.build();
     }

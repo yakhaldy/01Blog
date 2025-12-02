@@ -746,11 +746,11 @@
 
     display: flex;
     flex-direction: column;
-    /* make sure it's a row */
     justify-content: flex-start;
-    /* start from left */
     align-items: center;
-    /* align items vertically */
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
 }
 
 

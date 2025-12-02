@@ -789,19 +789,3 @@
 .posts-container {
     margin-top: 0;
 }
-
-/* Status Chip */
-.status-chip {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 4px 12px;
-    border-radius: 12px;
-}
-
-.status-chip.hidden {
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: rgba(239, 68, 68, 1);
-}
