@@ -110,7 +110,7 @@ public class NotificationService {
         try {
             eventPublisher.publishEvent(new NotificationCountEvent(userId, count));
         } catch (Exception e) {
-            // Log error but don't throw - async notification delivery is non-critical
+            System.out.println("Failed to send notification count event: " + e.getMessage());
         }
     }
 

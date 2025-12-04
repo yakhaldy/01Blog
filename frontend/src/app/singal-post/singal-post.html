@@ -26,9 +26,9 @@
                     </div>
                     <div class="author-details">
                         <h3 class="author-name">{{ post()!.user.username }}</h3>
-                        <div class="post-metadata">
-                            <p> {{ post()!.user.bio }}</p>
-                        </div>
+                        <!-- <div class="post-metadata">
+                            <p class="bio"> {{ post()!.user.bio }}</p>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -45,16 +45,47 @@
         <div class="post-content">
             <div class="content-body">
                 <h1 class="post-title">{{ post()!.title }}</h1>
-                <!-- Featured Image -->
-                <div class="featured-media" *ngIf="post()!.mediaUrl">
-                    <img *ngIf="isImage(post()!.mediaUrl)" [src]="getImage(post()!.mediaUrl)"
-                        [alt]="'Featured image for: ' + post()!.title" class="featured-image" loading="lazy">
+                
+                      <!-- Featured Media with Carousel -->
+      <!-- Featured Media with Carousel -->
+      <div class="featured-media-carousel" *ngIf="post()!.mediaUrls && post()!.mediaUrls!.length > 0">
+        <div class="carousel-container">
+          <!-- Display Current Image/Video -->
+          <div class="carousel-media">
+            <img *ngIf="isImage(post()!.mediaUrls![currentImageIndex()])"
+                 [src]="getImage(post()!.mediaUrls![currentImageIndex()])"
+                 [alt]="post()!.title"
+                 class="post-media">
 
-                    <video *ngIf="isVideo(post()!.mediaUrl)" [src]="getImage(post()!.mediaUrl)" controls
-                        class="featured-video" preload="metadata">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
+            <video *ngIf="isVideo(post()!.mediaUrls![currentImageIndex()])"
+                   [src]="getImage(post()!.mediaUrls![currentImageIndex()])"
+                   controls
+                   class="post-media">
+            </video>
+          </div>
+
+          <!-- Carousel Controls -->
+          <div class="carousel-controls" *ngIf="post()!.mediaUrls!.length > 1">
+            <button class="carousel-btn prev-btn" (click)="previousImage($event)" 
+                    aria-label="Previous image">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <button class="carousel-btn next-btn" (click)="nextImage($event)" 
+                    aria-label="Next image">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+
+          <!-- Carousel Indicators -->
+          <div class="carousel-indicators" *ngIf="post()!.mediaUrls!.length > 1">
+            <span *ngFor="let url of post()!.mediaUrls; let i = index" 
+                  class="indicator" 
+                  [class.active]="i === currentImageIndex()"
+                  (click)="goToImageIndex(i, $event)">
+            </span>
+          </div>
+        </div>
+      </div>
 
                 <!-- Post Content -->
                 <p class="post-description">{{ post()!.description }}</p>

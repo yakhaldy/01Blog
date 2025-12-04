@@ -33,9 +33,9 @@ public class PostController {
     public ResponseEntity<?> createPost(
             Authentication authentication,
             @Valid @RequestPart("post") PostRequest request,
-            @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile) {
+            @RequestPart(value = "mediaFiles", required = false) MultipartFile[] mediaFiles) {
 
-        Post post = postsService.createPost(authentication, request, mediaFile);
+        Post post = postsService.createPost(authentication, request, mediaFiles);
         return ResponseEntity.status(HttpStatus.CREATED).body(post);
     }
 
@@ -63,16 +63,17 @@ public class PostController {
     public ResponseEntity<Post> updatePost(
             @PathVariable Long id,
             Authentication authentication,
-            @RequestPart(value = "mediaFile", required = false) MultipartFile mediaFile,
+            @RequestPart(value = "mediaFiles", required = false) MultipartFile[] mediaFiles,
             @RequestPart("description") String description,
             @RequestPart("title") String title,
-            @RequestPart(value = "removeImage", required = false) String removeImage) {
+            @RequestPart(value = "removeImage", required = false) String removeImage,
+            @RequestPart(value = "keepImages", required = false) String keepImages) {
 
         PostRequest request = new PostRequest();
         request.setDescription(description);
         request.setTitle(title);
 
-        Post post = postsService.updatePost(id, authentication, request, mediaFile, removeImage);
+        Post post = postsService.updatePost(id, authentication, request, mediaFiles, removeImage, keepImages);
         return ResponseEntity.ok(post);
     }
 

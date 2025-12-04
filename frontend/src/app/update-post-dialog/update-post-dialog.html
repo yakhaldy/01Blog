@@ -26,38 +26,46 @@
         <div class="file-upload-section">
             <label for="fileinput" class="file-upload-label" matTooltip="Upload new media">
                 <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
+                <span *ngIf="selectedFileNames().length + currentImageUrls().length > 0" class="file-count">
+                    {{ selectedFileNames().length + currentImageUrls().length }}/3
+                </span>
             </label>
             <input type="file" id="fileinput" (change)="onFileSelected($event)" accept="image/*,video/*"
+                multiple [disabled]="selectedFileNames().length + currentImageUrls().length >= 3"
                 style="display: none;">
         </div>
     </div>
-    <!-- Current Image Display -->
-    <div *ngIf="hasCurrentImage() && !hasNewFile()" class="current-media">
-        <p class="media-label">Current image:</p>
-        <div class="current-image-container">
-                <img *ngIf="isImage(currentImageUrl())" [src]="getImage(currentImageUrl())" class="current-image"
-                   class="post-image" loading="lazy">
-                <video *ngIf="isVideo(currentImageUrl())" [src]="getImage(currentImageUrl())" controls class="post-video" class="current-image"
-                  preload="metadata">
-                  Your browser does not support the video tag.
+    
+    <!-- Current Images Display -->
+    <div *ngIf="hasCurrentImages()" class="current-media">
+        <p class="media-label">Current images:</p>
+        <div class="media-grid">
+            <div *ngFor="let imgUrl of currentImageUrls(); let i = index" class="media-item">
+                <img *ngIf="isImage(imgUrl)" [src]="getImage(imgUrl)" class="current-image" loading="lazy">
+                <video *ngIf="isVideo(imgUrl)" [src]="getImage(imgUrl)" controls class="current-video" preload="metadata">
+                    Your browser does not support the video tag.
                 </video>
-            <button type="button" class="remove-current-btn" (click)="removeCurrentImage()" mat-icon-button
-                matTooltip="Remove current image">
-                <mat-icon>delete</mat-icon>
-            </button>
+                <button type="button" class="remove-current-btn" (click)="removeCurrentImage(i)" mat-icon-button
+                    matTooltip="Remove image">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- New File Preview with Image/Video Display -->
-    <div *ngIf="hasNewFile()" class="file-preview-container">
-        <div class="file-preview">
-            <img *ngIf="isImageFile(selectedFileName())" [src]="filePreviewUrl()" alt="Selected image preview"
-                class="file-preview-image" loading="lazy">
-            <video *ngIf="isVideoFile(selectedFileName())" [src]="filePreviewUrl()" controls class="file-preview-video"
-                preload="metadata">Your browser does not support the video tag.</video>
-            <button type="button" class="remove-file-btn" (click)="removeMediaFile()" aria-label="Remove file">
-                <mat-icon>close</mat-icon>
-            </button>
+    <div *ngIf="hasNewFiles()" class="file-preview-container">
+        <p class="media-label">New images:</p>
+        <div class="media-grid">
+            <div *ngFor="let previewUrl of filePreviewUrls(); let i = index" class="media-item">
+                <img *ngIf="isImageFile(selectedFileNames()[i])" [src]="previewUrl" alt="Selected image preview"
+                    class="file-preview-image" loading="lazy">
+                <video *ngIf="isVideoFile(selectedFileNames()[i])" [src]="previewUrl" controls class="file-preview-video"
+                    preload="metadata">Your browser does not support the video tag.</video>
+                <button type="button" class="remove-file-btn" (click)="removeMediaFile(i)" aria-label="Remove file">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
         </div>
     </div>
 

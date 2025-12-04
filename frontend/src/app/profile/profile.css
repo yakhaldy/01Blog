@@ -789,3 +789,27 @@
 .posts-container {
     margin-top: 0;
 }
+
+/* Image count badge */
+.image-count-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10;
+}
+
+.image-count-badge mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}

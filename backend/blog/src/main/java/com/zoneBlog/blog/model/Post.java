@@ -33,8 +33,10 @@ public class Post {
     @Column(nullable = false, length = 5000)
     private String description;
 
+    // @ElementCollection
+    // @CollectionTable(name = "post_media", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "media_url")
-    private String mediaUrl;
+    private List<String> mediaUrls; // = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

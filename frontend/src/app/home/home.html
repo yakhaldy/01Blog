@@ -86,9 +86,10 @@
               <!-- File Input -->
               <label for="file-input" class="file-upload-label">
                 <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
+                <span *ngIf="selectedFileNames().length > 0" class="file-count">{{ selectedFileNames().length }}/3</span>
               </label>
               <input type="file" id="file-input" (change)="onFileSelected($event)" accept="image/*,video/*"
-                style="display: none;">
+                multiple [disabled]="selectedFileNames().length >= 3" style="display: none;">
 
               <button mat-raised-button color="primary" type="submit" class="submit-post-btn"
                 [disabled]="isSubmittingPost() || !isPostFormValid() ">
@@ -99,13 +100,13 @@
             </div>
 
             <!-- Image Preview Container - Separate div below -->
-            <div *ngIf="selectedFileName()" class="file-preview-container">
-              <div class="file-preview">
-                <img *ngIf="isImage(newPost().mediaFile?.name)" [src]="filePreviewUrl()" alt="Selected image preview"
+            <div *ngIf="selectedFileNames().length > 0" class="file-preview-container">
+              <div *ngFor="let previewUrl of filePreviewUrls(); let i = index" class="file-preview">
+                <img *ngIf="isImage(selectedFileNames()[i])" [src]="previewUrl" alt="Selected image preview"
                   class="file-preview-image" loading="lazy">
-                <video *ngIf="isVideo(newPost().mediaFile?.name)" [src]="filePreviewUrl()" controls class="file-preview-video"
+                <video *ngIf="isVideo(selectedFileNames()[i])" [src]="previewUrl" controls class="file-preview-video"
                   preload="metadata">Your browser does not support the video tag.</video>
-                <button type="button" class="remove-file-btn" (click)="removeMediaFile()" aria-label="Remove file">
+                <button type="button" class="remove-file-btn" (click)="removeMediaFile(i)" aria-label="Remove file">
                   <mat-icon>close</mat-icon>
                 </button>
               </div>
@@ -168,11 +169,43 @@
             <!-- Post Content -->
             <div class="post-content" matTooltip="GoToPost" (click)="goToPost(post.id!)">
               <p class="post-description">{{ post.title }}</p>
-              <div class="post-media" *ngIf="post.mediaUrl">
-                <img *ngIf="isImage(post.mediaUrl)" [src]="getImage(post.mediaUrl)"
-                  [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
-                <video *ngIf="isVideo(post.mediaUrl)" [src]="getImage(post.mediaUrl)" controls class="post-video"
-                  preload="metadata">Your browser does not support the video tag.</video>
+              
+              <!-- Media Carousel -->
+              <div class="post-media-carousel" *ngIf="post.mediaUrls && post.mediaUrls.length > 0">
+                <div class="carousel-container">
+                  <!-- Current Image/Video -->
+                  <div class="carousel-media">
+                    <img *ngIf="isImage(post.mediaUrls[getCurrentImageIndex(post.id)])" 
+                      [src]="getImage(post.mediaUrls[getCurrentImageIndex(post.id)])"
+                      [alt]="'Media from post by ' + post.user.username" 
+                      class="post-image" loading="lazy">
+                    <video *ngIf="isVideo(post.mediaUrls[getCurrentImageIndex(post.id)])" 
+                      [src]="getImage(post.mediaUrls[getCurrentImageIndex(post.id)])" 
+                      controls class="post-video"
+                      preload="metadata">Your browser does not support the video tag.</video>
+                  </div>
+
+                  <!-- Navigation Buttons (only if more than 1 image) -->
+                  <div class="carousel-controls" *ngIf="post.mediaUrls.length > 1">
+                    <button class="carousel-btn prev-btn" (click)="previousImage(post, $event)" 
+                      aria-label="Previous image">
+                      <mat-icon>chevron_left</mat-icon>
+                    </button>
+                    <button class="carousel-btn next-btn" (click)="nextImage(post, $event)" 
+                      aria-label="Next image">
+                      <mat-icon>chevron_right</mat-icon>
+                    </button>
+                  </div>
+
+                  <!-- Indicators -->
+                  <div class="carousel-indicators" *ngIf="post.mediaUrls.length > 1">
+                    <span *ngFor="let url of post.mediaUrls; let i = index" 
+                      class="indicator" 
+                      [class.active]="i === getCurrentImageIndex(post.id)"
+                      (click)="goToImageIndex(post, i, $event)">
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 

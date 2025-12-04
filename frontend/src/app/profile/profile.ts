@@ -324,7 +324,7 @@ export class Profile implements OnInit {
       data: {
         title: post.title,
         content: post.description,
-        imgUrl: post.mediaUrl,
+        imgUrls: post.mediaUrls,
         postId: post.id
       },
       disableClose: false,
@@ -337,12 +337,19 @@ export class Profile implements OnInit {
         updateData.append('description', result.description);
         updateData.append('title', result.title);
 
-        if (result.mediaFile) {
-          updateData.append('mediaFile', result.mediaFile);
+        if (result.mediaFiles && result.mediaFiles.length > 0) {
+          result.mediaFiles.forEach(file => {
+            updateData.append('mediaFiles', file);
+          });
         }
 
         if (result.removeCurrentImage) {
           updateData.append('removeImage', 'true');
+        }
+        
+        // Send remaining image URLs
+        if (result.remainingImageUrls && result.remainingImageUrls.length > 0) {
+          updateData.append('keepImages', JSON.stringify(result.remainingImageUrls));
         }
 
         this.auth.updatePost(post.id!, updateData).subscribe({

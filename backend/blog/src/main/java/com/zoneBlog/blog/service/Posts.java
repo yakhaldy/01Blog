@@ -1,5 +1,7 @@
 package com.zoneBlog.blog.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zoneBlog.blog.dataTransferObj.CommentRequest;
 import com.zoneBlog.blog.dataTransferObj.PostRequest;
 import com.zoneBlog.blog.exception.BusinessException;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,14 +58,14 @@ public class Posts {
     }
 
     @Transactional
-    public Post createPost(Authentication authentication, PostRequest request, MultipartFile mediaFile) {
+    public Post createPost(Authentication authentication, PostRequest request, MultipartFile[] mediaFiles) {
         User user = getUserOrThrow(authentication);
 
         Post post = buildPost(user, request.getTitle().trim(), request.getDescription().trim());
 
-        if (mediaFile != null && !mediaFile.isEmpty()) {
-            String mediaPath = helper.handleFileUpload(mediaFile);
-            post.setMediaUrl(mediaPath);
+        if (mediaFiles != null && mediaFiles.length > 0) {
+            List<String> mediaPaths = helper.handleMultipleFileUploads(mediaFiles);
+            post.setMediaUrls(mediaPaths);
         }
 
         postRepository.save(post);
@@ -102,12 +105,12 @@ public class Posts {
         commentRepository.deleteByPost_Id(post.getId());
         postRepository.delete(post);
 
-        helper.deleteOldMediaFile(post.getMediaUrl());
+        helper.deleteOldMediaFiles(post.getMediaUrls());
     }
 
     @Transactional
     public Post updatePost(Long id, Authentication authentication, PostRequest request,
-            MultipartFile mediaFile, String removeImage) {
+            MultipartFile[] mediaFiles, String removeImage, String keepImages) {
         User user = getUserOrThrow(authentication);
         Post post = getPostOrThrow(id);
 
@@ -116,7 +119,7 @@ public class Posts {
         post.setTitle(request.getTitle().trim());
         post.setDescription(request.getDescription().trim());
 
-        handleMediaUpdate(post, mediaFile, removeImage);
+        handleMediaUpdate(post, mediaFiles, removeImage, keepImages);
 
         return postRepository.save(post);
     }
@@ -338,14 +341,59 @@ public class Posts {
         return comment;
     }
 
-    private void handleMediaUpdate(Post post, MultipartFile mediaFile, String removeImage) {
-        if (mediaFile != null && !mediaFile.isEmpty()) {
-            helper.deleteOldMediaFile(post.getMediaUrl());
-            String mediaPath = helper.handleFileUpload(mediaFile);
-            post.setMediaUrl(mediaPath);
+    private void handleMediaUpdate(Post post, MultipartFile[] mediaFiles, String removeImage, String keepImages) {
+        if (mediaFiles != null && mediaFiles.length > 0) {
+            // Parse kept images
+            List<String> imagesToKeep = new ArrayList<>();
+            if (keepImages != null && !keepImages.isEmpty()) {
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    imagesToKeep = mapper.readValue(keepImages, new TypeReference<List<String>>() {});
+                } catch (Exception e) {
+                    throw new BusinessException("Failed to parse kept images");
+                }
+            }
+            
+            // Delete images that are not kept
+            List<String> currentUrls = post.getMediaUrls();
+            if (currentUrls != null) {
+                for (String url : currentUrls) {
+                    if (!imagesToKeep.contains(url)) {
+                        helper.deleteOldMediaFiles(List.of(url));
+                    }
+                }
+            }
+            
+            // Upload new media files
+            List<String> newMediaPaths = helper.handleMultipleFileUploads(mediaFiles);
+            
+            // Combine kept images with new ones
+            List<String> allMediaUrls = new ArrayList<>(imagesToKeep);
+            allMediaUrls.addAll(newMediaPaths);
+            post.setMediaUrls(allMediaUrls);
         } else if ("true".equals(removeImage)) {
-            helper.deleteOldMediaFile(post.getMediaUrl());
-            post.setMediaUrl(null);
+            helper.deleteOldMediaFiles(post.getMediaUrls());
+            post.setMediaUrls(new ArrayList<>());
+        } else if (keepImages != null && !keepImages.isEmpty()) {
+            // Only updating kept images, no new files
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                List<String> imagesToKeep = mapper.readValue(keepImages, new TypeReference<List<String>>() {});
+                
+                // Delete images that are not kept
+                List<String> currentUrls = post.getMediaUrls();
+                if (currentUrls != null) {
+                    for (String url : currentUrls) {
+                        if (!imagesToKeep.contains(url)) {
+                            helper.deleteOldMediaFiles(List.of(url));
+                        }
+                    }
+                }
+                
+                post.setMediaUrls(imagesToKeep);
+            } catch (Exception e) {
+                throw new BusinessException("Failed to parse kept images");
+            }
         }
     }
 

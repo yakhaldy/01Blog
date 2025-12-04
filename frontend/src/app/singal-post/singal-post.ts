@@ -47,6 +47,9 @@ export class SingalPost implements OnInit {
   currentUser = signal<User | null>(null);
   comments = signal<Comment[]>([]);
   newComment = signal('');
+  
+  // Carousel state
+  currentImageIndex = signal(0);
 
   isLoading = signal(true);
   isLoadingComments = signal(false);
@@ -117,7 +120,7 @@ export class SingalPost implements OnInit {
       data: {
         content: currentPost.description,
         title: currentPost.title,
-        imgUrl: currentPost.mediaUrl,
+        imgUrls: currentPost.mediaUrls,
         postId: currentPost.id
       },
       disableClose: false,
@@ -130,12 +133,19 @@ export class SingalPost implements OnInit {
         updateData.append('description', result.description);
         updateData.append('title', result.title);
 
-        if (result.mediaFile) {
-          updateData.append('mediaFile', result.mediaFile);
+        if (result.mediaFiles && result.mediaFiles.length > 0) {
+          result.mediaFiles.forEach(file => {
+            updateData.append('mediaFiles', file);
+          });
         }
 
         if (result.removeCurrentImage) {
           updateData.append('removeImage', 'true');
+        }
+        
+        // Send remaining image URLs
+        if (result.remainingImageUrls && result.remainingImageUrls.length > 0) {
+          updateData.append('keepImages', JSON.stringify(result.remainingImageUrls));
         }
 
         this.auth.updatePost(currentPost.id, updateData).subscribe({
@@ -405,6 +415,30 @@ export class SingalPost implements OnInit {
 
   backToHome(): void {
     this.router.navigate([`/`]);
+  }
+
+  // Carousel methods
+  nextImage(event: Event): void {
+    event.stopPropagation();
+    const post = this.post();
+    if (!post || !post.mediaUrls || post.mediaUrls.length === 0) return;
+    
+    const nextIndex = (this.currentImageIndex() + 1) % post.mediaUrls.length;
+    this.currentImageIndex.set(nextIndex);
+  }
+
+  previousImage(event: Event): void {
+    event.stopPropagation();
+    const post = this.post();
+    if (!post || !post.mediaUrls || post.mediaUrls.length === 0) return;
+    
+    const previousIndex = this.currentImageIndex() === 0 ? post.mediaUrls.length - 1 : this.currentImageIndex() - 1;
+    this.currentImageIndex.set(previousIndex);
+  }
+
+  goToImageIndex(index: number, event: Event): void {
+    event.stopPropagation();
+    this.currentImageIndex.set(index);
   }
 
 

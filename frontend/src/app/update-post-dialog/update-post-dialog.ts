@@ -13,14 +13,14 @@ import { ToastService } from '../service/toast-service';
 interface UpdatePostData {
   title: string;
   content: string;
-  imgUrl?: string | null;
+  imgUrls?: string[];
   postId: number;
 }
 
 interface PostUpdate {
   title: string;
   description: string;
-  mediaFile?: File;
+  mediaFiles?: File[];
 }
 
 @Component({
@@ -42,11 +42,11 @@ export class UpdatePostDialog {
   postUpdate = signal<PostUpdate>({
     title: '',
     description: '',
-    mediaFile: undefined
+    mediaFiles: []
   });
-  selectedFileName = signal('');
-  currentImageUrl = signal('');
-  filePreviewUrl = signal<string | null>(null);
+  selectedFileNames = signal<string[]>([]);
+  currentImageUrls = signal<string[]>([]);
+  filePreviewUrls = signal<string[]>([]);
 
   constructor(
     public dialogRef: MatDialogRef<UpdatePostDialog>,
@@ -57,10 +57,10 @@ export class UpdatePostDialog {
     this.postUpdate.set({
       description: this.data.content || '',
       title: this.data.title || '',
-      mediaFile: undefined
+      mediaFiles: []
     });
 
-    this.currentImageUrl.set(this.data.imgUrl || '');
+    this.currentImageUrls.set(this.data.imgUrls || []);
   }
 
   save() {
@@ -72,8 +72,9 @@ export class UpdatePostDialog {
     const result = {
       title: currentPost.title.trim(),
       description: currentPost.description.trim(),
-      mediaFile: currentPost.mediaFile,
-      removeCurrentImage: this.shouldRemoveCurrentImage()
+      mediaFiles: currentPost.mediaFiles,
+      removeCurrentImage: this.shouldRemoveCurrentImage(),
+      remainingImageUrls: this.currentImageUrls()
     };
     
     this.dialogRef.close(result);
@@ -98,69 +99,98 @@ export class UpdatePostDialog {
   isCharacterLimitExceeded = computed(() => this.postUpdate().description.length > 5000);
   
   isCharacterTitleLimitExceeded = computed(() => this.postUpdate().title.length > 280);
+  
   private shouldRemoveCurrentImage(): boolean {
-    return this.currentImageUrl() == '' && this.selectedFileName() == '';
+    return this.currentImageUrls().length === 0 && this.selectedFileNames().length === 0;
   }
 
   onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!isValidMediaType(file)) {
-        this.toastService.show('Invalid file type. Please select an image (JPEG, PNG, GIF) or video (MP4, WebM, AVI).', 'error');
-        return;
-      }
-      if (!isValidMediaSize(file)) {
-        this.toastService.show('File size exceeds 10MB limit.', 'error');
-        return;
-      }
-
-      // Revoke previous URL if exists
-      const prevUrl = this.filePreviewUrl();
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl);
-      }
-
-      // Create new preview URL
-      const previewUrl = URL.createObjectURL(file);
+    const input = event.target;
+    if (input.files && input.files.length > 0) {
+      const currentFiles = this.postUpdate().mediaFiles || [];
+      const totalImages = this.currentImageUrls().length + currentFiles.length;
       
-      this.postUpdate.update(post => ({ ...post, mediaFile: file }));
-      this.selectedFileName.set(file.name);
-      this.filePreviewUrl.set(previewUrl);
+      // Limit to 3 images total
+      if (totalImages + input.files.length > 3) {
+        this.toastService.show('You can upload a maximum of 3 images', 'error');
+        input.value = '';
+        return;
+      }
+
+      const validFiles: File[] = [];
+      const validUrls: string[] = [];
+      const validNames: string[] = [];
+
+      for (let i = 0; i < input.files.length; i++) {
+        const file = input.files[i];
+
+        if (!isValidMediaType(file)) {
+          this.toastService.show(`${file.name}: Invalid file type`, 'error');
+          continue;
+        }
+
+        if (!isValidMediaSize(file)) {
+          this.toastService.show(`${file.name}: File size exceeds 10MB`, 'error');
+          continue;
+        }
+
+        validFiles.push(file);
+        validUrls.push(URL.createObjectURL(file));
+        validNames.push(file.name);
+      }
+
+      if (validFiles.length > 0) {
+        this.postUpdate.update(post => ({ 
+          ...post, 
+          mediaFiles: [...currentFiles, ...validFiles] 
+        }));
+        this.filePreviewUrls.update(urls => [...urls, ...validUrls]);
+        this.selectedFileNames.update(names => [...names, ...validNames]);
+      }
+
+      input.value = '';
     }
   }
 
-  removeMediaFile(): void {
-    // Revoke the blob URL to free memory
-    const prevUrl = this.filePreviewUrl();
-    if (prevUrl) {
-      URL.revokeObjectURL(prevUrl);
+  removeMediaFile(index: number): void {
+    const urls = this.filePreviewUrls();
+    if (urls[index]) {
+      URL.revokeObjectURL(urls[index]);
     }
+
+    this.postUpdate.update(post => {
+      const files = [...(post.mediaFiles || [])];
+      files.splice(index, 1);
+      return { ...post, mediaFiles: files };
+    });
     
-    this.postUpdate.update(post => ({ ...post, mediaFile: undefined }));
-    this.selectedFileName.set('');
-    this.filePreviewUrl.set(null);
+    this.selectedFileNames.update(names => {
+      const newNames = [...names];
+      newNames.splice(index, 1);
+      return newNames;
+    });
     
-    // Clear the file input
-    const fileInput = document.getElementById('fileinput') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
+    this.filePreviewUrls.update(urls => {
+      const newUrls = [...urls];
+      newUrls.splice(index, 1);
+      return newUrls;
+    });
   }
 
-  removeCurrentImage(): void {
-    this.currentImageUrl.set('');
-    console.log('Current image removed');
+  removeCurrentImage(index: number): void {
+    this.currentImageUrls.update(urls => {
+      const newUrls = [...urls];
+      newUrls.splice(index, 1);
+      return newUrls;
+    });
   }
 
-  hasCurrentImage(): boolean {
-    const url = this.currentImageUrl();
-    return !!url && url.length > 0;
+  hasCurrentImages(): boolean {
+    return this.currentImageUrls().length > 0;
   }
 
-  hasNewFile(): boolean {
-    const fileName = this.selectedFileName();
-    return !!fileName && fileName.length > 0;
+  hasNewFiles(): boolean {
+    return this.selectedFileNames().length > 0;
   }
   isImage(url: string | null | undefined): boolean {
     return !!url && /\.(jpg|jpeg|png|gif)$/i.test(url);

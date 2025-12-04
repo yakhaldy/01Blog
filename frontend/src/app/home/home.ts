@@ -75,13 +75,13 @@ export class Home implements OnInit {
   isLoadingPost = signal(false);
   isLoadingUsers = signal(true);
   showMediaUpload = signal(false);
-  selectedFileName = signal('');
-  filePreviewUrl = signal<string | null>(null);
+  selectedFileNames = signal<string[]>([]);
+  filePreviewUrls = signal<string[]>([]);
   isSubmittingPost = signal(false);
   newPost = signal<NewPost>({
     title: '',
     description: '',
-    mediaFile: undefined
+    mediaFiles: []
   });
 
   hasMorePosts = signal(true);
@@ -95,6 +95,9 @@ export class Home implements OnInit {
 
   // Create Post Modal
   showCreatePostModal = signal(false);
+
+  // Carousel state - map postId to current image index
+  currentImageIndices = new Map<number, number>();
 
   // Search-related signals
   searchResults = signal<User[]>([]);
@@ -230,8 +233,10 @@ export class Home implements OnInit {
 
     formData.append('post', new Blob([postJson], { type: 'application/json' }));
 
-    if (currentPost.mediaFile) {
-      formData.append('mediaFile', currentPost.mediaFile);
+    if (currentPost.mediaFiles && currentPost.mediaFiles.length > 0) {
+      currentPost.mediaFiles.forEach(file => {
+        formData.append('mediaFiles', file);
+      });
     }
 
     this.homeService.createPost(formData).subscribe({
@@ -256,7 +261,7 @@ export class Home implements OnInit {
       data: {
         title: post.title,
         content: post.description,
-        imgUrl: post.mediaUrl,
+        imgUrls: post.mediaUrls,
         postId: post.id
       },
       disableClose: false,
@@ -269,12 +274,21 @@ export class Home implements OnInit {
         updateData.append('description', result.description);
         updateData.append('title', result.title);
 
-        if (result.mediaFile) {
-          updateData.append('mediaFile', result.mediaFile);
+        if (result.mediaFiles && result.mediaFiles.length > 0) {
+          console.log("=================>" , result.mediaFiles.length);
+          
+          result.mediaFiles.forEach(file => {
+            updateData.append('mediaFiles', file);
+          });
         }
 
         if (result.removeCurrentImage) {
           updateData.append('removeImage', 'true');
+        }
+        
+        // Send remaining image URLs
+        if (result.remainingImageUrls && result.remainingImageUrls.length > 0) {
+          updateData.append('keepImages', JSON.stringify(result.remainingImageUrls));
         }
 
         this.homeService.updatePost(post.id!, updateData).subscribe({
@@ -348,7 +362,6 @@ export class Home implements OnInit {
         });
       },
       error: (error: HttpErrorResponse) => {
-        // Revert optimistic update
         post.isLiked = originalIsLiked;
         post.likesCount = originalLikesCount;
         this.posts.set([...posts]);
@@ -382,15 +395,12 @@ export class Home implements OnInit {
 
   // ==================== Media Handling ====================
 
-  // Helper methods for ngModel binding with signals
   updatePostTitle(title: string): void {
-    // Trim to match backend validation
     const trimmedTitle = title.trim();
     this.newPost.update(post => ({ ...post, title: trimmedTitle }));
   }
 
   updatePostDescription(description: string): void {
-    // Trim to match backend validation
     const trimmedDescription = description.trim();
     this.newPost.update(post => ({ ...post, description: trimmedDescription }));
   }
@@ -403,61 +413,87 @@ export class Home implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-
-      if (!isValidMediaType(file)) {
+      const currentFiles = this.newPost().mediaFiles || [];
+      
+      // Limiter à 3 fichiers maximum
+      if (currentFiles.length + input.files.length > 3) {
+        this.toastService.show('You can upload a maximum of 3 images', 'error');
         input.value = '';
-        this.toastService.show('Please select a valid image or video file (JPEG, PNG, GIF, MP4, AVI, MOV)', 'error');
         return;
       }
 
-      if (!isValidMediaSize(file)) {
-        input.value = '';
-        this.toastService.show('File size must be less than 10MB', 'error');
-        return;
+      const validFiles: File[] = [];
+      const validUrls: string[] = [];
+      const validNames: string[] = [];
+
+      for (let i = 0; i < input.files.length; i++) {
+        const file = input.files[i];
+
+        if (!isValidMediaType(file)) {
+          this.toastService.show(`${file.name}: Please select a valid image or video file (JPEG, PNG, GIF, MP4, AVI, MOV)`, 'error');
+          continue;
+        }
+
+        if (!isValidMediaSize(file)) {
+          this.toastService.show(`${file.name}: File size must be less than 10MB`, 'error');
+          continue;
+        }
+
+        validFiles.push(file);
+        validUrls.push(URL.createObjectURL(file));
+        validNames.push(file.name);
       }
 
-      // Revoke previous URL if exists
-      const prevUrl = this.filePreviewUrl();
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl);
+      if (validFiles.length > 0) {
+        this.newPost.update(post => ({ 
+          ...post, 
+          mediaFiles: [...currentFiles, ...validFiles] 
+        }));
+        this.filePreviewUrls.update(urls => [...urls, ...validUrls]);
+        this.selectedFileNames.update(names => [...names, ...validNames]);
       }
 
-      // Create new preview URL
-      const previewUrl = URL.createObjectURL(file);
-
-      this.newPost.update(post => ({ ...post, mediaFile: file }));
-      this.selectedFileName.set(file.name);
-      this.filePreviewUrl.set(previewUrl);
+      input.value = '';
     }
   }
 
-  removeMediaFile(): void {
+  removeMediaFile(index: number): void {
     // Revoke the blob URL to free memory
-    const prevUrl = this.filePreviewUrl();
-    if (prevUrl) {
-      URL.revokeObjectURL(prevUrl);
+    const urls = this.filePreviewUrls();
+    if (urls[index]) {
+      URL.revokeObjectURL(urls[index]);
     }
 
-    this.newPost.update(post => ({ ...post, mediaFile: undefined }));
-    this.selectedFileName.set('');
-    this.filePreviewUrl.set(null);
-
-    const fileInput = document.getElementById('file-input') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
+    this.newPost.update(post => {
+      const files = [...(post.mediaFiles || [])];
+      files.splice(index, 1);
+      return { ...post, mediaFiles: files };
+    });
+    
+    this.selectedFileNames.update(names => {
+      const newNames = [...names];
+      newNames.splice(index, 1);
+      return newNames;
+    });
+    
+    this.filePreviewUrls.update(urls => {
+      const newUrls = [...urls];
+      newUrls.splice(index, 1);
+      return newUrls;
+    });
   }
 
   // ==================== Helper Methods ====================
 
   private resetPostForm(): void {
-    this.newPost.set({ title: '', description: '', mediaFile: undefined });
-    this.selectedFileName.set('');
-    if (this.filePreviewUrl()) {
-      URL.revokeObjectURL(this.filePreviewUrl()!);
-      this.filePreviewUrl.set(null);
-    }
+    this.newPost.set({ title: '', description: '', mediaFiles: [] });
+    this.selectedFileNames.set([]);
+    
+    // Revoke all preview URLs
+    const urls = this.filePreviewUrls();
+    urls.forEach(url => URL.revokeObjectURL(url));
+    this.filePreviewUrls.set([]);
+    
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
     const input = document.getElementById('input') as HTMLInputElement;
@@ -504,6 +540,34 @@ export class Home implements OnInit {
     return post.id;
   }
 
+  // Carousel methods
+  getCurrentImageIndex(postId: number): number {
+    return this.currentImageIndices.get(postId) || 0;
+  }
+
+  nextImage(post: Post, event: Event): void {
+    event.stopPropagation();
+    if (!post.mediaUrls || post.mediaUrls.length === 0) return;
+    
+    const currentIndex = this.getCurrentImageIndex(post.id);
+    const nextIndex = (currentIndex + 1) % post.mediaUrls.length;
+    this.currentImageIndices.set(post.id, nextIndex);
+  }
+
+  previousImage(post: Post, event: Event): void {
+    event.stopPropagation();
+    if (!post.mediaUrls || post.mediaUrls.length === 0) return;
+    
+    const currentIndex = this.getCurrentImageIndex(post.id);
+    const previousIndex = currentIndex === 0 ? post.mediaUrls.length - 1 : currentIndex - 1;
+    this.currentImageIndices.set(post.id, previousIndex);
+  }
+
+  goToImageIndex(post: Post, index: number, event: Event): void {
+    event.stopPropagation();
+    this.currentImageIndices.set(post.id, index);
+  }
+
   /***************=>Search<=***********************/
 
   private setupSearchDebounce(): void {
@@ -520,8 +584,6 @@ export class Home implements OnInit {
   // Search method
   onSearch(): void {
     const term = this.searchTerm().trim();
-    console.log('=====> ', term);
-
     if (term.length === 0) {
       this.searchResults.set([]);
       return;

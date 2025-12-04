@@ -204,8 +204,8 @@
 
               <div class="post-content">
                 <p class="post-title">{{ post.title }}</p>
-                <div class="post-media" *ngIf="post.mediaUrl">
-                  <img [src]="getImage(post.mediaUrl)" [alt]="post.title" class="post-image">
+                <div class="post-media" *ngIf="post.mediaUrls && post.mediaUrls.length > 0">
+                  <img [src]="getImage(post.mediaUrls[0])" [alt]="post.title" class="post-image">
                 </div>
               </div>
 
@@ -259,7 +259,7 @@
                 <div class="report-users">
                   <div class="report-user">
                     <span class="label">Reporter:</span>
-                    <span class="value">{{ report.reportedBy?.username || 'Unknown' }}</span>
+                    <span class="value">{{ report.reportedBy.username || 'Unknown' }}</span>
                   </div>
                   <div class="report-user">
                     <span class="label">Reported User:</span>

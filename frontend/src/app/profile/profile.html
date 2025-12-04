@@ -153,17 +153,25 @@
         <div class="post-content" (click)="goToPost(post)">
           <p class="post-description">{{ post.title }}</p>
 
-          <!-- Media Content -->
-          <div class="post-media" *ngIf="post.mediaUrl">
-            <!-- IMAGE -->
-            <img *ngIf="isImage(post.mediaUrl)" [src]="getImage(post.mediaUrl)"
-              [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
-
-            <!-- VIDEO -->
-            <video *ngIf="isVideo(post.mediaUrl)" [src]="getImage(post.mediaUrl)" controls class="post-video"
-              preload="metadata">
-              Your browser does not support the video tag.
-            </video>
+          <!-- Media Carousel -->
+          <div class="post-media-carousel" *ngIf="post.mediaUrls && post.mediaUrls.length > 0">
+            <div class="carousel-container" style="max-height: 300px;">
+              <div class="carousel-media">
+                <img *ngIf="post.mediaUrls.length === 1 && isImage(post.mediaUrls[0])" 
+                  [src]="getImage(post.mediaUrls[0])" class="post-image" loading="lazy">
+                <video *ngIf="post.mediaUrls.length === 1 && isVideo(post.mediaUrls[0])" 
+                  [src]="getImage(post.mediaUrls[0])" controls class="post-video" preload="metadata">
+                </video>
+                <!-- Show first image as preview if multiple -->
+                <img *ngIf="post.mediaUrls.length > 1 && isImage(post.mediaUrls[0])" 
+                  [src]="getImage(post.mediaUrls[0])" class="post-image" loading="lazy">
+              </div>
+              <!-- Show image count badge -->
+              <div *ngIf="post.mediaUrls.length > 1" class="image-count-badge">
+                <mat-icon>photo_library</mat-icon>
+                <span>{{ post.mediaUrls.length }}</span>
+              </div>
+            </div>
           </div>
         </div>
 

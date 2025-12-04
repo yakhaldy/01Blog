@@ -16,8 +16,9 @@ export interface User {
 export interface UpdatePostResult {
   title: string;
   description: string;
-  mediaFile?: File;
-  removeCurrentImage?: boolean;
+  mediaFiles?: File[];
+  removeCurrentImage: boolean;
+  remainingImageUrls?: string[];
 }
 
 export interface UpdateProfileResult {
@@ -30,14 +31,14 @@ export interface UpdateProfileResult {
 export interface NewPost {
   title: string;
   description: string;
-  mediaFile?: File;
+  mediaFiles?: File[];
 }
 
 export interface Post {
   id: number;
   title: string;
   description: string;
-  mediaUrl?: string;
+  mediaUrls?: string[];
   user: {
     id: number;
     username: string;

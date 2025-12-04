@@ -23,6 +23,7 @@
     opacity: 0.3;
 }
 
+
 .floating-circle {
     position: absolute;
     border-radius: 50%;
@@ -244,20 +245,36 @@
     background-clip: text;
 }
 
-/* Featured Media */
-.featured-media {
+/* Featured Media Carousel */
+.featured-media-carousel {
     margin: 40px 0;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
+.featured-media-carousel .carousel-container {
+    position: relative;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.featured-media-carousel .carousel-media {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    max-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .featured-image,
 .featured-video {
     width: 100%;
     height: auto;
-    max-height: 500px;
-    object-fit: cover;
+    max-height: 600px;
+    object-fit: contain;
     display: block;
 }
 

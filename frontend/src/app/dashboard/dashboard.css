@@ -479,6 +479,8 @@
     color: #ffffff;
     margin: 0 0 12px 0;
     line-height: 1.5;
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .post-date {
@@ -1117,6 +1119,8 @@
     color: #ffffff;
     margin: 0 0 12px 0;
     line-height: 1.4;
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .modal-post-date {

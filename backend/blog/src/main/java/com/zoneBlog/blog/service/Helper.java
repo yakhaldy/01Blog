@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -72,6 +73,36 @@ public class Helper {
         }
     }
 
+    public List<String> handleMultipleFileUploads(MultipartFile[] files) {
+        if (files == null || files.length == 0) {
+            return new ArrayList<>();
+        }
+
+        if (files.length > 3) {
+            throw new IllegalArgumentException("Maximum 3 files allowed per post");
+        }
+
+        List<String> uploadedFileNames = new ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                String fileName = handleFileUpload(file);
+                uploadedFileNames.add(fileName);
+            }
+        }
+
+        return uploadedFileNames;
+    }
+
+    public void deleteOldMediaFiles(List<String> mediaUrls) {
+        if (mediaUrls == null || mediaUrls.isEmpty()) {
+            return;
+        }
+
+        for (String mediaUrl : mediaUrls) {
+            deleteOldMediaFile(mediaUrl);
+        }
+    }
+
 
     public void deleteOldMediaFile(String mediaUrl) {
         if (mediaUrl == null || mediaUrl.trim().isEmpty()) {
@@ -83,7 +114,9 @@ public class Helper {
              Files.deleteIfExists(filePath);
     
         } catch (IOException e) {
+
             System.out.println("Failed to delete file: "+mediaUrl+" "+e);
+            throw new RuntimeException("Failed to delete file: " + mediaUrl);
         }
     }
 
@@ -91,9 +124,7 @@ public class Helper {
 
     private void validateFileSize(MultipartFile file) {
         if (file.getSize() > maxFileSize) {
-            throw new RuntimeException(
-                String.format("File size exceeds maximum limit of %d MB", maxFileSize / (1024 * 1024))
-            );
+            throw new RuntimeException("File size exceeds the maximum limit of " + (maxFileSize / 1048576) + " MB");
         }
     }
 
