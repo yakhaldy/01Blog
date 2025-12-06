@@ -85,6 +85,7 @@ export class AuthInterceptor implements HttpInterceptor {
                 break;
 
             case 500:
+                console.log("intercepter ====error", error);
                 this.handleServerError();
                 break;
             case 0:

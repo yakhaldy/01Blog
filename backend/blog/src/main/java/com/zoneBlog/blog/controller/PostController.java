@@ -87,8 +87,15 @@ public class PostController {
 
     @PostMapping("/like")
     public ResponseEntity<Post> likePost(@RequestBody PostRequest request, Authentication authentication) {
-        Post post = postsService.likePost(request.getPostId(), authentication);
-        return ResponseEntity.ok(post);
+
+        try{
+
+            Post post = postsService.likePost(request.getPostId(), authentication);
+            return ResponseEntity.ok(post);
+        } catch (Exception e){
+            System.out.println("============== like error ==============\n "+e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
 
 

@@ -128,14 +128,15 @@ public class Posts {
     public Post likePost(Long id, Authentication authentication) {
         User user = getUserOrThrow(authentication);
         Post post = getPostOrThrow(id);
+            
+            boolean alreadyLiked = likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId());
 
-        boolean alreadyLiked = likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId());
+            if (alreadyLiked) {
+                unlikePost(user, post);
+            } else {
+                performLike(user, post);
+            }
 
-        if (alreadyLiked) {
-            unlikePost(user, post);
-        } else {
-            performLike(user, post);
-        }
 
         post.setLikesCount(likeRepository.countByPost_Id(post.getId()));
         return postRepository.save(post);
@@ -440,15 +441,24 @@ public class Posts {
     }
 
     private void performLike(User user, Post post) {
-        Like like = new Like();
-        like.setPost(post);
-        like.setUser(user);
-        likeRepository.save(like);
+        try {
+            // Check again inside try-catch to handle race conditions
+            if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId())) {
+                return; // Already liked, skip
+            }
+            
+            Like like = new Like();
+            like.setPost(post);
+            like.setUser(user);
+            likeRepository.save(like);
 
-        if (!user.getId().equals(post.getUser().getId())) {
-            notificationService.addNotification(
-                    post.getUser(), user, LIKE, post, null,
-                    user.getUsername() + " liked your post.");
+            if (!user.getId().equals(post.getUser().getId())) {
+                notificationService.addNotification(
+                        post.getUser(), user, LIKE, post, null,
+                        user.getUsername() + " liked your post.");
+            }
+        } catch (Exception e) {
+            // Duplicate key or other constraint violation - like already exists, ignore
         }
     }
 

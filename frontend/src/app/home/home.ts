@@ -362,6 +362,8 @@ export class Home implements OnInit {
         });
       },
       error: (error: HttpErrorResponse) => {
+        console.log("home====error", error);
+        
         post.isLiked = originalIsLiked;
         post.likesCount = originalLikesCount;
         this.posts.set([...posts]);
