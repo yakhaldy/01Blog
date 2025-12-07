@@ -81,7 +81,7 @@ export class Profile implements OnInit {
             }
           },
           error: (err) => {
-            console.error('Failed to fetch current user:', err);
+            this.errorHandler.handle(err, 'Failed to load current user');
           }
         });
       } else {
@@ -236,9 +236,7 @@ export class Profile implements OnInit {
     });
   }
 
-  commentPoste(id: number): void {
-    console.log('Comment on post', id);
-  }
+
 
   likePoste(id: number): void {
     const post = this.posts().find(p => p.id === id);
@@ -354,7 +352,6 @@ export class Profile implements OnInit {
 
         this.auth.updatePost(post.id!, updateData).subscribe({
           next: (updatedPost) => {
-            console.log("updatePost :", updatedPost);
 
             this.posts.update(posts => 
               posts.map(p => p.id === post.id ? updatedPost : p)
@@ -398,8 +395,6 @@ export class Profile implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result?.success) {
-        // Report was successfully submitted, toast is already shown by the dialog
-        console.log('Report submitted successfully');
       }
     });
   }
@@ -419,9 +414,7 @@ export class Profile implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result?.success) {
-        console.log('Post reported successfully');
-      }
+
     });
   }
 

@@ -165,7 +165,6 @@ export class EditProfile {
 
   removeCurrentAvatar(): void {
     this.currentAvatarUrl.set('');
-    console.log('Current avatar removed');
   }
 
   hasCurrentAvatar(): boolean {

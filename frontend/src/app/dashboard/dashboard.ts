@@ -122,16 +122,11 @@ export class Dashboard implements OnInit {
   loadUsers(): void {
     this.isLoadingUsers.set(true);
     this.auth.getAllUsers(this.currentUsersPage(), this.usersPageSize).subscribe({
-      next: (response) => {
-        // Append new results to existing ones
-        console.log("User ==========>",response);
-        
+      next: (response) => {        
         this.users.update(users => [...users, ...response.content]);
         this.hasMoreUsersResults.set(this.currentUsersPage() + 1 < response.totalPages);
         this.isLoadingUsers.set(false);
         this.currentUsersPage.update(page => page + 1);
-        // console.table(this.users());
-        // console.log(this.isLoadingUsers());
       },
       error: (error: HttpErrorResponse) => {
         this.currentUsersPage.update(page => page - 1);
@@ -171,7 +166,6 @@ export class Dashboard implements OnInit {
         } else {
           this.hasMorePosts.set(false);
         }
-        console.log("ana hna", postsPage.size);
 
         this.isLoadingPosts.set(false);
       },
@@ -347,7 +341,6 @@ export class Dashboard implements OnInit {
   }
 
   dismissCurrentReport() {
-    console.log("dismiss Current Report");
     const report = this.selectedReport();
     if (!report) return;
     this.deletReport(report.id);

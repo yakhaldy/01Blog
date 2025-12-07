@@ -124,7 +124,6 @@ export class ReportDialog {
   }
 
   private submitPostReport(reason: string): void {
-    console.log("hhhhhhhhhhhh", this.data.targetId);
     
     this.auth.ReportPost({
       reportedId: this.data.targetId,
@@ -135,9 +134,7 @@ export class ReportDialog {
         this.toastService.show('Post reported successfully', 'success');
         this.dialogRef.close({ success: true, reason });
       },
-      error: (error: HttpErrorResponse) => {
-        console.log("error hana w3333333");
-        
+      error: (error: HttpErrorResponse) => {        
         this.isSubmitting.set(false);
         this.errorHandler.handle(error, 'Failed to submit report');
         this.dialogRef.close({ success: false });

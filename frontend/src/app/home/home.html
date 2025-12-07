@@ -58,38 +58,40 @@
 
       <!-- Create Post Modal -->
       <div *ngIf="showCreatePostModal()" class="modal-backdrop" (click)="closeCreatePostModal()">
-        <section class="create-post-modal" role="dialog" aria-label="Create new post" (click)="$event.stopPropagation()">
+        <section class="create-post-modal" role="dialog" aria-label="Create new post"
+          (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h2>Create New Post</h2>
             <button mat-icon-button (click)="closeCreatePostModal()" aria-label="Close">
               <mat-icon>close</mat-icon>
             </button>
           </div>
-          
+
           <form class="post-form" (ngSubmit)="createPost()" #postForm="ngForm">
             <!-- Form Inputs Container - Fixed size -->
             <div class="post-input-container">
               <mat-form-field class="post-textarea" appearance="outline">
-                <textarea matInput [ngModel]="newPost().title" (ngModelChange)="updatePostTitle($event)" name="postTitle" rows="3" id="input"
-                  placeholder="What's title?" maxlength="280" aria-label="Post content" #postTextarea
-                  style="color: aliceblue;"></textarea>
+                <textarea matInput [ngModel]="newPost().title" (ngModelChange)="updatePostTitle($event)"
+                  name="postTitle" rows="3" id="input" placeholder="What's title?" maxlength="280"
+                  aria-label="Post content" #postTextarea style="color: aliceblue;"></textarea>
                 <mat-hint>{{ postTitelCharacterCount() }}/280</mat-hint>
               </mat-form-field>
 
               <mat-form-field class="post-textarea" appearance="outline">
-                <textarea matInput [ngModel]="newPost().description" (ngModelChange)="updatePostDescription($event)" name="postDescription" rows="3" id="input"
-                  placeholder="What's happening?" maxlength="5000" aria-label="Post content" #postTextarea
-                  style="color: aliceblue;"></textarea>
+                <textarea matInput [ngModel]="newPost().description" (ngModelChange)="updatePostDescription($event)"
+                  name="postDescription" rows="3" id="input" placeholder="What's happening?" maxlength="5000"
+                  aria-label="Post content" #postTextarea style="color: aliceblue;"></textarea>
                 <mat-hint>{{ postCharacterCount() }}/5000</mat-hint>
               </mat-form-field>
 
               <!-- File Input -->
               <label for="file-input" class="file-upload-label">
                 <img src="assets/img/upload.png" alt="Upload" class="iconImageInput">
-                <span *ngIf="selectedFileNames().length > 0" class="file-count">{{ selectedFileNames().length }}/3</span>
+                <span *ngIf="selectedFileNames().length > 0" class="file-count">{{ selectedFileNames().length
+                  }}/3</span>
               </label>
-              <input type="file" id="file-input" (change)="onFileSelected($event)" accept="image/*,video/*"
-                multiple [disabled]="selectedFileNames().length >= 3" style="display: none;">
+              <input type="file" id="file-input" (change)="onFileSelected($event)" accept="image/*,video/*" multiple
+                [disabled]="selectedFileNames().length >= 3" style="display: none;">
 
               <button mat-raised-button color="primary" type="submit" class="submit-post-btn"
                 [disabled]="isSubmittingPost() || !isPostFormValid() ">
@@ -117,7 +119,7 @@
 
       <!-- Posts Feed -->
       <section class="posts-container" role="region" aria-label="Posts feed" infiniteScroll
-        [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()" >
+        [infiniteScrollDistance]="scrollDistance" (scrolled)="onScroll()">
 
         <div *ngIf="isLoadingPost()" class="loading-container">
           <mat-spinner diameter="20" aria-label="Loading profile"></mat-spinner>
@@ -145,6 +147,9 @@
                   <h4 class="author-name">{{ post.user.username }}</h4>
                   <time class="post-time" [attr.datetime]="post.createdAt">{{ post.createdAt | date:'medium' }}</time>
                 </div>
+                <div *ngIf="post.statue === 'hidden'" class="status-chip hidden">
+                  Hidden
+                </div>
               </div>
 
               <div class="post-actions" *ngIf="isMyPost(post)">
@@ -169,40 +174,35 @@
             <!-- Post Content -->
             <div class="post-content" matTooltip="GoToPost" (click)="goToPost(post.id!)">
               <p class="post-description">{{ post.title }}</p>
-              
+
               <!-- Media Carousel -->
               <div class="post-media-carousel" *ngIf="post.mediaUrls && post.mediaUrls.length > 0">
                 <div class="carousel-container">
                   <!-- Current Image/Video -->
                   <div class="carousel-media">
-                    <img *ngIf="isImage(post.mediaUrls[getCurrentImageIndex(post.id)])" 
+                    <img *ngIf="isImage(post.mediaUrls[getCurrentImageIndex(post.id)])"
                       [src]="getImage(post.mediaUrls[getCurrentImageIndex(post.id)])"
-                      [alt]="'Media from post by ' + post.user.username" 
-                      class="post-image" loading="lazy">
-                    <video *ngIf="isVideo(post.mediaUrls[getCurrentImageIndex(post.id)])" 
-                      [src]="getImage(post.mediaUrls[getCurrentImageIndex(post.id)])" 
-                      controls class="post-video"
+                      [alt]="'Media from post by ' + post.user.username" class="post-image" loading="lazy">
+                    <video *ngIf="isVideo(post.mediaUrls[getCurrentImageIndex(post.id)])"
+                      [src]="getImage(post.mediaUrls[getCurrentImageIndex(post.id)])" controls class="post-video"
                       preload="metadata">Your browser does not support the video tag.</video>
                   </div>
 
                   <!-- Navigation Buttons (only if more than 1 image) -->
                   <div class="carousel-controls" *ngIf="post.mediaUrls.length > 1">
-                    <button class="carousel-btn prev-btn" (click)="previousImage(post, $event)" 
+                    <button class="carousel-btn prev-btn" (click)="previousImage(post, $event)"
                       aria-label="Previous image">
                       <mat-icon>chevron_left</mat-icon>
                     </button>
-                    <button class="carousel-btn next-btn" (click)="nextImage(post, $event)" 
-                      aria-label="Next image">
+                    <button class="carousel-btn next-btn" (click)="nextImage(post, $event)" aria-label="Next image">
                       <mat-icon>chevron_right</mat-icon>
                     </button>
                   </div>
 
                   <!-- Indicators -->
                   <div class="carousel-indicators" *ngIf="post.mediaUrls.length > 1">
-                    <span *ngFor="let url of post.mediaUrls; let i = index" 
-                      class="indicator" 
-                      [class.active]="i === getCurrentImageIndex(post.id)"
-                      (click)="goToImageIndex(post, i, $event)">
+                    <span *ngFor="let url of post.mediaUrls; let i = index" class="indicator"
+                      [class.active]="i === getCurrentImageIndex(post.id)" (click)="goToImageIndex(post, i, $event)">
                     </span>
                   </div>
                 </div>
@@ -222,7 +222,8 @@
                   <mat-icon>comment</mat-icon>
                 </button>
                 <span class="stat-count">{{ post.commentsCount || 0 }}</span>
-                <button mat-icon-button matTooltip="report" class="interaction-btn" (click)="reportPost(post.id!)" *ngIf="!isMyPost(post)">
+                <button mat-icon-button matTooltip="report" class="interaction-btn" (click)="reportPost(post.id!)"
+                  *ngIf="!isMyPost(post)">
                   <mat-icon>report</mat-icon>
                 </button>
               </div>
@@ -261,8 +262,8 @@
         <div class="search-container">
           <mat-form-field class="search-field" appearance="outline">
             <mat-icon matPrefix>search</mat-icon>
-            <input matInput [ngModel]="searchTerm()" (ngModelChange)="updateSearchTerm($event)" placeholder="Search users..."
-              aria-label="Search users" style="color: aliceblue;">
+            <input matInput [ngModel]="searchTerm()" (ngModelChange)="updateSearchTerm($event)"
+              placeholder="Search users..." aria-label="Search users" style="color: aliceblue;">
           </mat-form-field>
         </div>
 
@@ -320,9 +321,9 @@
               [attr.aria-label]="'User: ' + user.username">
               <div class="user-info" matTooltip="Go to profile" (click)="goToProfile(user.username)">
                 <div class="user-avatar crown-container">
-                   <svg *ngIf="user.username === 'admin' " class="crown-icon" viewBox="0 0 64 64">
-                      <path d="M4 20 L20 40 L32 10 L44 40 L60 20 L54 50 H10 Z" />
-                    </svg>
+                  <svg *ngIf="user.username === 'admin' " class="crown-icon" viewBox="0 0 64 64">
+                    <path d="M4 20 L20 40 L32 10 L44 40 L60 20 L54 50 H10 Z" />
+                  </svg>
 
                   <img [src]="getImage(user.avatar) || 'assets/img/default-avatar.png'" (error)="onImageError($event)"
                     [alt]="user.username + ' profile picture'" class="avatar-user-img" loading="lazy">

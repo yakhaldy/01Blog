@@ -11,4 +11,4 @@ bootstrapApplication(App, {
     // Zoneless Mode
     provideZonelessChangeDetection(),
   ],
-}).catch(err => console.error(err));
+}).catch(err => console.log(err));

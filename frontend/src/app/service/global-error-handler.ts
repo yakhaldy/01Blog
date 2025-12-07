@@ -9,7 +9,6 @@ export class GlobalErrorHandler implements ErrorHandler {
   private router = inject(Router);
 
   handleError(error: any): void {
-    console.log("===================ERROR===========================\n", error);
     
     // Handle Angular Router errors for invalid URLs with special characters
     // Examples: domain.com/(x), domain.com/%url%, domain.com/test%20space
@@ -38,9 +37,7 @@ export class GlobalErrorHandler implements ErrorHandler {
     if (error instanceof HttpErrorResponse) {
       this.errorHandlerService.handle(error);
     } 
-    else if (error?.error instanceof ErrorEvent) {
-        console.error('Client-side error event captured:', error.error);
-        
+    else if (error?.error instanceof ErrorEvent) {        
       this.errorHandlerService.handle(
         error, 
         error.error.message || 'Client-side error occurred'

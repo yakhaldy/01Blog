@@ -67,7 +67,6 @@ export class Register implements OnInit {
     }
 
     if (!/^[A-Za-z_]+$/.test(currentUser.username)) {
-      console.log(currentUser.username);
       
       this.errorMessage.set('Username must contain only letters (A–Z) and underscore (_).');
       return;

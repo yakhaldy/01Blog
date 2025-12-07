@@ -160,13 +160,10 @@ export class Home implements OnInit {
     this.homeService.getAllUsers(this.currentUsersPage(), this.usersPageSize).subscribe({
       next: (response) => {
         this.users.update(users => [...users, ...response.content]);
-        console.log(response.content);
 
         this.hasMoreUsersResults.set(this.currentUsersPage() + 1 < response.totalPages);
         this.isLoadingUsers.set(false);
         this.currentUsersPage.update(page => page + 1);
-        console.table(this.users());
-        console.log(this.isLoadingUsers());
       },
       error: (error: HttpErrorResponse) => {
         this.currentUsersPage.update(page => page - 1);
@@ -275,7 +272,6 @@ export class Home implements OnInit {
         updateData.append('title', result.title);
 
         if (result.mediaFiles && result.mediaFiles.length > 0) {
-          console.log("=================>" , result.mediaFiles.length);
           
           result.mediaFiles.forEach(file => {
             updateData.append('mediaFiles', file);
@@ -362,12 +358,14 @@ export class Home implements OnInit {
         });
       },
       error: (error: HttpErrorResponse) => {
-        console.log("home====error", error);
-        
         post.isLiked = originalIsLiked;
         post.likesCount = originalLikesCount;
         this.posts.set([...posts]);
-        this.errorHandler.handle(error, 'Failed to like post', false);
+        if (error.status === 404) {
+          this.toastService.show('Post not found or has been removed', 'error');
+        }else{
+          this.errorHandler.handle(error, 'Failed to like post');
+        }
       }
     });
   }
@@ -628,10 +626,7 @@ export class Home implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result?.success) {
-        // Report was successfully submitted, toast is already shown by the dialog
-        console.log('Post reported successfully');
-      }
+      
     });
   }
 

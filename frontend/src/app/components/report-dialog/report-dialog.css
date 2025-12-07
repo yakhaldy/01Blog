@@ -4,14 +4,17 @@
   max-width: 600px;
   width: 100%;
   min-width: 400px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 25%, #1a202c 50%, #2d3748 75%, #1a1a1a 100%);
+  border-radius: 16px;
+  color: #ffffff;
 }
 
 .report-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .report-title {
@@ -19,38 +22,40 @@
   align-items: center;
   gap: 12px;
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
-  color: #333;
+  color: #ffffff;
 }
 
 .report-title mat-icon {
-  color: #f44336;
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
+  color: #ef4444;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
 }
 
 .close-btn {
-  color: #666;
+  color: #8b98a5;
+  transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .report-content {
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .report-description {
-  color: #666;
+  color: #8b98a5;
   font-size: 14px;
-  margin: 0 0 8px 0;
-  line-height: 1.5;
+  margin: 0;
+  line-height: 1.6;
 }
 
 .report-textarea-field {
@@ -58,50 +63,67 @@
 }
 
 .report-textarea-field textarea {
-  min-height: 120px;
+  min-height: 140px;
   resize: vertical;
-  font-family: inherit;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
 }
 
 .report-textarea-field mat-hint {
   font-size: 12px;
+  color: #8b98a5;
 }
 
 .report-textarea-field mat-hint .error {
-  color: #f44336;
+  color: #ef4444;
   font-weight: 600;
 }
 
 .validation-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background-color: #fff3e0;
-  border-left: 4px solid #ff9800;
-  border-radius: 4px;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: rgba(251, 191, 36, 0.15);
+  border-left: 4px solid #fbbf24;
+  border-radius: 8px;
   font-size: 13px;
-  color: #e65100;
+  color: #fbbf24;
 }
 
 .validation-info .warning-icon {
-  color: #ff9800;
+  color: #fbbf24;
   font-size: 20px;
   width: 20px;
   height: 20px;
+  flex-shrink: 0;
 }
 
 .report-actions {
-  padding: 16px 24px;
+  padding: 20px 24px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .cancel-btn {
-  color: #666;
+  color: #ffffff;
   font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 24px;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .submit-btn {
@@ -111,12 +133,26 @@
   gap: 8px;
   min-width: 140px;
   justify-content: center;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 1) 0%, rgba(220, 38, 38, 1) 100%) !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 24px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
 
 .submit-btn:disabled {
-  background-color: #e0e0e0;
-  color: #9e9e9e;
+  background: rgba(107, 114, 128, 0.3) !important;
+  color: rgba(139, 152, 165, 0.6) !important;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-spinner {
@@ -128,26 +164,84 @@
   stroke: #fff;
 }
 
+/* Material Form Field Overrides for Dark Theme */
+::ng-deep .report-textarea-field.mat-mdc-form-field {
+  width: 100%;
+}
+
+::ng-deep .report-textarea-field .mat-mdc-text-field-wrapper {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+::ng-deep .report-textarea-field .mat-mdc-form-field-focus-overlay {
+  background-color: transparent;
+}
+
+::ng-deep .report-textarea-field .mdc-text-field--filled {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 8px;
+}
+
+::ng-deep .report-textarea-field .mat-mdc-form-field-infix {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  min-height: 140px;
+}
+
+::ng-deep .report-textarea-field label {
+  color: #8b98a5 !important;
+  font-size: 14px;
+}
+
+::ng-deep .report-textarea-field .mat-mdc-input-element {
+  color: #ffffff !important;
+  caret-color: #6366f1 !important;
+}
+
+::ng-deep .report-textarea-field .mat-mdc-input-element::placeholder {
+  color: rgba(139, 152, 165, 0.6) !important;
+}
+
+::ng-deep .report-textarea-field .mdc-line-ripple::after {
+  border-bottom-color: #6366f1 !important;
+}
+
+::ng-deep .report-textarea-field .mat-mdc-form-field-subscript-wrapper {
+  margin-top: 8px;
+}
+
+::ng-deep .report-textarea-field .mat-mdc-form-field-hint {
+  color: #8b98a5;
+}
+
 /* Responsive Design */
 @media (max-width: 600px) {
   .report-dialog-container {
-    min-width: 300px;
+    min-width: 320px;
+    max-width: 95vw;
   }
 
   .report-header {
-    padding: 12px 16px;
+    padding: 16px 20px;
   }
 
   .report-title {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .report-title mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
   }
 
   .report-content {
-    padding: 16px;
+    padding: 20px;
   }
 
   .report-actions {
-    padding: 12px 16px;
+    padding: 16px 20px;
     flex-direction: column-reverse;
   }
 
@@ -157,31 +251,14 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .report-title {
-    color: #fff;
+/* Animation for dialog entrance */
+@keyframes slideInDialog {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
   }
-
-  .report-header,
-  .report-actions {
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .report-description {
-    color: #aaa;
-  }
-
-  .close-btn {
-    color: #aaa;
-  }
-
-  .close-btn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-
-  .validation-info {
-    background-color: #332200;
-    color: #ffb74d;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

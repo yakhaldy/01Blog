@@ -205,7 +205,11 @@ export class SingalPost implements OnInit {
             likesCount: originalLikesCount
           };
         });
-        this.errorHandler.handle(error, 'Failed to like/unlike post', false);
+        if (error.status === 404) {
+          this.error.set('Post not found or you do not have permission to view it.');
+          this.post.set(null);
+        }
+        this.errorHandler.handle(error, 'Failed to like/unlike post');
       }
     });
   }
@@ -283,8 +287,11 @@ export class SingalPost implements OnInit {
         this.showSuccessMessage('Comment posted successfully!'); 
       },
       error: (error: HttpErrorResponse) => {
-        console.error('Error posting comment:', error);
         this.isSubmittingComment.set(false);
+        if (error.status === 404) {
+          this.error.set('Post not found or you do not have permission to view it.');
+          this.post.set(null);
+        }
         this.errorHandler.handle(error, 'Failed to post comment');
       }
     });

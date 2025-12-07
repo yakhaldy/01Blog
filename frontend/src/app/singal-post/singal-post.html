@@ -40,52 +40,49 @@
                     </button>
                 </div>
             </div>
+            <div *ngIf="post()!.statue === 'hidden'" class="status-chip hidden">
+                Hidden
+            </div>
         </header>
 
         <div class="post-content">
             <div class="content-body">
                 <h1 class="post-title">{{ post()!.title }}</h1>
-                
-                      <!-- Featured Media with Carousel -->
-      <!-- Featured Media with Carousel -->
-      <div class="featured-media-carousel" *ngIf="post()!.mediaUrls && post()!.mediaUrls!.length > 0">
-        <div class="carousel-container">
-          <!-- Display Current Image/Video -->
-          <div class="carousel-media">
-            <img *ngIf="isImage(post()!.mediaUrls![currentImageIndex()])"
-                 [src]="getImage(post()!.mediaUrls![currentImageIndex()])"
-                 [alt]="post()!.title"
-                 class="post-media">
 
-            <video *ngIf="isVideo(post()!.mediaUrls![currentImageIndex()])"
-                   [src]="getImage(post()!.mediaUrls![currentImageIndex()])"
-                   controls
-                   class="post-media">
-            </video>
-          </div>
+                <!-- Featured Media with Carousel -->
+                <!-- Featured Media with Carousel -->
+                <div class="featured-media-carousel" *ngIf="post()!.mediaUrls && post()!.mediaUrls!.length > 0">
+                    <div class="carousel-container">
+                        <!-- Display Current Image/Video -->
+                        <div class="carousel-media">
+                            <img *ngIf="isImage(post()!.mediaUrls![currentImageIndex()])"
+                                [src]="getImage(post()!.mediaUrls![currentImageIndex()])" [alt]="post()!.title"
+                                class="post-media">
 
-          <!-- Carousel Controls -->
-          <div class="carousel-controls" *ngIf="post()!.mediaUrls!.length > 1">
-            <button class="carousel-btn prev-btn" (click)="previousImage($event)" 
-                    aria-label="Previous image">
-              <mat-icon>chevron_left</mat-icon>
-            </button>
-            <button class="carousel-btn next-btn" (click)="nextImage($event)" 
-                    aria-label="Next image">
-              <mat-icon>chevron_right</mat-icon>
-            </button>
-          </div>
+                            <video *ngIf="isVideo(post()!.mediaUrls![currentImageIndex()])"
+                                [src]="getImage(post()!.mediaUrls![currentImageIndex()])" controls class="post-media">
+                            </video>
+                        </div>
 
-          <!-- Carousel Indicators -->
-          <div class="carousel-indicators" *ngIf="post()!.mediaUrls!.length > 1">
-            <span *ngFor="let url of post()!.mediaUrls; let i = index" 
-                  class="indicator" 
-                  [class.active]="i === currentImageIndex()"
-                  (click)="goToImageIndex(i, $event)">
-            </span>
-          </div>
-        </div>
-      </div>
+                        <!-- Carousel Controls -->
+                        <div class="carousel-controls" *ngIf="post()!.mediaUrls!.length > 1">
+                            <button class="carousel-btn prev-btn" (click)="previousImage($event)"
+                                aria-label="Previous image">
+                                <mat-icon>chevron_left</mat-icon>
+                            </button>
+                            <button class="carousel-btn next-btn" (click)="nextImage($event)" aria-label="Next image">
+                                <mat-icon>chevron_right</mat-icon>
+                            </button>
+                        </div>
+
+                        <!-- Carousel Indicators -->
+                        <div class="carousel-indicators" *ngIf="post()!.mediaUrls!.length > 1">
+                            <span *ngFor="let url of post()!.mediaUrls; let i = index" class="indicator"
+                                [class.active]="i === currentImageIndex()" (click)="goToImageIndex(i, $event)">
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Post Content -->
                 <p class="post-description">{{ post()!.description }}</p>
@@ -93,7 +90,7 @@
 
                 <!-- Post Stats and Actions -->
 
-                <div class="post-interactions">
+                <div class="post-interactions" *ngIf="post()!.statue === 'active'">
                     <button mat-icon-button matTooltip="Like" class="interaction-btn" (click)="likePoste()">
                         <mat-icon [ngClass]="{ 'liked': post()!.isLiked }">
                             {{ post()!.isLiked ? 'favorite' : 'favorite_border' }}
@@ -105,8 +102,9 @@
                         <mat-icon>comment</mat-icon>
                     </button>
                     <span class="stat-count">{{ post()!.commentsCount || 0 }}</span>
-                    
-                    <button mat-icon-button matTooltip="Report" class="interaction-btn" (click)="reportPost()" *ngIf="!isMyPost()">
+
+                    <button mat-icon-button matTooltip="Report" class="interaction-btn" (click)="reportPost()"
+                        *ngIf="!isMyPost()">
                         <mat-icon>report</mat-icon>
                     </button>
                 </div>
@@ -132,15 +130,16 @@
             </div>
 
             <!-- Add Comment Form -->
-            <div class="add-comment-form" *ngIf="currentUser()">
+            <div class="add-comment-form" *ngIf="currentUser() && post()!.statue === 'active'">
                 <div class="comment-form">
                     <div class="comment-author">
                         <img [src]="getImage(currentUser()!.avatar) || 'assets/img/default-avatar.png'"
                             [alt]="currentUser()!.username + ' profile picture'" class="comment-avatar" loading="lazy">
                     </div>
                     <div class="comment-input-container">
-                        <textarea [ngModel]="getNewComment()" (ngModelChange)="setNewComment($event)" placeholder="Write a comment..." class="comment-textarea"
-                            rows="3" maxlength="500"></textarea>
+                        <textarea [ngModel]="getNewComment()" (ngModelChange)="setNewComment($event)"
+                            placeholder="Write a comment..." class="comment-textarea" rows="3"
+                            maxlength="500"></textarea>
                         <div class="comment-form-actions">
                             <span class="character-count">{{ getNewComment().length }}/500</span>
                             <button mat-raised-button class="submit-comment-btn"
@@ -206,8 +205,8 @@
 
                     <div class="comment-content">
                         <ng-container *ngIf="editingCommentId() === comment.id; else viewMode">
-                            <textarea [ngModel]="getEditedContent()" (ngModelChange)="setEditedContent($event)" rows="3" class="comment-edit-input"
-                                maxlength="500"></textarea>
+                            <textarea [ngModel]="getEditedContent()" (ngModelChange)="setEditedContent($event)" rows="3"
+                                class="comment-edit-input" maxlength="500"></textarea>
                             <div class="comment-edit-actions">
                                 <span class="character-count">{{ getEditedContent().length }}/500</span>
                                 <button mat-button color="primary" (click)="saveEditedComment(comment)">Save</button>

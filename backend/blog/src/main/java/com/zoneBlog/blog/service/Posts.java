@@ -88,8 +88,6 @@ public class Posts {
 
         Page<Post> postsPage = postRepository.findByUser_IdInAndStatueOrderByCreatedAtDesc(
                 followingIds, "active", pageable);
-        // Page<Post> postsPage =
-        // postRepository.findByUser_IdInOrderByCreatedAtDesc(followingIds, pageable);
 
         return addLikeStatus(postsPage, user.getId());
     }
@@ -128,15 +126,23 @@ public class Posts {
     public Post likePost(Long id, Authentication authentication) {
         User user = getUserOrThrow(authentication);
         Post post = getPostOrThrow(id);
-            
-            boolean alreadyLiked = likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId());
+        if (post == null) {
+            throw new ResourceNotFoundException("Post not found");
+        }
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found");
+        }
+        if (post.getStatue().equals("hidden")) {
+            System.out.println("===> Post is hidden");
+            throw new ResourceNotFoundException("Post not found");
+        }
+        boolean alreadyLiked = likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId());
 
-            if (alreadyLiked) {
-                unlikePost(user, post);
-            } else {
-                performLike(user, post);
-            }
-
+        if (alreadyLiked) {
+            unlikePost(user, post);
+        } else {
+            performLike(user, post);
+        }
 
         post.setLikesCount(likeRepository.countByPost_Id(post.getId()));
         return postRepository.save(post);
@@ -162,7 +168,7 @@ public class Posts {
         Page<Post> postsPage;
         // Admins can see all posts, non-admins only see active posts
         if (ADMIN_ROLE.equals(currentUser.getRole())) {
-            postsPage = postRepository.findByUser_IdOrderByCreatedAtDesc(user.getId(), pageable);
+            postsPage = postRepository.findByUser_IdAndStatueOrderByCreatedAtDesc(user.getId(), "active", pageable);
         } else {
             postsPage = postRepository.findByUser_IdAndStatueOrderByCreatedAtDesc(user.getId(), "active", pageable);
         }
@@ -188,7 +194,15 @@ public class Posts {
     public Comment createComment(Authentication authentication, CommentRequest request) {
         User currentUser = getUserOrThrow(authentication);
         Post post = getPostOrThrow(request.getPostId());
-
+        if (post == null) {
+            throw new ResourceNotFoundException("Post not found");
+        }
+        if (currentUser == null) {
+            throw new ResourceNotFoundException("User not found");
+        }
+        if (post.getStatue().equals("hidden")) {
+            throw new ResourceNotFoundException("Post not found");
+        }
         Comment comment = buildComment(currentUser, post, request.getContent().trim());
         commentRepository.save(comment);
 
@@ -349,12 +363,13 @@ public class Posts {
             if (keepImages != null && !keepImages.isEmpty()) {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
-                    imagesToKeep = mapper.readValue(keepImages, new TypeReference<List<String>>() {});
+                    imagesToKeep = mapper.readValue(keepImages, new TypeReference<List<String>>() {
+                    });
                 } catch (Exception e) {
                     throw new BusinessException("Failed to parse kept images");
                 }
             }
-            
+
             // Delete images that are not kept
             List<String> currentUrls = post.getMediaUrls();
             if (currentUrls != null) {
@@ -364,10 +379,10 @@ public class Posts {
                     }
                 }
             }
-            
+
             // Upload new media files
             List<String> newMediaPaths = helper.handleMultipleFileUploads(mediaFiles);
-            
+
             // Combine kept images with new ones
             List<String> allMediaUrls = new ArrayList<>(imagesToKeep);
             allMediaUrls.addAll(newMediaPaths);
@@ -379,8 +394,9 @@ public class Posts {
             // Only updating kept images, no new files
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                List<String> imagesToKeep = mapper.readValue(keepImages, new TypeReference<List<String>>() {});
-                
+                List<String> imagesToKeep = mapper.readValue(keepImages, new TypeReference<List<String>>() {
+                });
+
                 // Delete images that are not kept
                 List<String> currentUrls = post.getMediaUrls();
                 if (currentUrls != null) {
@@ -390,7 +406,7 @@ public class Posts {
                         }
                     }
                 }
-                
+
                 post.setMediaUrls(imagesToKeep);
             } catch (Exception e) {
                 throw new BusinessException("Failed to parse kept images");
@@ -446,7 +462,7 @@ public class Posts {
             if (likeRepository.existsByUser_IdAndPost_Id(user.getId(), post.getId())) {
                 return; // Already liked, skip
             }
-            
+
             Like like = new Like();
             like.setPost(post);
             like.setUser(user);

@@ -66,28 +66,23 @@ export class Navbar implements OnInit {
   }
 
   onHome(): void {
-    console.log('Navigate to home');
     this.router.navigate(['/']);
   }
 
   onProfile(): void {
-    console.log('Navigate to profile');
     this.router.navigate(['/profile']);
   }
 
   onNotifications(): void {
-    console.log('Navigate to notifications');
     this.router.navigate(['/notifications']);
   }
 
   onLogout(): void {
-    console.log('Logout clicked');
     this.auth.logout();
     this.router.navigate(['/login']);
   }
 
   onDashboard(): void {
-    console.log('Navigate to Dashboard');
     this.router.navigate(['/dashboard']);
   }
 

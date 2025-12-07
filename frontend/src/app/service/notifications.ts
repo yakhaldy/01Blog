@@ -2,7 +2,9 @@
 import { Injectable, NgZone, PLATFORM_ID, Inject, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { ErrorHandlerService } from '../helper/handleError';
+import { ToastService } from './toast-service';
 
 @Injectable({
   providedIn: 'root'
@@ -21,12 +23,15 @@ export class Notifications implements OnDestroy {
   private readonly MAX_DELAY = 60000; // 60 seconds
 
   constructor(
-    private zone: NgZone, 
+    private zone: NgZone,
     @Inject(PLATFORM_ID) platformId: Object,
-    private http: HttpClient
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService,
+    private toastService: ToastService
+
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
-    
+
     // Generate or retrieve connection ID for this tab
     if (this.isBrowser) {
       let connectionId = sessionStorage.getItem('sse-connection-id');
@@ -75,7 +80,6 @@ export class Notifications implements OnDestroy {
     const jwt = this.getToken();
 
     if (!jwt) {
-      console.error('❌ No authentication token available');
       this.notificationSubject.error('No authentication token');
       return;
     }
@@ -83,14 +87,12 @@ export class Notifications implements OnDestroy {
     // Close existing connection if any
     this.disconnect();
 
-    console.log('🔌 Creating new SSE connection...');
 
     this.eventSource = new EventSource(
       `http://localhost:8080/api/notifications/stream?token=${jwt}&connectionId=${this.connectionId}`
     );
 
     this.eventSource.onopen = (event) => {
-      console.log('✅ SSE Connection opened', event);
       this.isConnected = true;
       this.reconnectAttempts = 0; // Reset on successful connection
     };
@@ -98,34 +100,29 @@ export class Notifications implements OnDestroy {
     this.eventSource.addEventListener('unreadCount', (event: MessageEvent) => {
       this.zone.run(() => {
         const count = Number(event.data);
-        console.log("📩 unreadCount received:", count);
         this.notificationSubject.next(count);
       });
     });
 
     this.eventSource.onerror = (error) => {
-      console.error('❌ SSE error', error);
       this.isConnected = false;
 
       // Check if it's a fatal error
       if (this.eventSource?.readyState === EventSource.CLOSED) {
-        console.log('🔴 SSE connection closed by server');
-        
         this.reconnectAttempts++;
-        
+
         if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-          console.error('❌ Max reconnection attempts reached');
+          this.disconnect();
           return;
         }
-        
+
         // Exponential backoff: 3s, 6s, 12s, 24s, 48s, 60s (max)
         const delay = Math.min(
           this.BASE_DELAY * Math.pow(2, this.reconnectAttempts - 1),
           this.MAX_DELAY
         );
-        
-        console.log(`🔄 Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`);
-        
+
+
         // Attempt to reconnect after delay
         setTimeout(() => {
           this.connect();
@@ -137,7 +134,6 @@ export class Notifications implements OnDestroy {
 
   private disconnect(): void {
     if (this.eventSource) {
-      console.log('🔌 Closing existing SSE connection');
       this.eventSource.close();
       this.eventSource = null;
       this.isConnected = false;
@@ -145,21 +141,24 @@ export class Notifications implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    console.log('🧹 Notifications service destroying');
     this.disconnect();
     this.notificationSubject.complete();
   }
 
   public closeConnection(): void {
     this.disconnect();
-    
+
     // Optionally notify backend to close all SSE connections for this user
     const token = this.getToken();
     if (token && this.isBrowser) {
       this.http.post(`${this.apiUrl}/disconnect?token=${token}`, {})
         .subscribe({
-          next: (response) => console.log('✅ Backend SSE connections closed:', response),
-          error: (error) => console.error('❌ Failed to close backend SSE connections:', error)
+          next: (response) => {
+            this.toastService.show('Disconnected from notifications', 'info');
+          },
+          error: (error: HttpErrorResponse) => {
+            this.errorHandler.handle(error, 'Failed to update post');
+          }
         });
     }
   }

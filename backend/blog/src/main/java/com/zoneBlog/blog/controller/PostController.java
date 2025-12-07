@@ -16,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("/api/posts")
 // @CrossOrigin(origins = "http://localhost:4200")
@@ -28,7 +27,6 @@ public class PostController {
         this.postsService = postsService;
     }
 
- 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> createPost(
             Authentication authentication,
@@ -39,7 +37,6 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(post);
     }
 
-   
     @GetMapping
     public ResponseEntity<Page<Post>> getPosts(
             Authentication authentication,
@@ -51,13 +48,11 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<Post> getPost(Authentication authentication, @PathVariable Long id) {
         Post post = postsService.getPost(authentication, id);
         return ResponseEntity.ok(post);
     }
-
 
     @PatchMapping("/{id}")
     public ResponseEntity<Post> updatePost(
@@ -77,27 +72,19 @@ public class PostController {
         return ResponseEntity.ok(post);
     }
 
-
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id, Authentication authentication) {
         postsService.deletePost(id, authentication);
         return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
     }
 
-
     @PostMapping("/like")
     public ResponseEntity<Post> likePost(@RequestBody PostRequest request, Authentication authentication) {
 
-        try{
+        Post post = postsService.likePost(request.getPostId(), authentication);
+        return ResponseEntity.ok(post);
 
-            Post post = postsService.likePost(request.getPostId(), authentication);
-            return ResponseEntity.ok(post);
-        } catch (Exception e){
-            System.out.println("============== like error ==============\n "+e.getMessage());
-        }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
-
 
     @GetMapping("/me")
     public ResponseEntity<Page<Post>> getMyPosts(
@@ -109,7 +96,6 @@ public class PostController {
         Page<Post> posts = postsService.getMyPosts(authentication, pageable);
         return ResponseEntity.ok(posts);
     }
-
 
     @GetMapping("/user/{username}")
     public ResponseEntity<Page<Post>> getUserPosts(

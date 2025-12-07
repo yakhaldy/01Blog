@@ -85,19 +85,17 @@ export class AuthInterceptor implements HttpInterceptor {
                 break;
 
             case 500:
-                console.log("intercepter ====error", error);
                 this.handleServerError();
                 break;
             case 0:
                 this.handleServerError();
                 break;
             default:
-                // console.error('HTTP Error:', error);
+            
         }
     }
 
     private handleUnauthorized(): void {
-        console.log('Session expired - redirecting to login');
         this.removeToken();
         
         this.dialog.closeAll();
