@@ -45,6 +45,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 : "{\"error\":\"Too many requests. Please wait a moment.\"}";
             
             response.getWriter().write(message);
+            
             response.getWriter().flush();
             return;
         }
