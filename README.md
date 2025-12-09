@@ -289,7 +289,10 @@ npm install
 ```bash
 cd backend/blog
 
-# Run with Maven
+# Run with Maven Wrapper (recommended)
+./mvnw spring-boot:run
+
+# Or with Maven if installed
 mvn spring-boot:run
 
 # Or run the JAR directly

@@ -41,8 +41,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setCharacterEncoding("UTF-8");
             
             String message = path.contains("/notifications/stream") 
-                ? "{\"error\":\"Too many SSE connection attempts. Please wait 10 seconds.\"}"
-                : "{\"error\":\"Too many requests. Please wait a moment.\"}";
+                ? "Too many SSE connection attempts. Please wait 10 seconds."
+                : "Too many requests. Please wait a moment.";
             
             response.getWriter().write(message);
             
@@ -53,9 +53,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Get the real client IP, considering proxies
-     */
+
     private String getClientIp(HttpServletRequest request) {
         // String ip = request.getHeader("X-Forwarded-For");
         // if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {

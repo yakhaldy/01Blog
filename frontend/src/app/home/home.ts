@@ -39,6 +39,7 @@ import { Auth } from '../service/auth';
 import { ToastService } from '../service/toast-service';
 import { ErrorHandlerService } from '../helper/handleError';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { log } from 'console';
 
 @Component({
   selector: 'app-home',

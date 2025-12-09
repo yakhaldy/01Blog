@@ -169,7 +169,8 @@ export class Auth {
   }
 
   searchUsers(searchTerm: string, page: number = 0, size: number = 10): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/users/search?searchTerm=${searchTerm}`);
+    const encodedSearchTerm = encodeURIComponent(searchTerm);
+    return this.http.get<User[]>(`${this.apiUrl}/users/search?searchTerm=${encodedSearchTerm}`);
   }
   markNotificationAsRead(ids: number[]): Observable<any> {
     if (!this.isBrowser) return EMPTY;

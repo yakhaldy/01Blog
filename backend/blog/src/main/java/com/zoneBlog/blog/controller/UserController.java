@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("/api/users")
 // @CrossOrigin(origins = "http://localhost:4200")
@@ -32,7 +31,6 @@ public class UserController {
         return ResponseEntity.ok(profile);
     }
 
-
     @GetMapping("/{username}")
     public ResponseEntity<Map<String, Object>> getUserProfile(
             Authentication authentication,
@@ -40,7 +38,6 @@ public class UserController {
         Map<String, Object> userInfo = profileService.getInfoUser(authentication, username);
         return ResponseEntity.ok(userInfo);
     }
-
 
     @PostMapping("/me")
     public ResponseEntity<User> updateProfile(
@@ -54,7 +51,6 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-
     @GetMapping
     public ResponseEntity<Page<Map<String, Object>>> getAllUsers(
             Authentication authentication,
@@ -64,12 +60,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    /**
-     * Search users by username or email
-     * @param searchTerm Search query
-     * @param authentication Current user authentication
-     * @return List of matching users
-     */
     @GetMapping("/search")
     public ResponseEntity<List<Map<String, Object>>> searchUsers(
             @RequestParam(required = false, defaultValue = "") String searchTerm,
@@ -79,12 +69,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    /**
-     * Follow or unfollow a user
-     * @param authentication Current user authentication
-     * @param payload Request body containing userId
-     * @return Success message
-     */
     @PostMapping("/follow")
     public ResponseEntity<?> followUser(Authentication authentication, @RequestBody Map<String, Long> payload) {
         Long userId = payload.get("userId");
