@@ -1,0 +1,13 @@
+2025-12-09 10:13:08.760 GMT [249208] LOG:  starting PostgreSQL 16.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 11.4.0-1ubuntu1~22.04.2) 11.4.0, 64-bit
+2025-12-09 10:13:08.760 GMT [249208] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-12-09 10:13:08.762 GMT [249208] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-12-09 10:13:08.765 GMT [249211] LOG:  database system was interrupted; last known up at 2025-12-07 17:50:53 GMT
+2025-12-09 10:13:08.814 GMT [249211] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-12-09 10:13:08.816 GMT [249211] LOG:  redo starts at 0/21006F8
+2025-12-09 10:13:08.816 GMT [249211] LOG:  invalid record length at 0/21007E0: expected at least 24, got 0
+2025-12-09 10:13:08.816 GMT [249211] LOG:  redo done at 0/21007A8 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2025-12-09 10:13:08.821 GMT [249209] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-12-09 10:13:08.829 GMT [249209] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.002 s, total=0.010 s; sync files=3, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/21007E0, redo lsn=0/21007E0
+2025-12-09 10:13:08.830 GMT [249208] LOG:  database system is ready to accept connections
+2025-12-09 10:23:08.986 GMT [249209] LOG:  checkpoint starting: time
+2025-12-09 10:23:09.901 GMT [249209] LOG:  checkpoint complete: wrote 10 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.903 s, sync=0.005 s, total=0.916 s; sync files=10, longest=0.004 s, average=0.001 s; distance=12 kB, estimate=12 kB; lsn=0/2103B18, redo lsn=0/2103AE0

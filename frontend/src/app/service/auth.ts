@@ -104,8 +104,7 @@ export class Auth {
     }
     return undefined;
   }
-  getPost(id: string): Observable<Post> {
-    
+  getPost(id: string): Observable<Post> {    
     if (!this.isBrowser) return EMPTY;
     return this.http.get<Post>(`${this.apiUrl}/posts/${id}`)
   }

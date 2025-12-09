@@ -9,17 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zoneBlog.blog.exception.BusinessException;
 import com.zoneBlog.blog.exception.ResourceNotFoundException;
-import com.zoneBlog.blog.exception.UnauthorizedException;
 import com.zoneBlog.blog.exception.ForbiddenException;
 import com.zoneBlog.blog.model.Report;
 import com.zoneBlog.blog.model.User;
-import com.zoneBlog.blog.repository.CommentRepository;
 import com.zoneBlog.blog.repository.PostRepository;
 import com.zoneBlog.blog.repository.ReportRepository;
 import com.zoneBlog.blog.repository.UserRepository;
 
+
 @Service
-@Transactional
 public class Admin {
 
     private static final String ADMIN_ROLE = "ROLE_ADMIN";
@@ -28,15 +26,13 @@ public class Admin {
     private final ReportRepository reportRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final CommentRepository commentRepository;
     private final Helper helper;
 
     public Admin(ReportRepository reportRepository, PostRepository postRepository,
-            UserRepository userRepository, CommentRepository commentRepository, Helper helper) {
+            UserRepository userRepository, Helper helper) {
         this.reportRepository = reportRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
-        this.commentRepository = commentRepository;
         this.helper = helper;
     }
 
@@ -99,7 +95,9 @@ public class Admin {
 
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
-
+        if (report == null) {
+            throw new ResourceNotFoundException("Report not found");
+        }
         reportRepository.delete(report);
     }
 

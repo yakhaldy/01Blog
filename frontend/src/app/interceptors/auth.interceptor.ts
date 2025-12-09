@@ -44,8 +44,8 @@ export class AuthInterceptor implements HttpInterceptor {
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
-        // Skip token for public endpoints
-        const publicEndpoints = ['/api/login', '/api/register'];
+        
+        const publicEndpoints = ['/api/auth/login', '/api/auth/register'];
         const isPublicEndpoint = publicEndpoints.some(endpoint => req.url.endsWith(endpoint));
         
         if (isPublicEndpoint) {

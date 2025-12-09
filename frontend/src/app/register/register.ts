@@ -79,7 +79,7 @@ export class Register implements OnInit {
         this.errorMessage.set(null);
         this.toastService.show('Registration successful!', 'success');
 
-        // Redirect to login after 2 seconds
+
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 2000);
@@ -100,7 +100,6 @@ export class Register implements OnInit {
     this.router.navigate([url]);
   }
 
-  // Helper methods pour ngModel avec signals
   getUsername(): string {
     return this.user().username;
   }
