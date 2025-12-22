@@ -169,6 +169,22 @@ A fullstack social blogging platform where students can share their learning exp
 
 ## 📋 Prerequisites
 
+### For Docker Deployment (Recommended) 🐳
+
+- **Docker** (version 20.10+)
+  ```bash
+  docker --version
+  ```
+
+- **Docker Compose** (version 2.0+)
+  ```bash
+  docker compose version
+  ```
+
+That's it! Docker will handle all dependencies automatically.
+
+### For Manual Development Setup
+
 Before you begin, ensure you have the following installed:
 
 - **Java Development Kit (JDK) 17 or higher**
@@ -198,6 +214,26 @@ Before you begin, ensure you have the following installed:
   ```
 
 ## 🚀 Installation & Setup
+
+### Quick Start with Docker 🐳
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd 01blog
+
+# 2. Configure environment variables (optional)
+nano .env
+
+# 3. Start all services
+docker compose up -d
+```
+
+That's it! Skip to [Running the Application](#️-running-the-application) section.
+
+---
+
+### Manual Setup (For Development)
 
 ### 1. Clone the Repository
 
@@ -284,7 +320,54 @@ npm install
 
 ## ▶️ Running the Application
 
-### Start Backend Server
+### Option 1: Using Docker (Recommended) 🐳
+
+The easiest way to run the application is using Docker Compose:
+
+```bash
+# Make sure you're in the project root directory
+cd 01blog
+
+# Edit environment variables (optional)
+nano .env
+
+# Start all services (database, backend, frontend)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+**Access the Application:**
+- **Frontend**: http://localhost:8000
+- **Backend API**: http://localhost:8080
+- **Database**: PostgreSQL on port 5432
+
+**Check service status:**
+```bash
+docker compose ps
+```
+
+**Rebuild after code changes:**
+```bash
+# Rebuild specific service
+docker compose up -d --build backend
+docker compose up -d --build frontend
+
+# Rebuild all services
+docker compose up -d --build
+```
+
+📚 For more Docker details, see [README.docker.md](README.docker.md)
+
+---
+
+### Option 2: Manual Setup (Development)
+
+#### Start Backend Server
 
 ```bash
 cd backend/blog
@@ -301,7 +384,7 @@ java -jar target/blog-0.0.1-SNAPSHOT.jar
 
 The backend will start on **http://localhost:8080**
 
-### Start Frontend Development Server
+#### Start Frontend Development Server
 
 ```bash
 cd frontend
@@ -315,7 +398,7 @@ ng serve
 
 The frontend will start on **http://localhost:4200**
 
-### Access the Application
+#### Access the Application
 
 - **Frontend**: http://localhost:4200
 - **Backend API**: http://localhost:8080/api

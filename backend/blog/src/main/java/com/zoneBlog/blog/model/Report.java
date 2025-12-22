@@ -31,6 +31,7 @@ public class Report {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Post reportedPost;
 
+    @Column(columnDefinition = "TEXT")
     private String reportReason;
 
     // Reporter

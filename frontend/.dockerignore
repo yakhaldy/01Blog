@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.angular/
+*.log
+.git/
+.gitignore
+README.md
+TODO.MD
+logfile
+coverage/
+.vscode/
+.idea/

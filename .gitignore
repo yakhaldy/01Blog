@@ -1,0 +1,32 @@
+# Build artifacts
+target/
+backend/blog/target/
+
+# Dependencies
+frontend/node_modules/
+
+# Build outputs
+frontend/dist/
+frontend/.angular/
+frontend/logfile
+frontend/*.log
+
+# Environment files
+.env
+backend/blog/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log

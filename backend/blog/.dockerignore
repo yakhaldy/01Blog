@@ -1,0 +1,10 @@
+target/
+.mvn/wrapper/maven-wrapper.jar
+.env
+*.log
+*.tmp
+.git/
+.gitignore
+README.md
+uploads/*
+!uploads/.gitkeep

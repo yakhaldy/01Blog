@@ -15,8 +15,9 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow your frontend origin
+        // Allow your frontend origins (dev and docker)
         configuration.addAllowedOrigin("http://localhost:4200");
+        configuration.addAllowedOrigin("http://localhost:8000");
         
         // Allow all methods
         configuration.addAllowedMethod("*");
