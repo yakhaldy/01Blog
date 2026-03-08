@@ -1,0 +1,48 @@
+version: "1"
+
+services:
+  # The PostgreSQL Database
+  - type: psql
+    name: blog-db
+    plan: free 
+
+  # The Spring Boot Backend
+  - type: web
+    name: blog-backend
+    env: docker
+    plan: free
+    dockerContext: ./backend/blog
+    dockerfilePath: ./backend/blog/Dockerfile
+    envVars:
+      - key: DB_URL
+        value: jdbc:postgresql://${blog-db.host}:${blog-db.port}/${blog-db.database}
+      - key: DB_USERNAME
+        value: ${blog-db.user}
+      - key: DB_PASSWORD
+        value: ${blog-db.password}
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: ${blog-frontend.url} # This allows the frontend URL in CORS
+    # Note: Free tier Render instances are ephemeral. Image uploads will not persist between deployments.
+    # To persist uploads, upgrade to a paid web service plan and uncomment the disk below.
+    # disks:
+    #   - name: uploads
+    #     mountPath: /app/uploads
+    #     sizeGB: 1
+
+  # The Angular Frontend
+  - type: web
+    name: blog-frontend
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: chmod +x ./render-build.sh && ./render-build.sh
+    staticPublishPath: ./dist/01Blog/browser
+    envVars:
+      - key: BACKEND_URL
+        value: ${blog-backend.url}
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

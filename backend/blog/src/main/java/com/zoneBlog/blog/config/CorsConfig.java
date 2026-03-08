@@ -11,13 +11,15 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfig {
 
+    @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:http://localhost:4200,http://localhost:8000}")
+    private String[] allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow your frontend origins (dev and docker)
-        configuration.addAllowedOrigin("http://localhost:4200");
-        configuration.addAllowedOrigin("http://localhost:8000");
+        // Allow origins dynamically from environment or default to local development ones
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
         
         // Allow all methods
         configuration.addAllowedMethod("*");
