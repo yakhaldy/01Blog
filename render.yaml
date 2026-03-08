@@ -36,7 +36,6 @@ services:
   - type: web
     name: blog-frontend
     env: static
-    plan: free
     rootDir: frontend
     buildCommand: chmod +x ./render-build.sh && ./render-build.sh
     staticPublishPath: ./dist/01Blog/browser
