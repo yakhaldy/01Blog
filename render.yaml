@@ -16,7 +16,7 @@ services:
     dockerfilePath: ./backend/blog/Dockerfile
     envVars:
       - key: DB_URL
-        value: jdbc:postgresql://${blog-db.host}:${blog-db.port}/${blog-db.database}
+        value: jdbc:postgresql://${blog-db.host}:${blog-db.port}/${blog-db.database}?sslmode=require
       - key: DB_USERNAME
         value: ${blog-db.user}
       - key: DB_PASSWORD
