@@ -1,10 +1,11 @@
 version: "1"
 
-services:
+databases:
   # The PostgreSQL Database
-  - type: psql
-    name: blog-db
+  - name: blog-db
     plan: free 
+
+services:
 
   # The Spring Boot Backend
   - type: web
