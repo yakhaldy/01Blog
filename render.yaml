@@ -16,11 +16,17 @@ services:
     dockerfilePath: ./backend/blog/Dockerfile
     envVars:
       - key: SPRING_DATASOURCE_URL
-        value: jdbc:postgresql://${blog-db.host}:${blog-db.port}/${blog-db.database}?sslmode=require
+        fromDatabase:
+          name: blog-db
+          property: connectionString
       - key: SPRING_DATASOURCE_USERNAME
-        value: ${blog-db.user}
+        fromDatabase:
+          name: blog-db
+          property: user
       - key: SPRING_DATASOURCE_PASSWORD
-        value: ${blog-db.password}
+        fromDatabase:
+          name: blog-db
+          property: password
       - key: JWT_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
@@ -41,7 +47,10 @@ services:
     staticPublishPath: ./dist/01Blog/browser
     envVars:
       - key: BACKEND_URL
-        value: ${blog-backend.url}
+        fromService:
+          type: web
+          name: blog-backend
+          property: url
     routes:
       - type: rewrite
         source: /*
