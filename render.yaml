@@ -16,9 +16,7 @@ services:
     dockerfilePath: ./backend/blog/Dockerfile
     envVars:
       - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: blog-db
-          property: connectionString
+        value: jdbc:postgresql://${blog-db.host}:${blog-db.port}/${blog-db.database}?sslmode=require
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: blog-db

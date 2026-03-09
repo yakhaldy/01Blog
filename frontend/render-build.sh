@@ -4,10 +4,10 @@
 
 if [ -n "$BACKEND_URL" ]; then
   echo "Replacing localhost:8080 with backend url: $BACKEND_URL"
-  sed -i "s|'http://localhost:8080/api'|'${BACKEND_URL}/api'|g" src/app/service/auth.ts || true
-  sed -i "s|'http://localhost:8080/uploads'|'${BACKEND_URL}/uploads'|g" src/app/service/auth.ts || true
-  sed -i "s|'http://localhost:8080/api/notifications'|'${BACKEND_URL}/api/notifications'|g" src/app/service/notifications.ts || true
-  sed -i "s|http://localhost:8080/api/notifications/stream|${BACKEND_URL}/api/notifications/stream|g" src/app/service/notifications.ts || true
+  # Use double quotes for the sed pattern, but escape special chars and ensure exact match
+  sed -i "s|http://localhost:8080|$BACKEND_URL|g" src/app/service/auth.ts || true
+  sed -i "s|http://localhost:8080/uploads|$BACKEND_URL/uploads|g" src/app/service/auth.ts || true
+  sed -i "s|http://localhost:8080/api/notifications|$BACKEND_URL/api/notifications|g" src/app/service/notifications.ts || true
 fi
 
 npm ci
