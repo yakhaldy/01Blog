@@ -15,11 +15,11 @@ services:
     dockerContext: ./backend/blog
     dockerfilePath: ./backend/blog/Dockerfile
     envVars:
-      - key: DB_URL
+      - key: SPRING_DATASOURCE_URL
         value: jdbc:postgresql://${blog-db.host}:${blog-db.port}/${blog-db.database}?sslmode=require
-      - key: DB_USERNAME
+      - key: SPRING_DATASOURCE_USERNAME
         value: ${blog-db.user}
-      - key: DB_PASSWORD
+      - key: SPRING_DATASOURCE_PASSWORD
         value: ${blog-db.password}
       - key: JWT_SECRET
         generateValue: true
