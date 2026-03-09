@@ -47,10 +47,7 @@ services:
     staticPublishPath: ./dist/01Blog/browser
     envVars:
       - key: BACKEND_URL
-        fromService:
-          type: web
-          name: blog-backend
-          property: url
+        value: https://${blog-backend.host}
     routes:
       - type: rewrite
         source: /*
